@@ -32,6 +32,14 @@ set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_RELEASE}")
 # Use Unicode for all projects.
 add_definitions(-DUNICODE -D_UNICODE)
 
+# Release 1.1.0 CI fix: local_auth_windows and
+# flutter_local_notifications_windows still build on the
+# deprecated <experimental/coroutine> headers; the VS 18
+# STL turns that deprecation into a hard static_assert
+# (STL1011, error C2338). Silence it for all targets in
+# this build, as the STL message itself prescribes.
+add_compile_definitions(_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS)
+
 # Compilation settings that should be applied to most targets.
 #
 # Be cautious about adding new options here, as plugins use this function by
