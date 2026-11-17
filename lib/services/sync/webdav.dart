@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'dart:io';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 import 'package:path_provider/path_provider.dart';
@@ -8,6 +9,7 @@ import 'package:anikumo/services/logging/logger.dart';
 import 'package:anikumo/modules/collect/collect_module.dart';
 import 'package:anikumo/modules/collect/collect_change_module.dart';
 import 'package:anikumo/services/sync/history_sync_service.dart';
+import 'package:anikumo/services/sync/zone_sync.dart';
 import 'package:anikumo/services/sync/webdav_remote_file_commit.dart';
 import 'package:anikumo/utils/async_serial_queue.dart';
 import 'package:anikumo/utils/async_single_flight.dart';
@@ -51,7 +53,7 @@ class WebDav {
     webDavUsername = GStorage.getSetting(SettingsKeys.webDavUsername);
     webDavPassword = GStorage.getSetting(SettingsKeys.webDavPassword);
     if (webDavURL.isEmpty) {
-      throw Exception('请先填写WebDAV URL');
+      throw Exception(S.t('请先填写WebDAV URL'));
     }
     client = webdav.newClient(
       webDavURL,
@@ -86,6 +88,87 @@ class WebDav {
 
   Future<T> _runWebDavExclusive<T>(Future<T> Function() action) {
     return _webDavOperationQueue.run(action);
+  }
+
+  static const String _zonesRootPath = '$_syncRootPath/zones';
+
+  /// Batch 274 (#36–#39): syncs one zone bundle
+  /// (manga / novel / film) with the server copy.
+  /// Returns a short outcome token: 'uploaded',
+  /// 'downloaded', 'conflict', 'uptodate'.
+  Future<String> syncZoneData(String zone) {
+    return _runWebDavExclusive(() async {
+      await _ensureRemoteDirectory(_zonesRootPath);
+      final remotePath = '$_zonesRootPath/$zone.json';
+      final localPayload = await ZoneSyncService.buildPayload(zone);
+      final localBundle = ZoneBundle(
+        zone: zone,
+        updatedAtMs: DateTime.now().millisecondsSinceEpoch,
+        payload: localPayload,
+      );
+      // Read the remote bundle, if any.
+      ZoneBundle? remote;
+      final listing = await client.readDir(_zonesRootPath);
+      if (listing.any((f) => f.name == '$zone.json')) {
+        final temp = File(
+          '${webDavLocalTempDirectory.path}/zone-$zone.json',
+        );
+        await client.read2File(remotePath, temp.path);
+        remote = ZoneBundle.decode(await temp.readAsString());
+      }
+      final decision = decideZoneSync(
+        localHash: localBundle.hash,
+        remoteHash: remote?.hash,
+        lastSyncedHash: ZoneSyncService.lastSyncedHash(zone),
+        localIsEmpty: ZoneSyncService.payloadIsEmpty(zone, localPayload),
+      );
+      switch (decision) {
+        case ZoneSyncDecision.none:
+          return 'uptodate';
+        case ZoneSyncDecision.upload:
+          final temp = File(
+            '${webDavLocalTempDirectory.path}/zone-$zone-upload.json',
+          );
+          await temp.writeAsString(localBundle.encode(), flush: true);
+          await _publishRemoteFile(
+            sourceFilePath: temp.path,
+            destinationPath: remotePath,
+            temporaryPath: '$remotePath.cache',
+          );
+          await ZoneSyncService.markSynced(zone, localBundle.hash);
+          return 'uploaded';
+        case ZoneSyncDecision.download:
+          await ZoneSyncService.applyPayload(zone, remote!.payload);
+          await ZoneSyncService.markSynced(zone, remote.hash);
+          return 'downloaded';
+        case ZoneSyncDecision.conflict:
+          await SyncConflicts.park(
+            SyncConflict(
+              zone: zone,
+              detectedAtMs: DateTime.now().millisecondsSinceEpoch,
+              remoteUpdatedAtMs: remote!.updatedAtMs,
+              remotePayload: remote.payload,
+            ),
+          );
+          return 'conflict';
+      }
+    });
+  }
+
+  /// Batch 274 (#39): resolves a parked conflict by
+  /// applying the remote bundle and re-basing the
+  /// sync ledger on it.
+  Future<void> resolveZoneConflictWithRemote(String zone) async {
+    final conflict = SyncConflicts.load()
+        .where((c) => c.zone == zone)
+        .firstOrNull;
+    if (conflict == null) return;
+    await ZoneSyncService.applyPayload(zone, conflict.remotePayload);
+    await ZoneSyncService.markSynced(
+      zone,
+      ZoneSyncService.hashOfPayload(conflict.remotePayload),
+    );
+    await SyncConflicts.drop(zone);
   }
 
   bool get isDanmakuShieldSyncEnabled =>

@@ -1,5 +1,9 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:anikumo/bean/widget/companion_state_row.dart';
 import 'package:anikumo/bean/theme/violet_glass.dart';
@@ -7,6 +11,7 @@ import 'package:flutter_modular/flutter_modular.dart';
 
 import '../../bean/dialog/dialog.dart';
 import '../../models/novel_item.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import '../../modules/bangumi/bangumi_item.dart';
 import '../../modules/manga/manga_item.dart';
 import '../../request/apis/bangumi_api.dart';
@@ -15,6 +20,7 @@ import '../../services/manga/manga_api.dart';
 import '../../services/manga/manga_search_utils.dart';
 import '../../services/novel/novel_api.dart';
 import '../../services/novel/novel_downloads.dart';
+import '../../services/novel/novel_exporter.dart';
 import '../../services/novel/novel_library.dart';
 import '../../services/novel/novel_sources.dart';
 import 'novel_widgets.dart';
@@ -85,7 +91,7 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
       _chaptersError = null;
     });
     AnikumoDialog.showToast(
-      message: '原源无可读章节，已自动切换到 ${_sourceNameOf(found)}',
+      message: S.f('原源无可读章节，已自动切换到 {}', [_sourceNameOf(found)]),
     );
     NovelDownloadStore.downloadedKeys().then((keys) {
       if (mounted) setState(() => _downloadedKeys = keys);
@@ -187,7 +193,7 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
 
   Future<void> _downloadChapter(NovelChapter chapter, int index) async {
     if (chapter.webView) {
-      AnikumoDialog.showToast(message: '网页模式章节无法下载');
+      AnikumoDialog.showToast(message: S.t('网页模式章节无法下载'));
       return;
     }
     final key = NovelDownloadStore.keyFor(_item, chapter);
@@ -218,8 +224,8 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
     });
     AnikumoDialog.showToast(
       message: entry != null
-          ? '下载完成，可离线阅读'
-          : '下载失败：${failureReason ?? '未知原因'}',
+          ? S.t('下载完成，可离线阅读')
+          : S.f('下载失败：{}', [failureReason ?? S.t('未知原因')]),
     );
   }
 
@@ -243,7 +249,7 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
       );
     }
     return IconButton(
-      tooltip: '下载这一章',
+      tooltip: S.t('下载这一章'),
       icon: const Icon(AnikumoIcons.download_outlined, size: 20),
       onPressed: () => _downloadChapter(chapter, index),
     );
@@ -253,7 +259,125 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
     final nowFavorite = await NovelLibraryStore.toggleFavorite(_item);
     if (!mounted) return;
     setState(() => _isFavorite = nowFavorite);
-    AnikumoDialog.showToast(message: nowFavorite ? '已收藏' : '已取消收藏');
+    AnikumoDialog.showToast(
+        message: nowFavorite ? S.t('已收藏') : S.t('已取消收藏'));
+  }
+
+  /// Batch 270: whole-book export. Picks a format, fetches
+  /// every chapter's text with a cancellable progress
+  /// dialog, then saves TXT or EPUB through the system
+  /// save dialog. Chapters that fail to load are skipped
+  /// and counted in the final toast.
+  Future<void> _exportBook() async {
+    final format = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: Text(S.t('导出全书')),
+        children: [
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(dialogContext, 'txt'),
+            child: Text(S.t('导出为 TXT')),
+          ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(dialogContext, 'epub'),
+            child: Text(S.t('导出为 EPUB')),
+          ),
+        ],
+      ),
+    );
+    if (format == null || !mounted) return;
+
+    final progress = ValueNotifier<int>(0);
+    var cancelled = false;
+    unawaited(
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(S.t('正在导出')),
+          content: ValueListenableBuilder<int>(
+            valueListenable: progress,
+            builder: (context, done, _) => Text(
+              S.f('已处理 {} / {} 章', [done, _chapters.length]),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                cancelled = true;
+                Navigator.pop(dialogContext);
+              },
+              child: Text(S.t('取消')),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    final exported = <ExportChapter>[];
+    var failed = 0;
+    for (final chapter in _chapters) {
+      if (cancelled) break;
+      try {
+        final blocks = await NovelApi.content(_item, chapter);
+        exported.add(
+          ExportChapter(
+            title: chapter.title,
+            paragraphs: [
+              for (final block in blocks)
+                if (block is NovelTextBlock) block.text,
+            ],
+          ),
+        );
+      } catch (_) {
+        failed++;
+      }
+      progress.value++;
+    }
+    if (!mounted) return;
+    Navigator.of(context, rootNavigator: true).pop();
+    if (cancelled) return;
+    if (exported.isEmpty) {
+      AnikumoDialog.showToast(message: S.t('导出失败'));
+      return;
+    }
+    try {
+      if (format == 'txt') {
+        await FilePicker.platform.saveFile(
+          dialogTitle: S.t('导出全书'),
+          fileName: '${_item.title}.txt',
+          bytes: utf8.encode(
+            NovelExporter.buildTxt(
+              bookTitle: _item.title,
+              author: _item.author,
+              chapters: exported,
+            ),
+          ),
+        );
+      } else {
+        await FilePicker.platform.saveFile(
+          dialogTitle: S.t('导出全书'),
+          fileName: '${_item.title}.epub',
+          bytes: Uint8List.fromList(
+            NovelExporter.buildEpub(
+              bookTitle: _item.title,
+              author: _item.author,
+              chapters: exported,
+            ),
+          ),
+        );
+      }
+      if (!mounted) return;
+      AnikumoDialog.showToast(
+        message: failed > 0
+            ? S.f('导出完成，{} 章加载失败已跳过', [failed])
+            : S.t('导出完成'),
+      );
+    } catch (_) {
+      if (mounted) {
+        AnikumoDialog.showToast(message: S.t('导出失败'));
+      }
+    }
   }
 
   void _openReader(int chapterIndex) {
@@ -323,14 +447,24 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
                         children: [
                           const SizedBox(width: 8),
                           IconButton(
-                            tooltip: '返回',
+                            tooltip: S.t('返回'),
                             onPressed: () => context.pop(),
                             icon: const Icon(AnikumoIcons.arrow_back_rounded,
                                 color: Colors.white),
                           ),
                           const Spacer(),
                           IconButton(
-                            tooltip: _isFavorite ? '取消收藏' : '收藏',
+                            tooltip: S.t('导出全书'),
+                            icon: const Icon(
+                              AnikumoIcons.ios_share_rounded,
+                              color: Colors.white,
+                            ),
+                            onPressed:
+                                _chapters.isEmpty ? null : _exportBook,
+                          ),
+                          IconButton(
+                            tooltip:
+                                _isFavorite ? S.t('取消收藏') : S.t('收藏'),
                             icon: Icon(
                               _isFavorite
                                   ? AnikumoIcons.bookmark
@@ -375,7 +509,7 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
                                   const SizedBox(height: 6),
                                   if (_item.author.isNotEmpty)
                                     Text(
-                                      '作者：${_item.author}',
+                                      S.f('作者：{}', [_item.author]),
                                       style: const TextStyle(
                                         color: Colors.white70,
                                         fontSize: 13,
@@ -383,7 +517,7 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
                                     ),
                                   if (_item.lastChapter.isNotEmpty)
                                     Text(
-                                      '最新章节：${_item.lastChapter}',
+                                      S.f('最新章节：{}', [_item.lastChapter]),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
@@ -393,7 +527,7 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
                                     ),
                                   if (_item.wordCount.isNotEmpty)
                                     Text(
-                                      '字数：${_item.wordCount}',
+                                      S.f('字数：{}', [_item.wordCount]),
                                       style: const TextStyle(
                                         color: Colors.white70,
                                         fontSize: 13,
@@ -451,8 +585,8 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
               label: Flexible(
                 child: Text(
                   progress == null
-                      ? '开始阅读'
-                      : '继续阅读 · ${progress.chapterTitle}',
+                      ? S.t('开始阅读')
+                      : S.f('继续阅读 · {}', [progress.chapterTitle]),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -460,7 +594,7 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
             ),
           ),
           if (_item.intro.isNotEmpty) ...[
-            const NovelSectionHeader(title: '简介'),
+            NovelSectionHeader(title: S.t('简介')),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: InkWell(
@@ -476,18 +610,19 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
               ),
             ),
           ],
-          const NovelSectionHeader(title: '配套动漫'),
+          NovelSectionHeader(title: S.t('配套动漫')),
           if (!_companionsLoaded)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: CompanionLoadingRow(label: '正在动漫库里查找同名作品…'),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child:
+                  CompanionLoadingRow(label: S.t('正在动漫库里查找同名作品…')),
             )
           else if (_pairedAnime.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: CompanionEmptyRow(
-                message: '动漫库里暂未找到同名作品',
-                actionLabel: '去动漫区搜索',
+                message: S.t('动漫库里暂未找到同名作品'),
+                actionLabel: S.t('去动漫区搜索'),
                 onAction: () => context.pushNamed(
                   '/search/${Uri.encodeComponent(widget.novel.title)}',
                 ),
@@ -507,18 +642,19 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
                 },
               ),
             ),
-          const NovelSectionHeader(title: '配套漫画'),
+          NovelSectionHeader(title: S.t('配套漫画')),
           if (!_companionsLoaded)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: CompanionLoadingRow(label: '正在漫画源里查找同名作品…'),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child:
+                  CompanionLoadingRow(label: S.t('正在漫画源里查找同名作品…')),
             )
           else if (_pairedManga.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: CompanionEmptyRow(
-                message: '漫画源里暂未找到同名作品',
-                actionLabel: '去漫画区搜索',
+                message: S.t('漫画源里暂未找到同名作品'),
+                actionLabel: S.t('去漫画区搜索'),
                 onAction: () => context.pushNamed(
                   '/manga/search',
                   arguments: widget.novel.title,
@@ -578,7 +714,7 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '原源不可读，正在自动切换源…',
+                    S.t('原源不可读，正在自动切换源…'),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.primary,
                     ),
@@ -599,8 +735,8 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      '已从「$_switchedFromName」自动切换到'
-                      '「${_sourceNameOf(_item)}」（原源无可读章节）',
+                      S.f('已从「{}」自动切换到「{}」（原源无可读章节）',
+                          [_switchedFromName, _sourceNameOf(_item)]),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.primary,
                       ),
@@ -610,19 +746,19 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
               ),
             ),
           NovelSectionHeader(
-            title: '章节',
+            title: S.t('章节'),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (_chapters.isNotEmpty)
                   Text(
-                    '共 ${_chapters.length} 章',
+                    S.f('共 {} 章', [_chapters.length]),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.outline,
                     ),
                   ),
                 IconButton(
-                  tooltip: _descending ? '正序' : '倒序',
+                  tooltip: _descending ? S.t('正序') : S.t('倒序'),
                   icon: Icon(
                     _descending ? AnikumoIcons.arrow_upward : AnikumoIcons.arrow_downward,
                   ),
@@ -648,9 +784,9 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
               ),
             )
           else if (_chapters.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(28),
-              child: Center(child: Text('这个源暂时没有可读的章节')),
+            Padding(
+              padding: const EdgeInsets.all(28),
+              child: Center(child: Text(S.t('这个源暂时没有可读的章节'))),
             )
           else ...[
             for (var i = 0; i < visible.length; i++)
@@ -687,7 +823,7 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
             if (!_showAllChapters && displayed.length > 300)
               ListTile(
                 title: Text(
-                  '展开全部 ${displayed.length} 章',
+                  S.f('展开全部 {} 章', [displayed.length]),
                   style: TextStyle(color: theme.colorScheme.primary),
                 ),
                 trailing: const Icon(AnikumoIcons.expand_more),

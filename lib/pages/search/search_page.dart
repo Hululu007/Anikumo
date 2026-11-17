@@ -39,6 +39,7 @@ import 'package:anikumo/utils/constants.dart';
 import 'package:anikumo/utils/date_time.dart';
 import 'package:anikumo/utils/search_parser.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 part 'search_filter_sheet.dart';
 part 'search_widgets.dart';
@@ -353,7 +354,7 @@ class _SearchPageState extends State<SearchPage> {
     _mangaSearchedIds = {for (final source in MangaSources.all()) source.id};
     setState(() => _mangaExpanding = false);
     if (rest.isEmpty) {
-      AnikumoDialog.showToast(message: '其他源也没有找到更多结果');
+      AnikumoDialog.showToast(message: S.t('其他源也没有找到更多结果'));
       return;
     }
     // Re-apply through the same funnel _searchManga uses:
@@ -494,7 +495,7 @@ class _SearchPageState extends State<SearchPage> {
     if (_filmResults.isEmpty) return const [];
     return [
       SliverToBoxAdapter(
-        child: CrossSectionHeader(title: '影视', count: _filmResults.length),
+        child: CrossSectionHeader(title: S.t('影视'), count: _filmResults.length),
       ),
       SliverToBoxAdapter(
         child: FilmRail(
@@ -512,11 +513,11 @@ class _SearchPageState extends State<SearchPage> {
     final service = VideoEngineService.instance;
     service.loadRegistry();
     if (!service.hasSources) {
-      return const [
+      return [
         SliverToBoxAdapter(
           child: GeneralEmptyState(
             icon: AnikumoIcons.movie_rounded,
-            title: '影视区还没有数据源',
+            title: S.t('影视区还没有数据源'),
           ),
         ),
       ];
@@ -532,7 +533,7 @@ class _SearchPageState extends State<SearchPage> {
               children: [
                 for (final filter in FilmCrossFilter.values) ...[
                   ChoiceChip(
-                    label: Text(filter.label),
+                    label: Text(S.t(filter.label)),
                     selected: _filmFilter == filter,
                     onSelected: (_) => setState(() => _filmFilter = filter),
                   ),
@@ -540,7 +541,7 @@ class _SearchPageState extends State<SearchPage> {
                 ],
                 const SizedBox(width: 6),
                 Text(
-                  '${filtered.length} 部影视 · 点开进入影视专区',
+                  S.f('{} 部影视 · 点开进入影视专区', [filtered.length]),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -551,10 +552,10 @@ class _SearchPageState extends State<SearchPage> {
         ),
       ),
       if (filtered.isEmpty)
-        const SliverToBoxAdapter(
+        SliverToBoxAdapter(
           child: GeneralEmptyState(
             icon: AnikumoIcons.movie_rounded,
-            title: '没有找到影视',
+            title: S.t('没有找到影视'),
           ),
         )
       else
@@ -595,7 +596,7 @@ class _SearchPageState extends State<SearchPage> {
     _novelSearchedIds = {for (final source in NovelSources.all()) source.id};
     setState(() => _novelExpanding = false);
     if (rest.isEmpty) {
-      AnikumoDialog.showToast(message: '其他源也没有找到更多结果');
+      AnikumoDialog.showToast(message: S.t('其他源也没有找到更多结果'));
       return;
     }
     final union = [..._novelRawAll, ...rest];
@@ -634,7 +635,7 @@ class _SearchPageState extends State<SearchPage> {
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  '正在搜索更多源…',
+                  S.t('正在搜索更多源…'),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -648,11 +649,11 @@ class _SearchPageState extends State<SearchPage> {
                     AnikumoIcons.manage_search_outlined,
                     size: 18,
                   ),
-                  label: Text('更多搜索（还有 $remaining 个源）'),
+                  label: Text(S.f('更多搜索（还有 {} 个源）', [remaining])),
                 )
               else
                 Text(
-                  '已搜索全部 ${installedIds.length} 个源',
+                  S.f('已搜索全部 {} 个源', [installedIds.length]),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -661,7 +662,7 @@ class _SearchPageState extends State<SearchPage> {
               TextButton.icon(
                 onPressed: () => _pickCrossSources(manga: manga),
                 icon: const Icon(AnikumoIcons.tune, size: 18),
-                label: const Text('搜索源'),
+                label: Text(S.t('搜索源')),
               ),
             ],
           ),
@@ -698,7 +699,7 @@ class _SearchPageState extends State<SearchPage> {
     final result = await showDialog<List<String>>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(manga ? '选择漫画搜索源' : '选择小说搜索源'),
+        title: Text(manga ? S.t('选择漫画搜索源') : S.t('选择小说搜索源')),
         content: SizedBox(
           width: double.maxFinite,
           child: StatefulBuilder(
@@ -708,8 +709,7 @@ class _SearchPageState extends State<SearchPage> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
-                    '默认同时搜索的源，最多 $maxCrossSearchSources 个；'
-                    '想一次搜全部源，用结果下方的「更多搜索」。',
+                    S.f('默认同时搜索的源，最多 {} 个；想一次搜全部源，用结果下方的「更多搜索」。', [maxCrossSearchSources]),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -724,7 +724,7 @@ class _SearchPageState extends State<SearchPage> {
                           !selected.contains(option.id) &&
                           selected.length >= maxCrossSearchSources) {
                         AnikumoDialog.showToast(
-                          message: '最多选 $maxCrossSearchSources 个源',
+                          message: S.f('最多选 {} 个源', [maxCrossSearchSources]),
                         );
                         return;
                       }
@@ -744,15 +744,15 @@ class _SearchPageState extends State<SearchPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, const <String>[]),
-            child: const Text('恢复默认'),
+            child: Text(S.t('恢复默认')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, selected.toList()),
-            child: const Text('保存'),
+            child: Text(S.t('保存')),
           ),
         ],
       ),
@@ -786,7 +786,7 @@ class _SearchPageState extends State<SearchPage> {
     if (_novelResults.isEmpty) return const [];
     return [
       SliverToBoxAdapter(
-        child: CrossSectionHeader(title: '小说', count: _novelResults.length),
+        child: CrossSectionHeader(title: S.t('小说'), count: _novelResults.length),
       ),
       NovelResultsSliver(items: _novelResults.take(10).toList()),
     ];
@@ -798,10 +798,10 @@ class _SearchPageState extends State<SearchPage> {
     }
     if (_novelResultsAll.isEmpty) {
       return [
-        const SliverToBoxAdapter(
+        SliverToBoxAdapter(
           child: GeneralEmptyState(
             icon: AnikumoIcons.auto_stories_outlined,
-            title: '没有找到小说',
+            title: S.t('没有找到小说'),
           ),
         ),
         ..._crossSearchFooter(manga: false),
@@ -812,7 +812,7 @@ class _SearchPageState extends State<SearchPage> {
         child: Padding(
           padding: const EdgeInsets.only(bottom: 4),
           child: Text(
-            '${_novelResultsAll.length} 本小说 · 点一行进入小说专区',
+            S.f('{} 本小说 · 点一行进入小说专区', [_novelResultsAll.length]),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -844,7 +844,7 @@ class _SearchPageState extends State<SearchPage> {
           child: Padding(
             padding: const EdgeInsets.only(top: 20),
             child: Text(
-              '没有找到相关漫画',
+              S.t('没有找到相关漫画'),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -856,7 +856,7 @@ class _SearchPageState extends State<SearchPage> {
     return [
       SliverToBoxAdapter(
         child: CrossSectionHeader(
-          title: '漫画',
+          title: S.t('漫画'),
           count: _visibleMangaResults.length,
         ),
       ),
@@ -876,7 +876,7 @@ class _SearchPageState extends State<SearchPage> {
         SliverToBoxAdapter(
           child: GeneralEmptyState(
             icon: AnikumoIcons.menu_book_outlined,
-            title: _mangaResultsAll.isEmpty ? '没有找到漫画' : '找到的漫画都无法观看，已自动隐藏',
+            title: _mangaResultsAll.isEmpty ? S.t('没有找到漫画') : S.t('找到的漫画都无法观看，已自动隐藏'),
           ),
         ),
         ..._crossSearchFooter(manga: true),
@@ -887,7 +887,7 @@ class _SearchPageState extends State<SearchPage> {
         child: Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: Text(
-            '${visible.length} 部漫画 · 点封面进入漫画专区',
+            S.f('{} 部漫画 · 点封面进入漫画专区', [visible.length]),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -950,7 +950,7 @@ class _SearchPageState extends State<SearchPage> {
       builder: (context, value, child) => SearchBar(
         controller: _input,
         focusNode: _inputFocus,
-        hintText: '搜索番剧名称',
+        hintText: S.t('搜索番剧名称'),
         textInputAction: TextInputAction.search,
         constraints: const BoxConstraints(minHeight: 64),
         elevation: const WidgetStatePropertyAll(0),
@@ -959,24 +959,24 @@ class _SearchPageState extends State<SearchPage> {
           EdgeInsets.symmetric(horizontal: 8),
         ),
         leading: IconButton(
-          tooltip: '搜索',
+          tooltip: S.t('搜索'),
           onPressed: () => _submit(_input.text),
           icon: const Icon(AnikumoIcons.search_rounded),
         ),
         trailing: [
           if (value.text.isNotEmpty || _hasSearched)
             IconButton(
-              tooltip: '清空搜索',
+              tooltip: S.t('清空搜索'),
               onPressed: _clearSearch,
               icon: const Icon(AnikumoIcons.close_rounded),
             ),
           if (value.text.trim().isNotEmpty)
             IconButton(
-              tooltip: '保存这次搜索',
+              tooltip: S.t('保存这次搜索'),
               onPressed: () async {
                 await SavedSearchStore.add(value.text);
                 if (context.mounted) {
-                  AnikumoDialog.showToast(message: '已保存到「我保存的搜索」');
+                  AnikumoDialog.showToast(message: S.t('已保存到「我保存的搜索」'));
                 }
               },
               icon: const Icon(AnikumoIcons.bookmark_add_outlined),
@@ -1018,7 +1018,7 @@ class _SearchPageState extends State<SearchPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _sectionLabel('我保存的搜索'),
+        _sectionLabel(S.t('我保存的搜索')),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Wrap(
@@ -1071,8 +1071,8 @@ class _SearchPageState extends State<SearchPage> {
               vertical: 4,
             ),
             leading: const Icon(AnikumoIcons.tune_rounded),
-            title: const Text('按条件查找'),
-            subtitle: const Text('题材、放送时间与评分'),
+            title: Text(S.t('按条件查找')),
+            subtitle: Text(S.t('题材、放送时间与评分')),
             trailing: const Icon(AnikumoIcons.chevron_right_rounded),
             onTap: _showFilters,
           ),
@@ -1093,7 +1093,7 @@ class _SearchPageState extends State<SearchPage> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          '最近搜索',
+                          S.t('最近搜索'),
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w800,
                             color: theme.colorScheme.onSurface,
@@ -1108,13 +1108,13 @@ class _SearchPageState extends State<SearchPage> {
                               setState(() => _managingHistory = false);
                             }
                           },
-                          child: const Text('清空'),
+                          child: Text(S.t('清空')),
                         ),
                       TextButton(
                         onPressed: () => setState(
                           () => _managingHistory = !_managingHistory,
                         ),
-                        child: Text(_managingHistory ? '完成' : '管理'),
+                        child: Text(_managingHistory ? S.t('完成') : S.t('管理')),
                       ),
                     ],
                   ),
@@ -1223,7 +1223,7 @@ class _SearchPageState extends State<SearchPage> {
                 children: [
                   Expanded(
                     child: Text(
-                      '搜索结果',
+                      S.t('搜索结果'),
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -1236,7 +1236,7 @@ class _SearchPageState extends State<SearchPage> {
                           _applyFilters(submitted.copyWith(sort: sort)),
                     ),
                   IconButton(
-                    tooltip: '筛选番剧',
+                    tooltip: S.t('筛选番剧'),
                     onPressed: _showFilters,
                     icon: Badge(
                       backgroundColor: Theme.of(context).colorScheme.primary,
@@ -1252,8 +1252,10 @@ class _SearchPageState extends State<SearchPage> {
               ),
               Text(
                 busy
-                    ? '正在搜索…'
-                    : '${items.length} 部番剧${items.length < allItems.length ? ' · 隐藏 ${allItems.length - items.length} 部' : ''}',
+                    ? S.t('正在搜索…')
+                    : items.length < allItems.length
+                        ? S.f('{} 部番剧 · 隐藏 {} 部', [items.length, allItems.length - items.length])
+                        : S.f('{} 部番剧', [items.length]),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -1272,7 +1274,7 @@ class _SearchPageState extends State<SearchPage> {
               if (_controller.fallbackKeywordUsed.isNotEmpty) ...[
                 const SizedBox(height: 6),
                 Text(
-                  '原关键词无结果，已改用「${_controller.fallbackKeywordUsed}」搜索',
+                  S.f('原关键词无结果，已改用「{}」搜索', [_controller.fallbackKeywordUsed]),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -1291,25 +1293,25 @@ class _SearchPageState extends State<SearchPage> {
           child: _controller.isSearchError
               ? GeneralEmptyState(
                   icon: AnikumoIcons.cloud_off_rounded,
-                  title: '网络开小差了，搜索没能完成',
+                  title: S.t('网络开小差了，搜索没能完成'),
                   actions: [
                     StateActionButton.tonal(
                       onPressed: () => _submit(_submittedQuery!),
                       icon: AnikumoIcons.refresh_rounded,
-                      text: '重试',
+                      text: S.t('重试'),
                     ),
                   ],
                 )
-              : const GeneralEmptyState(
+              : GeneralEmptyState(
                   icon: AnikumoIcons.search_off_rounded,
-                  title: '没有找到番剧',
+                  title: S.t('没有找到番剧'),
                 ),
         )
       else if (items.isEmpty)
         SliverToBoxAdapter(
           child: GeneralEmptyState(
             icon: AnikumoIcons.filter_alt_off_rounded,
-            title: '这些番剧被筛选隐藏了',
+            title: S.t('这些番剧被筛选隐藏了'),
             actions: [
               StateActionButton.tonal(
                 onPressed: () async {
@@ -1317,7 +1319,7 @@ class _SearchPageState extends State<SearchPage> {
                   await _controller.setNotShowAbandonedBangumis(false);
                 },
                 icon: AnikumoIcons.visibility_outlined,
-                text: '显示全部',
+                text: S.t('显示全部'),
               ),
             ],
           ),
@@ -1341,10 +1343,10 @@ class _SearchPageState extends State<SearchPage> {
                   ? TextButton.icon(
                       onPressed: _loadMore,
                       icon: const Icon(AnikumoIcons.expand_more_rounded),
-                      label: const Text('加载更多'),
+                      label: Text(S.t('加载更多')),
                     )
                   : Text(
-                      '已经看到全部结果',
+                      S.t('已经看到全部结果'),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -1374,9 +1376,9 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const SysAppBar(
+      appBar: SysAppBar(
         backgroundColor: Colors.transparent,
-        title: Text('番剧搜索'),
+        title: Text(S.t('番剧搜索')),
       ),
       body: SafeArea(
         top: false,

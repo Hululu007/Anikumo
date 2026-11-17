@@ -12,6 +12,7 @@ import 'package:anikumo/request/apis/bangumi_api.dart';
 import 'package:anikumo/services/browse/feed_builder.dart';
 import 'package:anikumo/services/network/bangumi_acceleration.dart';
 import 'package:anikumo/utils/constants.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// 精选 (featured) tab: a curated browse surface assembled from data the
 /// app already fetches — Bangumi trends for the hero and 趋势热播，
@@ -82,7 +83,7 @@ class _FeaturedPageState extends State<FeaturedPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'FEATURED · 编辑精选',
+                      S.t('FEATURED · 编辑精选'),
                       style: Theme.of(context)
                           .textTheme
                           .labelSmall
@@ -95,7 +96,7 @@ class _FeaturedPageState extends State<FeaturedPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '精选',
+                      S.t('精选'),
                       style: Theme.of(context)
                           .textTheme
                           .headlineMedium
@@ -114,7 +115,7 @@ class _FeaturedPageState extends State<FeaturedPage> {
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: GeneralErrorWidget(
-                  errMsg: '精选内容加载失败，请检查网络后重试。',
+                  errMsg: S.t('精选内容加载失败，请检查网络后重试。'),
                   onRetry: _load,
                 ),
               )
@@ -126,7 +127,7 @@ class _FeaturedPageState extends State<FeaturedPage> {
                     child: ScaleIn(
                       child: EditorialHero(
                         item: _feed!.hero!,
-                        kicker: '编辑主推 · HEADLINE',
+                        kicker: S.t('编辑主推 · HEADLINE'),
                         onTap: () => context.pushNamed(
                           '/info/',
                           arguments: _feed!.hero!,
@@ -147,7 +148,7 @@ class _FeaturedPageState extends State<FeaturedPage> {
                     },
                     title: section.title,
                     subtitle: section.subtitle,
-                    actionLabel: '更多',
+                    actionLabel: S.t('更多'),
                     onAction: () => context.pushNamed(
                       '/tab/featured/more',
                       arguments: section.id,

@@ -19,6 +19,9 @@ import 'package:anikumo/services/liuguang/tvmaze_covers.dart';
 import 'package:anikumo/services/liuguang/video_engine.dart';
 import 'package:anikumo/services/liuguang/film_probes.dart';
 import 'package:anikumo/services/liuguang/film_features.dart';
+import 'package:anikumo/services/tmdb/tmdb_catalog.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
+import 'package:anikumo/services/i18n/film_vocab_i18n.dart';
 
 /// Batch 205: 详情 — header with blurred poster backdrop,
 /// meta / genres / cast, synopsis, favorite toggle (engine
@@ -64,6 +67,11 @@ class _FilmDetailPageState extends State<FilmDetailPage>
   /// overview fallback), once resolved — absent entirely
   /// when there is no key or no confident match.
   TmdbEnrichment? _tmdb;
+
+  /// Batch 272 (#34): TMDB similar works for the 相似推荐
+  /// rail — empty until (and unless) the enrichment
+  /// resolves a TMDB id.
+  List<TmdbCatalogEntry> _similar = const [];
 
   /// Batch 244: TMDB episode names by episode number,
   /// once resolved (series only).
@@ -135,7 +143,7 @@ class _FilmDetailPageState extends State<FilmDetailPage>
         kind: FilmKindFilter.all,
         genre: tag,
         allSources: true,
-        title: '标签：$tag',
+        title: S.f('标签：{}', [filmGenreLabel(tag)]),
       ),
     );
   }
@@ -162,6 +170,16 @@ class _FilmDetailPageState extends State<FilmDetailPage>
       if (mounted && enrichment != null) {
         setState(() => _tmdb = enrichment);
         _loadTmdbAccountStates(enrichment);
+        if (enrichment.tmdbId > 0) {
+          TmdbCatalogService.similarWorks(
+            tmdbId: enrichment.tmdbId,
+            isSeries: enrichment.isSeries,
+          ).then((works) {
+            if (mounted && works.isNotEmpty) {
+              setState(() => _similar = works);
+            }
+          }).ignore();
+        }
       }
     }).ignore();
     final posterService = TmdbPosterService.instance;
@@ -233,7 +251,7 @@ class _FilmDetailPageState extends State<FilmDetailPage>
         for (final m in _tmdb!.cast)
           (
             name: m.name,
-            sub: m.character.isEmpty ? '' : '饰 ${m.character}',
+            sub: m.character.isEmpty ? '' : S.f('饰 {}', [m.character]),
             imageUrl: m.profileUrl,
           ),
       ];
@@ -331,9 +349,9 @@ class _FilmDetailPageState extends State<FilmDetailPage>
       _resolveTmdb();
       _resolveBangumi();
       _resolveRecommendations();
-      _error = detail == null ? '没有取到详情，源可能暂时不可用。' : null;
+      _error = detail == null ? S.t('没有取到详情，源可能暂时不可用。') : null;
     } catch (e) {
-      _error = '加载失败：$e';
+      _error = S.f('加载失败：{}', [e]);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -396,8 +414,8 @@ class _FilmDetailPageState extends State<FilmDetailPage>
             ? null
             : TabController(length: seasons.length, vsync: this);
         _lineProbeNote = fastest.$2 == null
-            ? '测速完成，但线路都没有响应'
-            : '测速完成：最快「${fastest.$1}」${fastest.$2}ms';
+            ? S.t('测速完成，但线路都没有响应')
+            : S.f('测速完成：最快「{}」{}ms', [fastest.$1, fastest.$2]);
       });
     } finally {
       if (mounted) setState(() => _probingLines = false);
@@ -452,9 +470,13 @@ class _FilmDetailPageState extends State<FilmDetailPage>
       context: context,
       message: ok
           ? (current
-                ? '已从 TMDB ${favorite ? '收藏' : '想看'}移除'
-                : '已同步到 TMDB ${favorite ? '收藏' : '想看'}')
-          : '同步到 TMDB 失败，请稍后重试',
+                ? S.f('已从 TMDB {}移除', [
+                    favorite ? S.t('收藏') : S.t('想看'),
+                  ])
+                : S.f('已同步到 TMDB {}', [
+                    favorite ? S.t('收藏') : S.t('想看'),
+                  ]))
+          : S.t('同步到 TMDB 失败，请稍后重试'),
     );
   }
 
@@ -467,7 +489,7 @@ class _FilmDetailPageState extends State<FilmDetailPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const ListTile(title: Text('同步到 Bangumi 收藏')),
+            ListTile(title: Text(S.t('同步到 Bangumi 收藏'))),
             for (final entry in const [
               (2, '想看'),
               (1, '在看'),
@@ -476,7 +498,7 @@ class _FilmDetailPageState extends State<FilmDetailPage>
               (5, '抛弃'),
             ])
               ListTile(
-                title: Text(entry.$2),
+                title: Text(S.t(entry.$2)),
                 onTap: () => Navigator.of(sheetContext).pop(entry.$1),
               ),
           ],
@@ -488,7 +510,7 @@ class _FilmDetailPageState extends State<FilmDetailPage>
     if (!mounted) return;
     AnikumoDialog.showToast(
       context: context,
-      message: ok ? '已同步到 Bangumi 收藏' : '同步到 Bangumi 失败，请稍后重试',
+      message: ok ? S.t('已同步到 Bangumi 收藏') : S.t('同步到 Bangumi 失败，请稍后重试'),
     );
   }
 
@@ -496,6 +518,97 @@ class _FilmDetailPageState extends State<FilmDetailPage>
   /// row — visible only when the relevant account is
   /// connected and the work's id on that service is
   /// known.
+  /// Batch 272 (#34): the TMDB similar-works rail.
+  Widget _similarRail(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+            child: Text(
+              S.t('相似推荐'),
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w700),
+            ),
+          ),
+          SizedBox(
+            height: 196,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: _similar.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (context, index) {
+                final entry = _similar[index];
+                return GestureDetector(
+                  onTap: () => context.pushNamed(
+                    '/film/search',
+                    arguments: entry.title,
+                  ),
+                  child: SizedBox(
+                    width: 104,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: entry.posterUrl.isEmpty
+                              ? Container(
+                                  width: 104,
+                                  height: 146,
+                                  color:
+                                      theme.colorScheme.surfaceContainerHigh,
+                                  child: Icon(
+                                    AnikumoIcons.movie_rounded,
+                                    color: theme.colorScheme.outline,
+                                  ),
+                                )
+                              : CachedNetworkImage(
+                                  imageUrl: entry.posterUrl,
+                                  width: 104,
+                                  height: 146,
+                                  fit: BoxFit.cover,
+                                  errorWidget: (_, __, ___) => Container(
+                                    width: 104,
+                                    height: 146,
+                                    color: theme
+                                        .colorScheme.surfaceContainerHigh,
+                                  ),
+                                ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          entry.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        Text(
+                          [
+                            if (entry.year.isNotEmpty) entry.year,
+                            if (entry.score > 0)
+                              entry.score.toStringAsFixed(1),
+                          ].join(' · '),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.outline,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _cloudSyncRow(BuildContext context) {
     final tmdbReady =
         TmdbAccount.connected && _tmdb != null && _tmdb!.tmdbId > 0;
@@ -509,7 +622,7 @@ class _FilmDetailPageState extends State<FilmDetailPage>
         children: [
           if (tmdbReady && _tmdbFav != null)
             FilterChip(
-              label: const Text('TMDB 收藏'),
+              label: Text(S.t('TMDB 收藏')),
               selected: _tmdbFav!,
               showCheckmark: true,
               onSelected: _tmdbMarkBusy
@@ -518,7 +631,7 @@ class _FilmDetailPageState extends State<FilmDetailPage>
             ),
           if (tmdbReady && _tmdbWatch != null)
             FilterChip(
-              label: const Text('TMDB 想看'),
+              label: Text(S.t('TMDB 想看')),
               selected: _tmdbWatch!,
               showCheckmark: true,
               onSelected: _tmdbMarkBusy
@@ -531,7 +644,7 @@ class _FilmDetailPageState extends State<FilmDetailPage>
                 AnikumoIcons.collections_bookmark_rounded,
                 size: 16,
               ),
-              label: const Text('同步到 Bangumi'),
+              label: Text(S.t('同步到 Bangumi')),
               onPressed: _syncBangumiCollection,
             ),
         ],
@@ -557,7 +670,7 @@ class _FilmDetailPageState extends State<FilmDetailPage>
     for (final s in service.sources) {
       if (s.id == _item.sourceId) return s.name;
     }
-    return '未知接口';
+    return S.t('未知接口');
   }
 
   int get _sourceCount {
@@ -594,7 +707,7 @@ class _FilmDetailPageState extends State<FilmDetailPage>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const ListTile(title: Text('选择要下载的集')),
+                ListTile(title: Text(S.t('选择要下载的集'))),
                 if (seasons.length > 1)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -605,7 +718,7 @@ class _FilmDetailPageState extends State<FilmDetailPage>
                           ChoiceChip(
                             label: Text(
                               seasons[i].title.isEmpty
-                                  ? '线路${seasons[i].seasonNumber}'
+                                  ? S.f('线路{}', [seasons[i].seasonNumber])
                                   : seasons[i].title,
                             ),
                             selected: line == i,
@@ -625,11 +738,11 @@ class _FilmDetailPageState extends State<FilmDetailPage>
                           for (var i = 0; i < season.episodes.length; i++) i,
                         ]);
                       }),
-                      child: const Text('全选'),
+                      child: Text(S.t('全选')),
                     ),
                     TextButton(
                       onPressed: () => setSheetState(selected.clear),
-                      child: const Text('取消全选'),
+                      child: Text(S.t('取消全选')),
                     ),
                   ],
                 ),
@@ -700,13 +813,16 @@ class _FilmDetailPageState extends State<FilmDetailPage>
                                 SnackBar(
                                   content: Text(
                                     added == picks.length
-                                        ? '已加入下载：${picks.length} 集'
-                                        : '已加入下载：$added 集（其余已在下载列表中或没有地址）',
+                                        ? S.f('已加入下载：{} 集', [picks.length])
+                                        : S.f(
+                                            '已加入下载：{} 集（其余已在下载列表中或没有地址）',
+                                            [added],
+                                          ),
                                   ),
                                 ),
                               );
                             },
-                      child: Text('开始下载（${selected.length}）'),
+                      child: Text(S.f('开始下载（{}）', [selected.length])),
                     ),
                   ),
                 ),
@@ -762,7 +878,7 @@ class _FilmDetailPageState extends State<FilmDetailPage>
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('播放失败：$e')));
+        ).showSnackBar(SnackBar(content: Text(S.f('播放失败：{}', [e]))));
       }
     } finally {
       _starting = false;
@@ -811,9 +927,9 @@ class _FilmDetailPageState extends State<FilmDetailPage>
               hasScrollBody: false,
               child: FilmEmptyState(
                 icon: AnikumoIcons.movie_rounded,
-                title: '详情',
-                message: _error ?? '没有取到详情。',
-                actionLabel: '重试',
+                title: S.t('详情'),
+                message: _error ?? S.t('没有取到详情。'),
+                actionLabel: S.t('重试'),
                 onAction: () {
                   setState(() => _loading = true);
                   _load();
@@ -828,13 +944,18 @@ class _FilmDetailPageState extends State<FilmDetailPage>
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 24),
                 child: FilmRail(
-                  title: '猜你喜欢',
+                  title: S.t('猜你喜欢'),
                   items: _recommendations,
                   onTapItem: (item) =>
                       context.pushNamed('/film/detail', arguments: item),
                 ),
               ),
             ),
+          // Batch 272 (#34): 相似推荐 — TMDB's similarity
+          // graph. Entries are metadata only, so a tap
+          // searches the title across the film sources.
+          if (_similar.isNotEmpty)
+            SliverToBoxAdapter(child: _similarRail(context)),
         ],
       ),
     );
@@ -908,7 +1029,10 @@ class _FilmDetailPageState extends State<FilmDetailPage>
                             const SizedBox(width: 4),
                             Text(
                               _displayScore!.votes > 0
-                                  ? '${_displayScore!.source} · ${_displayScore!.votes}人评'
+                                  ? S.f('{} · {}人评', [
+                                      _displayScore!.source,
+                                      _displayScore!.votes,
+                                    ])
                                   : _displayScore!.source,
                               style: TextStyle(
                                 color: scheme.onSurfaceVariant,
@@ -974,7 +1098,9 @@ class _FilmDetailPageState extends State<FilmDetailPage>
                   onPressed: _resume != null ? _playResume : () => _play(0, 0),
                   icon: const Icon(AnikumoIcons.play_circle_rounded, size: 19),
                   label: Text(
-                    _resume != null ? '继续播放 ${_resumeLabel()}' : '播放',
+                    _resume != null
+                        ? S.f('继续播放 {}', [_resumeLabel()])
+                        : S.t('播放'),
                   ),
                 ),
               ),
@@ -986,14 +1112,14 @@ class _FilmDetailPageState extends State<FilmDetailPage>
                       ? AnikumoIcons.favorite_rounded
                       : AnikumoIcons.favorite_outline_rounded,
                 ),
-                label: Text(_favorite ? '已收藏' : '收藏'),
+                label: Text(_favorite ? S.t('已收藏') : S.t('收藏')),
               ),
               // Batch 226: a live channel has nothing to
               // download — the button leaves its row.
               if (!cmsItemIsLive(_item)) ...[
                 const SizedBox(width: 6),
                 IconButton.outlined(
-                  tooltip: '下载',
+                  tooltip: S.t('下载'),
                   onPressed: _detail == null ? null : _showDownloadSheet,
                   icon: const Icon(AnikumoIcons.download_rounded),
                 ),
@@ -1017,7 +1143,7 @@ class _FilmDetailPageState extends State<FilmDetailPage>
               const SizedBox(width: 7),
               Expanded(
                 child: Text(
-                  '接口：$_sourceName',
+                  S.f('接口：{}', [_sourceName]),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -1029,7 +1155,7 @@ class _FilmDetailPageState extends State<FilmDetailPage>
               TextButton.icon(
                 onPressed: _sourceCount > 1 ? _showSourceSwitcher : null,
                 icon: const Icon(AnikumoIcons.swap_horiz_rounded, size: 17),
-                label: const Text('切换接口'),
+                label: Text(S.t('切换接口')),
               ),
             ],
           ),
@@ -1055,14 +1181,14 @@ class _FilmDetailPageState extends State<FilmDetailPage>
             const SizedBox(height: 10),
             if (directors.isNotEmpty)
               Text(
-                '导演：${directors.map((p) => p.name).join(' / ')}',
+                S.f('导演：{}', [directors.map((p) => p.name).join(' / ')]),
                 style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
               ),
             // Batch 229: when TMDB cast arrives it replaces
             // this plain line with the photo row below.
             if (actors.isNotEmpty && _castMembers.isEmpty)
               Text(
-                '主演：${actors.map((p) => p.name).join(' / ')}',
+                S.f('主演：{}', [actors.map((p) => p.name).join(' / ')]),
                 style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
               ),
           ],
@@ -1072,7 +1198,7 @@ class _FilmDetailPageState extends State<FilmDetailPage>
           if (_displayOverview.isNotEmpty) ...[
             const SizedBox(height: 14),
             Text(
-              '简介 · STORY',
+              S.t('简介 · STORY'),
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: scheme.outline,
                 fontWeight: FontWeight.w700,
@@ -1090,7 +1216,7 @@ class _FilmDetailPageState extends State<FilmDetailPage>
           if (_castMembers.isNotEmpty) ...[
             const SizedBox(height: 16),
             Text(
-              _castFromBangumi ? '角色 · CHARACTERS' : '演员 · CAST',
+              _castFromBangumi ? S.t('角色 · CHARACTERS') : S.t('演员 · CAST'),
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: scheme.outline,
                 fontWeight: FontWeight.w700,
@@ -1105,7 +1231,7 @@ class _FilmDetailPageState extends State<FilmDetailPage>
           if (_mergedReviews.isNotEmpty) ...[
             const SizedBox(height: 16),
             Text(
-              '评论 · REVIEWS',
+              S.t('评论 · REVIEWS'),
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: scheme.outline,
                 fontWeight: FontWeight.w700,
@@ -1123,8 +1249,8 @@ class _FilmDetailPageState extends State<FilmDetailPage>
             Text(
               _castFromBangumi ||
                       _mergedReviews.any((r) => r.source == 'Bangumi')
-                  ? '角色与评论数据来自 Bangumi 与 TMDB'
-                  : '演员与评论数据来自 TMDB',
+                  ? S.t('角色与评论数据来自 Bangumi 与 TMDB')
+                  : S.t('演员与评论数据来自 TMDB'),
               style: TextStyle(color: scheme.outline, fontSize: 11),
             ),
           ],
@@ -1218,7 +1344,7 @@ class _FilmDetailPageState extends State<FilmDetailPage>
             children: [
               Expanded(
                 child: Text(
-                  review.author.isEmpty ? '匿名用户' : review.author,
+                  review.author.isEmpty ? S.t('匿名用户') : review.author,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -1275,15 +1401,15 @@ class _FilmDetailPageState extends State<FilmDetailPage>
     if (resume == null) return '';
     final parts = (resume.episodeId ?? '').split('::');
     final ep = parts.length >= 2 ? int.tryParse(parts.last) : null;
-    return ep == null ? '' : '· 第${ep + 1}集';
+    return ep == null ? '' : S.f('· 第{}集', [ep + 1]);
   }
 
   Widget _lines(BuildContext context) {
     final seasons = _detail?.seasons ?? const <Season>[];
     if (seasons.isEmpty || _tabs == null) {
-      return const Padding(
-        padding: EdgeInsets.all(24),
-        child: Center(child: Text('该源没有返回可播放的线路。')),
+      return Padding(
+        padding: const EdgeInsets.all(24),
+        child: Center(child: Text(S.t('该源没有返回可播放的线路。'))),
       );
     }
     return Column(
@@ -1294,8 +1420,8 @@ class _FilmDetailPageState extends State<FilmDetailPage>
         EditorialSectionHeader(
           index: '01',
           label: 'EPISODES',
-          title: '选集',
-          actionLabel: _reversed ? '倒序' : '正序',
+          title: S.t('选集'),
+          actionLabel: _reversed ? S.t('倒序') : S.t('正序'),
           onAction: () => setState(() => _reversed = !_reversed),
         ),
         if (seasons.length > 1 &&
@@ -1313,7 +1439,7 @@ class _FilmDetailPageState extends State<FilmDetailPage>
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(AnikumoIcons.speed_rounded, size: 17),
-                  label: Text(_probingLines ? '测速中…' : '线路测速'),
+                  label: Text(_probingLines ? S.t('测速中…') : S.t('线路测速')),
                 ),
                 if (_lineProbeNote != null)
                   Expanded(
@@ -1336,7 +1462,11 @@ class _FilmDetailPageState extends State<FilmDetailPage>
             tabAlignment: TabAlignment.start,
             tabs: [
               for (final s in seasons)
-                Tab(text: s.title.isEmpty ? '线路${s.seasonNumber}' : s.title),
+                Tab(
+                  text: s.title.isEmpty
+                      ? S.f('线路{}', [s.seasonNumber])
+                      : s.title,
+                ),
             ],
           ),
         SizedBox(
@@ -1357,7 +1487,7 @@ class _FilmDetailPageState extends State<FilmDetailPage>
     var episodes = season.episodes;
     if (_reversed) episodes = episodes.reversed.toList();
     if (episodes.isEmpty) {
-      return const Center(child: Text('该线路暂无剧集。'));
+      return Center(child: Text(S.t('该线路暂无剧集。')));
     }
     final isMovie = _item.mediaType == MediaType.movie;
     return GridView.builder(

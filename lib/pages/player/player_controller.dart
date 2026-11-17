@@ -23,6 +23,7 @@ import 'package:anikumo/pages/download/download_controller.dart';
 import 'package:anikumo/services/player/audio_controller.dart';
 import 'package:anikumo/utils/async_session.dart';
 import 'package:anikumo/utils/device.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 export 'package:anikumo/pages/player/controller/player_models.dart';
 
@@ -169,7 +170,7 @@ class PlayerController implements Disposable {
   /// Describes [videoUrl], not the episode the page may still be resolving.
   String get mediaTitle {
     final episode =
-        _episodeTitle.isNotEmpty ? _episodeTitle : '第 $currentEpisode 集';
+        _episodeTitle.isNotEmpty ? _episodeTitle : S.f('第 {} 集', [currentEpisode]);
     return _bangumiName.isEmpty ? episode : '$_bangumiName · $episode';
   }
 

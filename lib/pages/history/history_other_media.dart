@@ -12,6 +12,7 @@ import 'package:anikumo/utils/constants.dart';
 import 'package:anikumo/utils/date_time.dart';
 import 'package:anikumo/utils/tap_debouncer.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// Batch 80: one row of the history page's cross-media
 /// modes （全部 / 漫画 / 小说）. The anime mode keeps its own
@@ -42,10 +43,10 @@ class CrossHistoryEntry {
   final NovelProgress? novelProgress;
 
   String get kindLabel => switch (mode) {
-    CrossSearchMode.anime => '动漫',
-    CrossSearchMode.manga => '漫画',
-    CrossSearchMode.novel => '小说',
-    CrossSearchMode.film => '影视',
+    CrossSearchMode.anime => S.t('动漫'),
+    CrossSearchMode.manga => S.t('漫画'),
+    CrossSearchMode.novel => S.t('小说'),
+    CrossSearchMode.film => S.t('影视'),
     CrossSearchMode.all => '',
   };
 }
@@ -56,7 +57,7 @@ List<CrossHistoryEntry> mangaHistoryEntries(List<MangaProgress> progress) {
       CrossHistoryEntry(
         mode: CrossSearchMode.manga,
         title: p.mangaTitle,
-        subtitle: '${p.chapterLabel} · 第 ${p.page + 1} 页',
+        subtitle: S.f('{} · 第 {} 页', [p.chapterLabel, p.page + 1]),
         timeMs: p.updatedAtMs,
         coverUrl: p.coverUrl,
         mangaProgress: p,
@@ -85,7 +86,7 @@ List<CrossHistoryEntry> animeHistoryEntries(List<History> histories) {
         mode: CrossSearchMode.anime,
         title: bangumiDisplayTitle(h.bangumiItem),
         subtitle: h.lastWatchEpisodeName.isEmpty
-            ? '看到第 ${h.lastWatchEpisode} 话'
+            ? S.f('看到第 {} 话', [h.lastWatchEpisode])
             : h.lastWatchEpisodeName,
         timeMs: h.lastWatchTime.millisecondsSinceEpoch,
         coverUrl:
@@ -186,16 +187,16 @@ class _CrossHistoryListView extends StatelessWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('删除这条记录？'),
-        content: Text('将移除《${entry.title}》的阅读进度，此操作无法撤销。'),
+        title: Text(S.t('删除这条记录？')),
+        content: Text(S.f('将移除《{}》的阅读进度，此操作无法撤销。', [entry.title])),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('删除'),
+            child: Text(S.t('删除')),
           ),
         ],
       ),
@@ -203,14 +204,14 @@ class _CrossHistoryListView extends StatelessWidget {
     if (ok != true) return;
     await onDeleteEntry!(entry);
     if (context.mounted) {
-      AnikumoDialog.showToast(context: context, message: '已删除');
+      AnikumoDialog.showToast(context: context, message: S.t('已删除'));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     if (entries.isEmpty) {
-      return Center(child: Text(emptyText));
+      return Center(child: Text(S.t(emptyText)));
     }
     final theme = Theme.of(context);
     return ListView.builder(
@@ -281,7 +282,7 @@ class _CrossHistoryListView extends StatelessWidget {
                     (entry.mangaProgress != null ||
                         entry.novelProgress != null))
                   IconButton(
-                    tooltip: '删除记录',
+                    tooltip: S.t('删除记录'),
                     icon: const Icon(AnikumoIcons.delete_outline_rounded),
                     onPressed: () => _confirmAndDelete(context, entry),
                   ),

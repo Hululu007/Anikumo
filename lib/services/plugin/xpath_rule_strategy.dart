@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:html/dom.dart';
 import 'package:html/parser.dart';
 import 'package:anikumo/modules/roads/road_module.dart';
@@ -58,7 +59,7 @@ class XPathRuleStrategy {
     final uri = Uri.tryParse(queryUrl);
     if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
       throw XPathRuleFormatException(
-        '搜索 URL 无效: $queryUrl',
+        S.f('搜索 URL 无效: {}', [queryUrl]),
         kind: XPathRuleFormatKind.invalidUrl,
       );
     }
@@ -86,7 +87,7 @@ class XPathRuleStrategy {
     final uri = Uri.tryParse(url);
     if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
       throw XPathRuleFormatException(
-        '章节 URL 无效: $url',
+        S.f('章节 URL 无效: {}', [url]),
         kind: XPathRuleFormatKind.invalidUrl,
       );
     }
@@ -132,7 +133,7 @@ class XPathRuleStrategy {
             )?.attributes['href']?.trim() ??
             '';
         if (name.isEmpty || source.isEmpty) {
-          diagnostics.add('搜索节点 $index 缺少名称或来源，已跳过');
+          diagnostics.add(S.f('搜索节点 {} 缺少名称或来源，已跳过', [index]));
           continue;
         }
         items.add(SearchItem(name: name, src: source));
@@ -140,7 +141,7 @@ class XPathRuleStrategy {
       } on XPathRuleFormatException {
         rethrow;
       } catch (error) {
-        diagnostics.add('搜索节点 $index 解析失败: $error');
+        diagnostics.add(S.f('搜索节点 {} 解析失败: {}', [index, error]));
       }
     }
     return RuleSearchParseResult(
@@ -180,26 +181,26 @@ class XPathRuleStrategy {
             final source = episode.attributes['href']?.trim() ?? '';
             if (source.isEmpty) {
               diagnostics.add(
-                '线路 $roadIndex 的剧集节点 $episodeIndex 缺少 URL，已跳过',
+                S.f('线路 {} 的剧集节点 {} 缺少 URL，已跳过', [roadIndex, episodeIndex]),
               );
               continue;
             }
             final name = (episode.text ?? '').replaceAll(RegExp(r'\s+'), '');
             urls.add(normalizeEpisodeUrl(config.baseUrl, source));
-            names.add(name.isEmpty ? '第${episodeIndex + 1}集' : name);
+            names.add(name.isEmpty ? S.f('第{}集', [episodeIndex + 1]) : name);
           } catch (error) {
             diagnostics.add(
-              '线路 $roadIndex 的剧集节点 $episodeIndex 解析失败: $error',
+              S.f('线路 {} 的剧集节点 {} 解析失败: {}', [roadIndex, episodeIndex, error]),
             );
           }
         }
         if (urls.isEmpty) {
-          diagnostics.add('线路 $roadIndex 没有有效剧集，已跳过');
+          diagnostics.add(S.f('线路 {} 没有有效剧集，已跳过', [roadIndex]));
           continue;
         }
         roads.add(
           Road(
-            name: '播放线路${roads.length + 1}',
+            name: S.f('播放线路{}', [roads.length + 1]),
             data: urls,
             identifier: names,
           ),
@@ -207,7 +208,7 @@ class XPathRuleStrategy {
       } on XPathRuleFormatException {
         rethrow;
       } catch (error) {
-        diagnostics.add('线路节点 $roadIndex 解析失败: $error');
+        diagnostics.add(S.f('线路节点 {} 解析失败: {}', [roadIndex, error]));
       }
     }
     return RuleChapterParseResult(
@@ -270,8 +271,8 @@ class XPathRuleStrategy {
     try {
       final element = parse(raw).documentElement;
       if (element == null) {
-        throw const XPathRuleFormatException(
-          'HTML 响应没有根节点',
+        throw XPathRuleFormatException(
+          S.t('HTML 响应没有根节点'),
           kind: XPathRuleFormatKind.invalidDocument,
         );
       }
@@ -280,7 +281,7 @@ class XPathRuleStrategy {
       rethrow;
     } catch (error) {
       throw XPathRuleFormatException(
-        'HTML 响应解析失败',
+        S.t('HTML 响应解析失败'),
         kind: XPathRuleFormatKind.invalidDocument,
         cause: error,
       );
@@ -295,7 +296,7 @@ class XPathRuleStrategy {
     final label = _fieldLabel(field);
     if (expression.trim().isEmpty) {
       throw XPathRuleFormatException(
-        '$label XPath 不能为空',
+        S.f('{} XPath 不能为空', [label]),
         kind: XPathRuleFormatKind.invalidSelector,
         field: field,
         expression: expression,
@@ -305,7 +306,7 @@ class XPathRuleStrategy {
       return query();
     } catch (error) {
       throw XPathRuleFormatException(
-        '$label XPath 无效: $expression',
+        S.f('{} XPath 无效: {}', [label, expression]),
         kind: XPathRuleFormatKind.invalidSelector,
         field: field,
         expression: expression,
@@ -316,14 +317,14 @@ class XPathRuleStrategy {
 
   String _fieldLabel(XPathRuleField field) {
     return switch (field) {
-      XPathRuleField.searchList => '搜索结果列表',
-      XPathRuleField.searchName => '条目名称',
-      XPathRuleField.searchResult => '条目链接',
-      XPathRuleField.chapterRoads => '播放线路列表',
-      XPathRuleField.chapterResult => '剧集列表',
-      XPathRuleField.captchaDetectValue => '验证页检测',
-      XPathRuleField.captchaImage => '验证码图片',
-      XPathRuleField.captchaButton => '验证按钮',
+      XPathRuleField.searchList => S.t('搜索结果列表'),
+      XPathRuleField.searchName => S.t('条目名称'),
+      XPathRuleField.searchResult => S.t('条目链接'),
+      XPathRuleField.chapterRoads => S.t('播放线路列表'),
+      XPathRuleField.chapterResult => S.t('剧集列表'),
+      XPathRuleField.captchaDetectValue => S.t('验证页检测'),
+      XPathRuleField.captchaImage => S.t('验证码图片'),
+      XPathRuleField.captchaButton => S.t('验证按钮'),
     };
   }
 

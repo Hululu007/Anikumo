@@ -7,6 +7,7 @@ import 'package:anikumo/bean/widget/loading_indicator.dart';
 import 'package:anikumo/modules/download/download_module.dart';
 import 'package:anikumo/utils/format.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 const Duration _kExpandDuration = Duration(milliseconds: 250);
 const Curve _kExpandCurve = Curves.easeInOutCubic;
@@ -59,9 +60,9 @@ class DownloadRecordCard extends StatelessWidget {
             totalCount;
     final allCompleted = completedCount >= totalCount;
 
-    var meta = '$completedCount/$totalCount 已完成';
+    var meta = S.f('{}/{} 已完成', [completedCount, totalCount]);
     if (activeCount > 0) {
-      meta += ' · $activeCount 项进行中';
+      meta += S.f(' · {} 项进行中', [activeCount]);
       if (totalSpeed > 0) {
         meta += ' · ${formatSpeed(totalSpeed)}';
       }
@@ -127,13 +128,13 @@ class DownloadRecordCard extends StatelessWidget {
                     builder: (context, toggle) => IconButton(
                       icon: Icon(AnikumoIcons.more_vert,
                           color: colorScheme.onSurfaceVariant),
-                      tooltip: '更多操作',
+                      tooltip: S.t('更多操作'),
                       onPressed: toggle,
                     ),
                     menuChildren: [
-                      AnikumoMenuItem(label: '全部开始', onPressed: onResumeAll),
+                      AnikumoMenuItem(label: S.t('全部开始'), onPressed: onResumeAll),
                       AnikumoMenuItem(
-                        label: '全部删除',
+                        label: S.t('全部删除'),
                         destructive: true,
                         onPressed: onDeleteAll,
                       ),
@@ -217,7 +218,7 @@ class DownloadEpisodeTile extends StatelessWidget {
                   Text(
                     episode.episodeName.isNotEmpty
                         ? episode.episodeName
-                        : '第${episode.episodeNumber}集',
+                        : S.f('第{}集', [episode.episodeNumber]),
                     style: textTheme.bodyMedium,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

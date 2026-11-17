@@ -14,11 +14,17 @@ import 'package:anikumo/services/logging/logger.dart';
 import 'package:anikumo/services/shaders/shader_asset_service.dart';
 import 'package:anikumo/pages/download/download_controller.dart';
 import 'package:anikumo/services/download/background_download_service.dart';
+import 'package:anikumo/services/platform/app_shortcuts.dart';
 import 'package:anikumo/services/platform/windows_shortcut.dart';
 import 'package:anikumo/services/platform/platform_environment_service.dart';
 import 'package:anikumo/services/platform/app_exit.dart';
+import 'package:anikumo/services/announcement/announcement_service.dart';
+import 'package:anikumo/services/backup/auto_backup.dart';
+import 'package:anikumo/services/platform/home_widget_publisher.dart';
+import 'package:anikumo/services/notifications/update_notification_service.dart';
 import 'package:anikumo/services/update/startup_update_check.dart';
 import 'package:anikumo/navigation.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class InitPage extends StatefulWidget {
   const InitPage({
@@ -57,17 +63,20 @@ class _InitPageState extends State<InitPage> {
 
   Future<void> _initializeApp() async {
     widget.danmakuShieldSync.start();
+    // Batch 276 (#62): launcher shortcuts registration.
+    AppShortcuts.initialize();
     _migrateStorage();
     _loadShaders();
     unawaited(myController.loadShieldList());
     _webDavInit();
     _bangumiInit();
-    try {
-      await downloadController.init();
-      _setupBackgroundDownloadNavigation();
-    } catch (e) {
-      AnikumoLogger().e('InitPage: downloadController.init() failed', error: e);
-    }
+    // Batch 268: the nav callbacks are cheap and must be
+    // registered before any notification tap can arrive,
+    // but restoring download state can take real time and
+    // used to block the first navigation. It now runs after
+    // the app shell is up (see the end of this method).
+    _setupBackgroundDownloadNavigation();
+    unawaited(_initDownloadsDeferred());
 
     await _checkRunningOnX11();
     await _showShortcutDialog();
@@ -88,7 +97,49 @@ class _InitPageState extends State<InitPage> {
       isEnabled: () => GStorage.getSetting(SettingsKeys.autoUpdate),
       checkForUpdate: () => updateController.checkUpdate(type: 'auto'),
     ));
+    // Batch 267: community announcement (published from the
+    // Discord community into the repo's announcement.json).
+    unawaited(runStartupAnnouncementCheck());
+    // Batch 269: update notifications for watching anime /
+    // favorite novels. Delayed so it never competes with the
+    // first paint or the checks above; internally throttled
+    // and toggle-gated.
+    unawaited(
+      Future<void>.delayed(
+        const Duration(seconds: 10),
+        () => UpdateNotificationService.runChecksIfEnabled(),
+      ),
+    );
+    // Batch 274 (#41): scheduled local backup, same
+    // deferred pattern; the service itself checks the
+    // toggle and the interval.
+    unawaited(
+      Future<void>.delayed(
+        const Duration(seconds: 15),
+        () => AutoBackupService.runIfDue(),
+      ),
+    );
+    // Batch 276 (#61): refresh the home-screen
+    // continue-watching widget (Android only inside).
+    unawaited(
+      Future<void>.delayed(
+        const Duration(seconds: 20),
+        HomeWidgetPublisher.publishContinue,
+      ),
+    );
     context.navigate(GStorage.getSetting(SettingsKeys.defaultStartupPage));
+  }
+
+  /// Batch 268: download state restore, deferred until
+  /// after the first navigation so a cold start reaches the
+  /// home page without waiting on it.
+  Future<void> _initDownloadsDeferred() async {
+    try {
+      await downloadController.init();
+    } catch (e) {
+      AnikumoLogger()
+          .e('InitPage: downloadController.init() failed', error: e);
+    }
   }
 
   void _setupBackgroundDownloadNavigation() {
@@ -114,23 +165,22 @@ class _InitPageState extends State<InitPage> {
         clickMaskDismiss: false,
         builder: (context) {
           return AlertDialog(
-            title: const Text('需要通知权限'),
-            content: const Text(
-              '开启通知权限后，可以在后台下载时显示进度，并防止系统终止下载任务。\n\n'
-              '如果拒绝，下载功能仍可使用，但在后台时可能被系统中断。',
+            title: Text(S.t('需要通知权限')),
+            content: Text(
+              S.t('开启通知权限后，可以在后台下载时显示进度，并防止系统终止下载任务。\n\n如果拒绝，下载功能仍可使用，但在后台时可能被系统中断。'),
             ),
             actions: [
               TextButton(
                 onPressed: () => AnikumoDialog.dismiss(popWith: false),
                 child: Text(
-                  '稍后再说',
+                  S.t('稍后再说'),
                   style:
                       TextStyle(color: Theme.of(context).colorScheme.outline),
                 ),
               ),
               TextButton(
                 onPressed: () => AnikumoDialog.dismiss(popWith: true),
-                child: const Text('允许'),
+                child: Text(S.t('允许')),
               ),
             ],
           );
@@ -195,7 +245,7 @@ class _InitPageState extends State<InitPage> {
         );
         AnikumoDialog.showToast(
           message:
-              'Bangumi 暂未连接，同步设置已保留：${BangumiSyncService.describeError(e)}',
+              S.f('Bangumi 暂未连接，同步设置已保留：{}', [BangumiSyncService.describeError(e)]),
         );
       }
     }
@@ -213,14 +263,14 @@ class _InitPageState extends State<InitPage> {
           return PopScope(
             canPop: false,
             child: AlertDialog(
-              title: const Text('X11环境检测'),
-              content: const Text(
-                  '检测到您当前运行在X11环境下，Anikumo在X11环境下可能出现性能问题或界面异常，建议切换到Wayland以获得更好的体验。您是否希望在X11下继续使用Anikumo？'),
+              title: Text(S.t('X11环境检测')),
+              content: Text(
+                  S.t('检测到您当前运行在X11环境下，Anikumo在X11环境下可能出现性能问题或界面异常，建议切换到Wayland以获得更好的体验。您是否希望在X11下继续使用Anikumo？')),
               actions: [
                 TextButton(
                   onPressed: AppExit.quit,
                   child: Text(
-                    '退出',
+                    S.t('退出'),
                     style:
                         TextStyle(color: Theme.of(context).colorScheme.outline),
                   ),
@@ -229,7 +279,7 @@ class _InitPageState extends State<InitPage> {
                   onPressed: () {
                     AnikumoDialog.dismiss();
                   },
-                  child: const Text('继续'),
+                  child: Text(S.t('继续')),
                 ),
               ],
             ),
@@ -248,17 +298,17 @@ class _InitPageState extends State<InitPage> {
     final create = await AnikumoDialog.show<bool>(
       clickMaskDismiss: false,
       builder: (context) => AlertDialog(
-        title: const Text('创建桌面快捷方式'),
-        content: const Text('是否在桌面创建 anikumo 的快捷方式？'),
+        title: Text(S.t('创建桌面快捷方式')),
+        content: Text(S.t('是否在桌面创建 anikumo 的快捷方式？')),
         actions: [
           TextButton(
             onPressed: () => AnikumoDialog.dismiss(popWith: false),
-            child: Text('暂不创建',
+            child: Text(S.t('暂不创建'),
                 style: TextStyle(color: Theme.of(context).colorScheme.outline)),
           ),
           TextButton(
             onPressed: () => AnikumoDialog.dismiss(popWith: true),
-            child: const Text('创建'),
+            child: Text(S.t('创建')),
           ),
         ],
       ),
@@ -267,7 +317,7 @@ class _InitPageState extends State<InitPage> {
     await GStorage.putSetting(SettingsKeys.shortcutDialogShown, true);
     if (create ?? false) {
       final success = await WindowsShortcut.createDesktopShortcut();
-      AnikumoDialog.showToast(message: success ? '桌面快捷方式已创建' : '桌面快捷方式创建失败');
+      AnikumoDialog.showToast(message: success ? S.t('桌面快捷方式已创建') : S.t('桌面快捷方式创建失败'));
     }
   }
 

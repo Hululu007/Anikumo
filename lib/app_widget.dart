@@ -7,6 +7,7 @@ import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:anikumo/bean/theme/signature.dart';
 import 'package:anikumo/bean/widget/mini_player_overlay.dart';
 import 'package:anikumo/bean/widget/pin_lock_gate.dart';
+import 'package:anikumo/services/privacy/app_lock.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/services/ui/app_extras.dart';
 import 'package:anikumo/services/ui/custom_font.dart';
@@ -19,6 +20,8 @@ import 'package:window_manager/window_manager.dart';
 import 'package:anikumo/bean/dialog/dialog_helper.dart';
 import 'package:anikumo/bean/dialog/exit_confirmation_dialog.dart';
 import 'package:anikumo/bean/settings/theme_provider.dart';
+import 'package:anikumo/services/i18n/app_language.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/navigation.dart';
 import 'package:anikumo/utils/constants.dart';
 import 'package:anikumo/utils/device.dart';
@@ -492,8 +495,21 @@ class _AppWidgetState extends State<AppWidget>
   }
 
   @override
+  void didChangeLocales(List<Locale>? locales) {
+    super.didChangeLocales(locales);
+    // Batch 262: keep a "follow system" language selection in
+    // sync with the platform locale.
+    context.read<LocaleProvider>().refreshSystemLocale();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final ThemeProvider themeProvider = context.watch<ThemeProvider>();
+    final LocaleProvider localeProvider = context.watch<LocaleProvider>();
+    // Batch 262: the source-keyed string table (S) reads its
+    // language from here; a locale change rebuilds the whole
+    // MaterialApp below, so lookups refresh app-wide.
+    S.applyLocale(localeProvider.locale);
     bool oledEnhance = GStorage.getSetting(SettingsKeys.oledEnhance);
 
     var app = DynamicColorBuilder(
@@ -519,14 +535,20 @@ class _AppWidgetState extends State<AppWidget>
             : dynamicDarkTheme;
 
         return MaterialApp.router(
+          // Batch 266: keyed by the UI language so a language
+          // switch recreates the app shell and remounts the
+          // whole route tree — every page re-renders in the
+          // new language immediately (including any page that
+          // cached strings in its State), no restart needed.
+          key: ValueKey('app-locale-${localeProvider.languageCode}'),
           title: "Anikumo",
-          localizationsDelegates: GlobalMaterialLocalizations.delegates,
-          supportedLocales: const [
-            Locale.fromSubtags(
-                languageCode: 'zh', scriptCode: 'Hans', countryCode: "CN")
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
           ],
-          locale: const Locale.fromSubtags(
-              languageCode: 'zh', scriptCode: 'Hans', countryCode: "CN"),
+          supportedLocales: kSupportedAppLocales,
+          locale: localeProvider.locale,
           theme: lightTheme,
           darkTheme: effectiveDarkTheme,
           themeMode: _effectiveThemeMode(themeProvider.themeMode),
@@ -537,16 +559,21 @@ class _AppWidgetState extends State<AppWidget>
               textScaler: TextScaler.linear(scale.clamp(0.8, 1.4)),
             );
             return PinLockGate(
-              child: MediaQuery(
-                data: scaled,
-                // Batch 113: the in-app mini player floats above
-                // every page (inside the PIN gate, so it never shows
-                // over the lock screen).
-                child: Stack(
-                  children: [
-                    child!,
-                    const MiniPlayerHost(),
-                  ],
+              // Batch 275 (#46): biometric lock for the
+              // no-PIN case (the PIN gate offers the
+              // biometric shortcut itself when a PIN is set).
+              child: BiometricLockGate(
+                child: MediaQuery(
+                  data: scaled,
+                  // Batch 113: the in-app mini player floats above
+                  // every page (inside the PIN gate, so it never shows
+                  // over the lock screen).
+                  child: Stack(
+                    children: [
+                      child!,
+                      const MiniPlayerHost(),
+                    ],
+                  ),
                 ),
               ),
             );

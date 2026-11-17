@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter_modular/flutter_modular.dart';
@@ -96,13 +97,13 @@ class _MangaExploreTabState extends State<MangaExploreTab> {
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  '还没有漫画源',
+                  S.t('还没有漫画源'),
                   style: theme.textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '用你自己的 URL 链接导入 JS 源后即可探索。',
+                  S.t('用你自己的 URL 链接导入 JS 源后即可探索。'),
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
@@ -112,7 +113,7 @@ class _MangaExploreTabState extends State<MangaExploreTab> {
                 FilledButton.icon(
                   onPressed: () => context.pushNamed('/manga/sources'),
                   icon: const Icon(AnikumoIcons.add_link_rounded, size: 18),
-                  label: const Text('去导入漫画源'),
+                  label: Text(S.t('去导入漫画源')),
                 ),
               ],
             ),
@@ -152,7 +153,7 @@ class _MangaExploreTabState extends State<MangaExploreTab> {
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  '探索',
+                  S.t('探索'),
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
@@ -182,9 +183,9 @@ class _MangaExploreTabState extends State<MangaExploreTab> {
                       : null,
                   label: Text(
                     failed
-                        ? '${source.name} · 不可用'
+                        ? S.f('{} · 不可用', [source.name])
                         : source.id == activeId
-                            ? '${source.name} · 当前源'
+                            ? S.f('{} · 当前源', [source.name])
                             : source.name,
                   ),
                   selected: isSelected,
@@ -221,7 +222,7 @@ class MangaSourcePage extends StatelessWidget {
     if (source == null) {
       return Scaffold(
         appBar: AppBar(),
-        body: const Center(child: Text('这个源已经不存在了')),
+        body: Center(child: Text(S.t('这个源已经不存在了'))),
       );
     }
     final isActive = MangaSources.activeOrNull()?.id == source.id;
@@ -232,7 +233,7 @@ class MangaSourcePage extends StatelessWidget {
           if (!isActive)
             TextButton(
               onPressed: () => MangaSources.setActive(source.id),
-              child: const Text('切换到此源'),
+              child: Text(S.t('切换到此源')),
             ),
         ],
       ),
@@ -438,13 +439,13 @@ class _MangaSourceGridState extends State<MangaSourceGrid> {
     if (_loadMoreFailed) {
       return OutlinedButton(
         onPressed: _loadMore,
-        child: const Text('加载失败，点按重试'),
+        child: Text(S.t('加载失败，点按重试')),
       );
     }
     final style = theme.textTheme.bodySmall
         ?.copyWith(color: theme.colorScheme.onSurfaceVariant);
-    if (!_hasMore) return Text('没有更多了', style: style);
-    return Text('继续下滑自动加载', style: style);
+    if (!_hasMore) return Text(S.t('没有更多了'), style: style);
+    return Text(S.t('继续下滑自动加载'), style: style);
   }
 
   @override
@@ -499,7 +500,7 @@ class _MangaSourceGridState extends State<MangaSourceGrid> {
               height: constraints.maxHeight,
               child: GeneralEmptyState(
                 icon: AnikumoIcons.cloud_off_rounded,
-                title: _errorText != null ? '加载失败' : '这个源暂时没有内容',
+                title: _errorText != null ? S.t('加载失败') : S.t('这个源暂时没有内容'),
                 actions: [
                   if (_errorText != null)
                     Padding(
@@ -528,7 +529,7 @@ class _MangaSourceGridState extends State<MangaSourceGrid> {
                       });
                       _loadFirst(fresh: true);
                     },
-                    child: const Text('重试'),
+                    child: Text(S.t('重试')),
                   ),
                 ],
               ),

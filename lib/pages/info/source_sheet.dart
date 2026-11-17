@@ -35,6 +35,7 @@ import 'package:anikumo/services/plugin/plugin_search_service.dart';
 import 'package:anikumo/services/plugin/rule_engine_models.dart'
     show RuleCancelToken;
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/utils/device.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -226,7 +227,7 @@ class _SourceSheetState extends State<SourceSheet> with AnikumoDialogOwner {
   void _showVerifiedResult(Plugin plugin, String pageHtml) {
     if (!mounted) return;
     if (_searchService.applyHarvestedSearchResult(plugin.name, pageHtml)) {
-      AnikumoDialog.showToast(message: '验证成功');
+      AnikumoDialog.showToast(message: S.t('验证成功'));
       return;
     }
     _captchaFlow.showSuccess(
@@ -251,7 +252,7 @@ class _SourceSheetState extends State<SourceSheet> with AnikumoDialogOwner {
     } catch (error) {
       AnikumoLogger().w('SourceSheet: failed to open browser', error: error);
     }
-    if (mounted) AnikumoDialog.showToast(message: '无法打开浏览器，请稍后重试');
+    if (mounted) AnikumoDialog.showToast(message: S.t('无法打开浏览器，请稍后重试'));
   }
 
   Future<void> _openSearchItem(String name, SearchItem searchItem) async {
@@ -275,7 +276,7 @@ class _SourceSheetState extends State<SourceSheet> with AnikumoDialogOwner {
     await dialogs.run((task) async {
       final cancelToken = RuleCancelToken();
       final roads = await task.loading(
-        message: '正在获取播放列表',
+        message: S.t('正在获取播放列表'),
         barrierDismissible: isDesktop(),
         onCancel: cancelToken.cancel,
         action: () =>
@@ -328,13 +329,13 @@ class _SourceSheetState extends State<SourceSheet> with AnikumoDialogOwner {
           ));
     }, onError: (error, stackTrace) {
       AnikumoLogger().w('SourceSheet: failed to query playlist', error: error);
-      AnikumoDialog.showToast(message: '未能获取播放列表，请重试或选择其他结果');
+      AnikumoDialog.showToast(message: S.t('未能获取播放列表，请重试或选择其他结果'));
     });
   }
 
   void _showAliasPicker(String pluginName) {
     if (widget.infoController.bangumiItem.alias.isEmpty) {
-      AnikumoDialog.showToast(message: '无可用别名，试试修改检索关键词');
+      AnikumoDialog.showToast(message: S.t('无可用别名，试试修改检索关键词'));
       return;
     }
     _showAliasPickerDialog(

@@ -10,6 +10,7 @@ import 'package:flutter_modular/flutter_modular.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:screen_brightness_platform_interface/screen_brightness_platform_interface.dart';
 
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/navigation.dart';
 import 'package:anikumo/pages/player/pip_settings_sheet.dart';
 import 'package:anikumo/pages/video/video_playback_args.dart';
@@ -931,7 +932,7 @@ class _MiniPlayerWindowState extends State<_MiniPlayerWindow>
         playerController.seekBy(Duration(seconds: direction * step)));
     _showHud(
       icon: direction > 0 ? AnikumoIcons.fast_forward_rounded : AnikumoIcons.fast_rewind_rounded,
-      text: '${_seekAccum > 0 ? '+' : ''}$_seekAccum 秒',
+      text: S.f('{} 秒', ['${_seekAccum > 0 ? '+' : ''}$_seekAccum']),
     );
     _seekAccumTimer?.cancel();
     _seekAccumTimer = Timer(const Duration(milliseconds: 900), () {
@@ -1360,6 +1361,7 @@ class _MiniPlayerWindowState extends State<_MiniPlayerWindow>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
+                      tooltip: S.t('放大播放器'),
                       visualDensity: VisualDensity.compact,
                       iconSize: 16,
                       color: Colors.white,
@@ -1374,6 +1376,7 @@ class _MiniPlayerWindowState extends State<_MiniPlayerWindow>
                       onPressed: _openPlayer,
                     ),
                     IconButton(
+                      tooltip: S.t('关闭'),
                       visualDensity: VisualDensity.compact,
                       iconSize: 16,
                       color: Colors.white,
@@ -1594,6 +1597,7 @@ class _MiniPlayerWindowState extends State<_MiniPlayerWindow>
                           canPrev = vpc.selectedEpisode.episode > 1;
                         }
                         return IconButton(
+                          tooltip: S.t('上一集'),
                           visualDensity: VisualDensity.compact,
                           iconSize: 21,
                           color: theme.foreground,
@@ -1607,12 +1611,13 @@ class _MiniPlayerWindowState extends State<_MiniPlayerWindow>
                       Observer(builder: (context) {
                         final on = playerController.danmaku.danmakuOn;
                         return IconButton(
+                          tooltip: S.t('弹幕开关'),
                           visualDensity: VisualDensity.compact,
                           iconSize: 21,
                           color: theme.foreground,
                           icon: Icon(on
-                              ? AnikumoIcons.subtitles_rounded
-                              : AnikumoIcons.subtitles_off_rounded),
+                              ? AnikumoIcons.forum_rounded
+                              : AnikumoIcons.chat_bubble_outline_rounded),
                           onPressed: _toggleDanmaku,
                         );
                       }),
@@ -1637,6 +1642,7 @@ class _MiniPlayerWindowState extends State<_MiniPlayerWindow>
                 children: [
                   if (tier >= 1)
                     IconButton(
+                      tooltip: S.t('快退'),
                       visualDensity: VisualDensity.compact,
                       iconSize: 23,
                       color: theme.foreground,
@@ -1677,6 +1683,7 @@ class _MiniPlayerWindowState extends State<_MiniPlayerWindow>
                   }),
                   if (tier >= 1)
                     IconButton(
+                      tooltip: S.t('快进'),
                       visualDensity: VisualDensity.compact,
                       iconSize: 23,
                       color: theme.foreground,
@@ -1739,6 +1746,7 @@ class _MiniPlayerWindowState extends State<_MiniPlayerWindow>
                           }
                         }
                         return IconButton(
+                          tooltip: S.t('下一集'),
                           visualDensity: VisualDensity.compact,
                           iconSize: 21,
                           color: theme.foreground,
@@ -1751,6 +1759,7 @@ class _MiniPlayerWindowState extends State<_MiniPlayerWindow>
                     // Dock into the edge circle (the
                     // drag-off-the-edge gesture does the same).
                     IconButton(
+                      tooltip: S.t('收起播放器'),
                       visualDensity: VisualDensity.compact,
                       iconSize: 21,
                       color: theme.foreground,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
 import 'package:anikumo/pages/liuguang/film_widgets.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/liuguang/film_prefs.dart';
 import 'package:anikumo/services/liuguang/film_probes.dart';
 import 'package:anikumo/services/liuguang/video_engine.dart';
@@ -99,8 +100,8 @@ class _FilmSourcesTabState extends State<FilmSourcesTab> {
           children: [
             // Batch 221: editorial title bar.
             FilmEditorialTitle(
-              eyebrow: 'SOURCES · 片源',
-              title: filmHeadline(context, '片源'),
+              eyebrow: S.t('SOURCES · 片源'),
+              title: filmHeadline(context, S.t('片源')),
               padding: const EdgeInsets.fromLTRB(4, 2, 4, 10),
             ),
             Row(
@@ -109,23 +110,23 @@ class _FilmSourcesTabState extends State<FilmSourcesTab> {
                 Expanded(
                   child: _sectionTitle(
                     context,
-                    '仓库',
-                    '仓库地址指向一份配置，导入后一次装入其中全部可用的接口源。',
+                    S.t('仓库'),
+                    S.t('仓库地址指向一份配置，导入后一次装入其中全部可用的接口源。'),
                   ),
                 ),
                 TextButton(
                   onPressed: () => _pasteConfig(context),
-                  child: const Text('粘贴配置'),
+                  child: Text(S.t('粘贴配置')),
                 ),
                 IconButton(
-                  tooltip: '添加仓库',
+                  tooltip: S.t('添加仓库'),
                   icon: const Icon(AnikumoIcons.add_rounded),
                   onPressed: () => _addRepository(context),
                 ),
               ],
             ),
             if (service.repositories.isEmpty)
-              _hint(context, '还没有添加仓库')
+              _hint(context, S.t('还没有添加仓库'))
             else
               for (final repo in service.repositories)
                 ListTile(
@@ -149,10 +150,10 @@ class _FilmSourcesTabState extends State<FilmSourcesTab> {
                       else
                         TextButton(
                           onPressed: () => _importRepository(repo),
-                          child: const Text('导入'),
+                          child: Text(S.t('导入')),
                         ),
                       IconButton(
-                        tooltip: '删除仓库',
+                        tooltip: S.t('删除仓库'),
                         icon: const Icon(AnikumoIcons.delete_outline_rounded),
                         onPressed: () => service.removeRepository(repo.url),
                       ),
@@ -166,8 +167,8 @@ class _FilmSourcesTabState extends State<FilmSourcesTab> {
                 Expanded(
                   child: _sectionTitle(
                     context,
-                    '接口源',
-                    '单个接口地址也可以直接添加；开关关闭的源不参与搜索与浏览。点源一行打开它的设置。',
+                    S.t('接口源'),
+                    S.t('单个接口地址也可以直接添加；开关关闭的源不参与搜索与浏览。点源一行打开它的设置。'),
                   ),
                 ),
                 if (service.sources.isNotEmpty)
@@ -177,8 +178,11 @@ class _FilmSourcesTabState extends State<FilmSourcesTab> {
                         : () => service.checkAllSources(),
                     child: Text(
                       service.checkingAll
-                          ? '检测中 ${service.checkDone}/${service.checkTotal}'
-                          : '全部检测',
+                          ? S.f('检测中 {}/{}', [
+                              service.checkDone,
+                              service.checkTotal,
+                            ])
+                          : S.t('全部检测'),
                     ),
                   ),
                 if (service.sources.any((s) => s.enabled))
@@ -187,7 +191,9 @@ class _FilmSourcesTabState extends State<FilmSourcesTab> {
                         ? null
                         : () => _testAllSpeeds(service),
                     child: Text(
-                      _speedBusyAll ? '测速中 $_speedDone/$_speedTotal' : '全部测速',
+                      _speedBusyAll
+                          ? S.f('测速中 {}/{}', [_speedDone, _speedTotal])
+                          : S.t('全部测速'),
                     ),
                   ),
                 // Batch 222: once checks mark sources unusable,
@@ -201,14 +207,14 @@ class _FilmSourcesTabState extends State<FilmSourcesTab> {
                         ? null
                         : () => _confirmDeleteFailed(context, service),
                     child: Text(
-                      '删除不可用',
+                      S.t('删除不可用'),
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.error,
                       ),
                     ),
                   ),
                 IconButton(
-                  tooltip: '添加接口源',
+                  tooltip: S.t('添加接口源'),
                   icon: const Icon(AnikumoIcons.add_rounded),
                   onPressed: () => _addSource(context),
                 ),
@@ -220,7 +226,7 @@ class _FilmSourcesTabState extends State<FilmSourcesTab> {
                 decoration: InputDecoration(
                   isDense: true,
                   prefixIcon: const Icon(AnikumoIcons.search_rounded, size: 20),
-                  hintText: '搜索片源（名称 / 地址 / 仓库）',
+                  hintText: S.t('搜索片源（名称 / 地址 / 仓库）'),
                   suffixIcon: _query.isEmpty
                       ? null
                       : IconButton(
@@ -241,7 +247,7 @@ class _FilmSourcesTabState extends State<FilmSourcesTab> {
               ),
               const SizedBox(height: 6),
               Text(
-                '共 ${service.sources.length} 个，显示 ${visible.length} 个',
+                S.f('共 {} 个，显示 {} 个', [service.sources.length, visible.length]),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -249,9 +255,9 @@ class _FilmSourcesTabState extends State<FilmSourcesTab> {
               const SizedBox(height: 4),
             ],
             if (service.sources.isEmpty)
-              _hint(context, '还没有接口源')
+              _hint(context, S.t('还没有接口源'))
             else if (visible.isEmpty)
-              _hint(context, '没有匹配「$_query」的片源')
+              _hint(context, S.f('没有匹配「{}」的片源', [_query]))
             else
               for (final source in visible)
                 _sourceTile(context, service, source),
@@ -301,22 +307,42 @@ class _FilmSourcesTabState extends State<FilmSourcesTab> {
                     [
                       source.api,
                       if (source.fromRepository.isNotEmpty)
-                        '来自仓库「${source.fromRepository}」',
+                        S.f('来自仓库「{}」', [source.fromRepository]),
                       if (health != null)
                         health.ok
-                            ? '可用 · ${health.latencyMs}ms · '
-                                  '${filmCheckAgeText(health.checkedAt, DateTime.now())}检测'
-                            : '不可用：${health.message} · '
-                                  '${filmCheckAgeText(health.checkedAt, DateTime.now())}检测',
+                            ? S.f('可用 · {}ms · {}检测', [
+                                health.latencyMs,
+                                filmCheckAgeText(
+                                  health.checkedAt,
+                                  DateTime.now(),
+                                ),
+                              ])
+                            : S.f('不可用：{} · {}检测', [
+                                health.message,
+                                filmCheckAgeText(
+                                  health.checkedAt,
+                                  DateTime.now(),
+                                ),
+                              ]),
                       if (FilmSourceSpeeds.recordOf(source.id)
                           case final speed?)
                         speed.ms >= 0
-                            ? '测速 ${speed.ms}ms · '
-                                  '${filmCheckAgeText(speed.at, DateTime.now())}测'
-                            : '测速失败 · '
-                                  '${filmCheckAgeText(speed.at, DateTime.now())}测',
+                            ? S.f('测速 {}ms · {}测', [
+                                speed.ms,
+                                filmCheckAgeText(speed.at, DateTime.now()),
+                              ])
+                            : S.f('测速失败 · {}测', [
+                                filmCheckAgeText(speed.at, DateTime.now()),
+                              ]),
+                      // Batch 272 (#35): availability history.
+                      if (FilmSourceHistory.successRate(source.id)
+                          case final rate?)
+                        S.f('历史可用率 {}%（近 {} 次）', [
+                          (rate * 100).round(),
+                          FilmSourceHistory.of(source.id).length,
+                        ]),
                     ].join('\n'),
-                    maxLines: 4,
+                    maxLines: 5,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -329,7 +355,7 @@ class _FilmSourcesTabState extends State<FilmSourcesTab> {
             // can be deleted straight from its row.
             if (health != null && !health.ok)
               IconButton(
-                tooltip: '删除此源',
+                tooltip: S.t('删除此源'),
                 icon: Icon(
                   AnikumoIcons.delete_outline_rounded,
                   color: colors.error,
@@ -339,7 +365,7 @@ class _FilmSourcesTabState extends State<FilmSourcesTab> {
               ),
             TextButton(
               onPressed: () => service.checkSourceHealth(source),
-              child: const Text('检测'),
+              child: Text(S.t('检测')),
             ),
             if (_speedTesting.contains(source.id))
               const Padding(
@@ -353,7 +379,7 @@ class _FilmSourcesTabState extends State<FilmSourcesTab> {
             else
               TextButton(
                 onPressed: () => _testSpeed(source),
-                child: const Text('测速'),
+                child: Text(S.t('测速')),
               ),
             Switch(
               value: source.enabled,
@@ -389,21 +415,23 @@ class _FilmSourcesTabState extends State<FilmSourcesTab> {
       builder: (dialogContext) => AlertDialog(
         title: Text(
           targets.length == 1
-              ? '删除源「${targets.first.name}」？'
-              : '删除 ${targets.length} 个不可用的源？',
+              ? S.f('删除源「{}」？', [targets.first.name])
+              : S.f('删除 {} 个不可用的源？', [targets.length]),
         ),
         content: Text(
-          '${targets.map((e) => '「${e.name}」').join('、')} 已检测为不可用。'
-          '删除后不再参与搜索与浏览，之后可以重新添加。',
+          S.f(
+            '{} 已检测为不可用。删除后不再参与搜索与浏览，之后可以重新添加。',
+            [targets.map((e) => '「${e.name}」').join('、')],
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('删除'),
+            child: Text(S.t('删除')),
           ),
         ],
       ),
@@ -415,7 +443,9 @@ class _FilmSourcesTabState extends State<FilmSourcesTab> {
     if (context.mounted) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('已删除 ${targets.length} 个源')));
+      ).showSnackBar(
+        SnackBar(content: Text(S.f('已删除 {} 个源', [targets.length]))),
+      );
     }
   }
 
@@ -468,7 +498,7 @@ class _FilmSourcesTabState extends State<FilmSourcesTab> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('粘贴配置导入'),
+        title: Text(S.t('粘贴配置导入')),
         content: SizedBox(
           width: double.maxFinite,
           child: Column(
@@ -476,14 +506,14 @@ class _FilmSourcesTabState extends State<FilmSourcesTab> {
             children: [
               TextField(
                 controller: nameCtl,
-                decoration: const InputDecoration(labelText: '仓库名称（可空）'),
+                decoration: InputDecoration(labelText: S.t('仓库名称（可空）')),
               ),
               const SizedBox(height: 10),
               TextField(
                 controller: textCtl,
-                decoration: const InputDecoration(
-                  labelText: '配置内容',
-                  hintText: '把整份配置文本粘贴到这里',
+                decoration: InputDecoration(
+                  labelText: S.t('配置内容'),
+                  hintText: S.t('把整份配置文本粘贴到这里'),
                   alignLabelWithHint: true,
                 ),
                 minLines: 5,
@@ -495,11 +525,11 @@ class _FilmSourcesTabState extends State<FilmSourcesTab> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('导入'),
+            child: Text(S.t('导入')),
           ),
         ],
       ),
@@ -526,9 +556,9 @@ class _FilmSourcesTabState extends State<FilmSourcesTab> {
   Future<void> _addSource(BuildContext context) async {
     final result = await _entryDialog(
       context,
-      title: '添加接口源',
-      nameLabel: '名称',
-      urlLabel: '接口地址',
+      title: S.t('添加接口源'),
+      nameLabel: S.t('名称'),
+      urlLabel: S.t('接口地址'),
     );
     if (result == null) return;
     final api = result.$2.trim();
@@ -544,9 +574,9 @@ class _FilmSourcesTabState extends State<FilmSourcesTab> {
   Future<void> _addRepository(BuildContext context) async {
     final result = await _entryDialog(
       context,
-      title: '添加仓库',
-      nameLabel: '仓库名称',
-      urlLabel: '仓库地址',
+      title: S.t('添加仓库'),
+      nameLabel: S.t('仓库名称'),
+      urlLabel: S.t('仓库地址'),
     );
     if (result == null) return;
     await VideoEngineService.instance.addRepository(
@@ -587,14 +617,14 @@ class _FilmSourcesTabState extends State<FilmSourcesTab> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () {
               if (urlCtl.text.trim().isEmpty) return;
               Navigator.of(dialogContext).pop((nameCtl.text, urlCtl.text));
             },
-            child: const Text('添加'),
+            child: Text(S.t('添加')),
           ),
         ],
       ),
@@ -651,13 +681,13 @@ class _SourceSettingsSheetState extends State<_SourceSettingsSheet> {
     if (updated == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('保存失败：地址为空，或与已有片源重复。')));
+      ).showSnackBar(SnackBar(content: Text(S.t('保存失败：地址为空，或与已有片源重复。'))));
       return;
     }
     Navigator.of(context).pop();
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('片源已更新')));
+    ).showSnackBar(SnackBar(content: Text(S.t('片源已更新'))));
   }
 
   Future<void> _delete(
@@ -667,16 +697,16 @@ class _SourceSettingsSheetState extends State<_SourceSettingsSheet> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('删除片源'),
-        content: Text('确定删除「${entry.name}」吗？它的收藏与历史不受影响。'),
+        title: Text(S.t('删除片源')),
+        content: Text(S.f('确定删除「{}」吗？它的收藏与历史不受影响。', [entry.name])),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('删除'),
+            child: Text(S.t('删除')),
           ),
         ],
       ),
@@ -695,10 +725,10 @@ class _SourceSettingsSheetState extends State<_SourceSettingsSheet> {
         service.loadRegistry();
         final entry = _entry(service);
         if (entry == null) {
-          return const SafeArea(
+          return SafeArea(
             child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Text('这个片源已经不在了。'),
+              padding: const EdgeInsets.all(24),
+              child: Text(S.t('这个片源已经不在了。')),
             ),
           );
         }
@@ -722,7 +752,7 @@ class _SourceSettingsSheetState extends State<_SourceSettingsSheet> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '片源设置',
+                  S.t('片源设置'),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
@@ -730,26 +760,26 @@ class _SourceSettingsSheetState extends State<_SourceSettingsSheet> {
                 const SizedBox(height: 14),
                 TextField(
                   controller: _nameCtl,
-                  decoration: const InputDecoration(labelText: '名称'),
+                  decoration: InputDecoration(labelText: S.t('名称')),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: _apiCtl,
-                  decoration: const InputDecoration(labelText: '接口地址'),
+                  decoration: InputDecoration(labelText: S.t('接口地址')),
                   keyboardType: TextInputType.url,
                 ),
                 if (entry.fromRepository.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
-                      '来自仓库「${entry.fromRepository}」',
+                      S.f('来自仓库「{}」', [entry.fromRepository]),
                       style: TextStyle(color: variant, fontSize: 12.5),
                     ),
                   ),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('启用'),
-                  subtitle: const Text('关闭后不参与搜索与浏览'),
+                  title: Text(S.t('启用')),
+                  subtitle: Text(S.t('关闭后不参与搜索与浏览')),
                   value: entry.enabled,
                   onChanged: (v) => service.setSourceEnabled(entry.id, v),
                 ),
@@ -759,13 +789,22 @@ class _SourceSettingsSheetState extends State<_SourceSettingsSheet> {
                     Expanded(
                       child: Text(
                         health == null
-                            ? '还没有检测过'
+                            ? S.t('还没有检测过')
                             : health.ok
-                            ? '上次检测：可用 · ${health.latencyMs}ms · '
-                                  '${filmCheckAgeText(health.checkedAt, DateTime.now())}'
-                            : '上次检测：不可用 · '
-                                  '${filmCheckAgeText(health.checkedAt, DateTime.now())}\n'
-                                  '${health.message}',
+                            ? S.f('上次检测：可用 · {}ms · {}', [
+                                health.latencyMs,
+                                filmCheckAgeText(
+                                  health.checkedAt,
+                                  DateTime.now(),
+                                ),
+                              ])
+                            : S.f('上次检测：不可用 · {}\n{}', [
+                                filmCheckAgeText(
+                                  health.checkedAt,
+                                  DateTime.now(),
+                                ),
+                                health.message,
+                              ]),
                         style: TextStyle(color: variant, fontSize: 13),
                       ),
                     ),
@@ -779,7 +818,7 @@ class _SourceSettingsSheetState extends State<_SourceSettingsSheet> {
                                 setState(() => _testing = false);
                               }
                             },
-                      child: Text(_testing ? '检测中…' : '立即检测'),
+                      child: Text(_testing ? S.t('检测中…') : S.t('立即检测')),
                     ),
                   ],
                 ),
@@ -789,7 +828,7 @@ class _SourceSettingsSheetState extends State<_SourceSettingsSheet> {
                     TextButton(
                       onPressed: () => _delete(service, entry),
                       child: Text(
-                        '删除片源',
+                        S.t('删除片源'),
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.error,
                         ),
@@ -798,11 +837,11 @@ class _SourceSettingsSheetState extends State<_SourceSettingsSheet> {
                     const Spacer(),
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('取消'),
+                      child: Text(S.t('取消')),
                     ),
                     FilledButton(
                       onPressed: _saving ? null : () => _save(service),
-                      child: Text(_saving ? '保存中…' : '保存'),
+                      child: Text(_saving ? S.t('保存中…') : S.t('保存')),
                     ),
                   ],
                 ),

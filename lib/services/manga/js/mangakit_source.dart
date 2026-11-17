@@ -284,6 +284,56 @@ class MangaKitMangaSource extends JsBackedMangaSource {
   }
 
   @override
+  Future<MangaCommentsPage?> loadComments(
+    MangaItem manga, {
+    String? subId,
+    int page = 1,
+    String? replyTo,
+  }) async {
+    final capabilities = _manifest?['capabilities'];
+    if (capabilities is List && !capabilities.contains('comments')) {
+      return null;
+    }
+    try {
+      final result = await _call('comments', {
+        'comicId': manga.id,
+        'subId': subId ?? manga.id,
+        'page': page,
+        if (replyTo != null) 'replyTo': replyTo,
+      });
+      final raw = result['comments'];
+      if (raw is! List) return null;
+      return MangaCommentsPage(
+        comments: [
+          for (final entry in raw)
+            if (entry is Map)
+              MangaComment.fromMap(entry.cast<String, dynamic>()),
+        ],
+        maxPage: result['maxPage'] is num
+            ? (result['maxPage'] as num).toInt()
+            : 1,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Future<void> sendComment(
+    MangaItem manga, {
+    String? subId,
+    required String content,
+    String? replyTo,
+  }) async {
+    await _call('sendComment', {
+      'comicId': manga.id,
+      'subId': subId ?? manga.id,
+      'content': content,
+      if (replyTo != null) 'replyTo': replyTo,
+    });
+  }
+
+  @override
   Future<List<String>> loadThumbnails(MangaItem manga) async {
     try {
       final result = await _call('thumbnails', {'id': manga.id});

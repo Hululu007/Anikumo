@@ -12,6 +12,7 @@ import 'package:anikumo/pages/video/video_playback_args.dart';
 import 'package:anikumo/services/logging/logger.dart';
 import 'package:anikumo/utils/format.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class DownloadPage extends StatefulWidget {
   const DownloadPage({
@@ -48,14 +49,14 @@ class _DownloadPageState extends State<DownloadPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const SysAppBar(title: Text('下载管理')),
+      appBar: SysAppBar(title: Text(S.t('下载管理'))),
       body: Observer(builder: (context) {
         final recordKeys = downloadController.recordKeys.toList();
         _expanded.removeWhere((key, _) => !recordKeys.contains(key));
         if (recordKeys.isEmpty) {
-          return const GeneralEmptyState(
+          return GeneralEmptyState(
             icon: AnikumoIcons.download_rounded,
-            title: '还没有下载记录',
+            title: S.t('还没有下载记录'),
           );
         }
         return ListView.builder(
@@ -104,7 +105,7 @@ class _DownloadPageState extends State<DownloadPage> {
             record.bangumiId,
             record.pluginName,
           );
-          AnikumoDialog.showToast(message: '已开始恢复下载');
+          AnikumoDialog.showToast(message: S.t('已开始恢复下载'));
         },
         onDeleteAll: () => _confirmDeleteRecord(record),
         totalSpeed: totalSpeed,
@@ -131,7 +132,7 @@ class _DownloadPageState extends State<DownloadPage> {
   String _getStatusText(DownloadRecord record, DownloadEpisode episode) {
     switch (episode.status) {
       case DownloadStatus.completed:
-        return '已完成 · ${formatBytes(episode.totalBytes)}';
+        return S.f('已完成 · {}', [formatBytes(episode.totalBytes)]);
       case DownloadStatus.downloading:
         final speed = downloadController.getSpeed(
           record.bangumiId,
@@ -139,16 +140,20 @@ class _DownloadPageState extends State<DownloadPage> {
           episode.episodeNumber,
         );
         final speedText = speed > 0 ? ' · ${formatSpeed(speed)}' : '';
-        return '${(episode.progressPercent * 100).toStringAsFixed(0)}% · '
-            '${episode.downloadedSegments}/${episode.totalSegments} 分片$speedText';
+        return S.f('{}% · {}/{} 分片{}', [
+          (episode.progressPercent * 100).toStringAsFixed(0),
+          episode.downloadedSegments,
+          episode.totalSegments,
+          speedText,
+        ]);
       case DownloadStatus.failed:
-        return episode.errorMessage.isNotEmpty ? episode.errorMessage : '下载失败';
+        return episode.errorMessage.isNotEmpty ? episode.errorMessage : S.t('下载失败');
       case DownloadStatus.paused:
-        return '已暂停 · ${(episode.progressPercent * 100).toStringAsFixed(0)}%';
+        return S.f('已暂停 · {}%', [(episode.progressPercent * 100).toStringAsFixed(0)]);
       case DownloadStatus.pending:
-        return '排队中';
+        return S.t('排队中');
       case DownloadStatus.resolving:
-        return '正在解析视频源';
+        return S.t('正在解析视频源');
       default:
         return '';
     }
@@ -165,7 +170,7 @@ class _DownloadPageState extends State<DownloadPage> {
           icon: Icon(AnikumoIcons.play_circle_outline,
               size: 20, color: colorScheme.primary),
           onPressed: () => _playEpisode(record, episode),
-          tooltip: '播放',
+          tooltip: S.t('播放'),
           visualDensity: VisualDensity.compact,
         ));
         break;
@@ -177,7 +182,7 @@ class _DownloadPageState extends State<DownloadPage> {
             record.pluginName,
             episode.episodeNumber,
           ),
-          tooltip: '暂停',
+          tooltip: S.t('暂停'),
           visualDensity: VisualDensity.compact,
         ));
         break;
@@ -189,7 +194,7 @@ class _DownloadPageState extends State<DownloadPage> {
             pluginName: record.pluginName,
             episodeNumber: episode.episodeNumber,
           ),
-          tooltip: '继续',
+          tooltip: S.t('继续'),
           visualDensity: VisualDensity.compact,
         ));
         break;
@@ -201,7 +206,7 @@ class _DownloadPageState extends State<DownloadPage> {
             pluginName: record.pluginName,
             episodeNumber: episode.episodeNumber,
           ),
-          tooltip: '重试',
+          tooltip: S.t('重试'),
           visualDensity: VisualDensity.compact,
         ));
         break;
@@ -214,9 +219,9 @@ class _DownloadPageState extends State<DownloadPage> {
               pluginName: record.pluginName,
               episodeNumber: episode.episodeNumber,
             );
-            AnikumoDialog.showToast(message: '已插队优先下载');
+            AnikumoDialog.showToast(message: S.t('已插队优先下载'));
           },
-          tooltip: '优先下载',
+          tooltip: S.t('优先下载'),
           visualDensity: VisualDensity.compact,
         ));
         break;
@@ -228,7 +233,7 @@ class _DownloadPageState extends State<DownloadPage> {
       icon: Icon(AnikumoIcons.delete_outline,
           size: 20, color: colorScheme.onSurfaceVariant),
       onPressed: () => _confirmDeleteEpisode(record, episode),
-      tooltip: '删除',
+      tooltip: S.t('删除'),
       visualDensity: VisualDensity.compact,
     ));
 
@@ -242,7 +247,7 @@ class _DownloadPageState extends State<DownloadPage> {
       episode.episodeNumber,
     );
     if (localPath == null) {
-      AnikumoDialog.showToast(message: '本地文件不存在');
+      AnikumoDialog.showToast(message: S.t('本地文件不存在'));
       return;
     }
 
@@ -284,14 +289,17 @@ class _DownloadPageState extends State<DownloadPage> {
   void _confirmDeleteEpisode(DownloadRecord record, DownloadEpisode episode) {
     AnikumoDialog.show(
       builder: (context) => AlertDialog(
-        title: const Text('删除下载'),
-        content: Text(
-            '确定要删除「${episode.episodeName.isNotEmpty ? episode.episodeName : '第${episode.episodeNumber}集'}」的下载文件吗？'),
+        title: Text(S.t('删除下载')),
+        content: Text(S.f('确定要删除「{}」的下载文件吗？', [
+          episode.episodeName.isNotEmpty
+              ? episode.episodeName
+              : S.f('第{}集', [episode.episodeNumber])
+        ])),
         actions: [
           TextButton(
             onPressed: () => AnikumoDialog.dismiss(),
             child: Text(
-              '取消',
+              S.t('取消'),
               style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
           ),
@@ -307,7 +315,7 @@ class _DownloadPageState extends State<DownloadPage> {
               );
             },
             child: Text(
-              '删除',
+              S.t('删除'),
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ),
@@ -319,13 +327,13 @@ class _DownloadPageState extends State<DownloadPage> {
   void _confirmDeleteRecord(DownloadRecord record) {
     AnikumoDialog.show(
       builder: (context) => AlertDialog(
-        title: const Text('删除全部下载'),
-        content: Text('确定要删除「${record.bangumiName}」的所有下载文件吗？'),
+        title: Text(S.t('删除全部下载')),
+        content: Text(S.f('确定要删除「{}」的所有下载文件吗？', [record.bangumiName])),
         actions: [
           TextButton(
             onPressed: () => AnikumoDialog.dismiss(),
             child: Text(
-              '取消',
+              S.t('取消'),
               style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
           ),
@@ -340,7 +348,7 @@ class _DownloadPageState extends State<DownloadPage> {
               );
             },
             child: Text(
-              '删除',
+              S.t('删除'),
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ),
@@ -358,12 +366,12 @@ class _DownloadPageState extends State<DownloadPage> {
       AnikumoDialog.show(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('删除失败'),
-          content: const Text('删除下载文件失败，请稍后重试'),
+          title: Text(S.t('删除失败')),
+          content: Text(S.t('删除下载文件失败，请稍后重试')),
           actions: [
             TextButton(
               onPressed: () => AnikumoDialog.dismiss(context: context),
-              child: const Text('确定'),
+              child: Text(S.t('确定')),
             ),
           ],
         ),

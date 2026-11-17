@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -93,25 +94,24 @@ class _PluginViewPageState extends State<PluginViewPage> {
       for (final file in result.files) {
         final bytes = file.bytes ??
             (file.path == null ? null : await File(file.path!).readAsBytes());
-        if (bytes == null) throw const FileSystemException('无法读取所选文件');
+        if (bytes == null) throw FileSystemException(S.t('无法读取所选文件'));
         parsedList.add(PluginImportParser.parse(utf8.decode(bytes)));
       }
       final parsed = mergeImportResults(parsedList);
       if (parsed.plugins.isEmpty) {
         AnikumoDialog.showToast(
             message: parsed.failures.isEmpty
-                ? '文件中没有可导入的规则'
+                ? S.t('文件中没有可导入的规则')
                 : parsed.failures.first);
         return;
       }
       await _controller.updatePlugins(parsed.plugins);
       AnikumoDialog.showToast(
-          message: '已导入 ${parsed.plugins.length} 条规则，'
-              '跳过重复 ${parsed.duplicateCount} 条，失败 ${parsed.failureCount} 条');
+          message: S.f('已导入 {} 条规则，跳过重复 {} 条，失败 {} 条', [parsed.plugins.length, parsed.duplicateCount, parsed.failureCount]));
     } catch (error, stackTrace) {
       AnikumoLogger().e('Plugin: failed to import rules from file',
           error: error, stackTrace: stackTrace);
-      AnikumoDialog.showToast(message: '导入规则文件失败：$error');
+      AnikumoDialog.showToast(message: S.f('导入规则文件失败：{}', [error]));
     }
   }
 
@@ -136,9 +136,9 @@ class _PluginViewPageState extends State<PluginViewPage> {
     try {
       await _controller.removePlugins(names);
       if (mounted) _leaveSelection();
-      AnikumoDialog.showToast(message: '已删除 ${names.length} 条规则');
+      AnikumoDialog.showToast(message: S.f('已删除 {} 条规则', [names.length]));
     } catch (_) {
-      AnikumoDialog.showToast(message: '删除规则失败，请重试');
+      AnikumoDialog.showToast(message: S.t('删除规则失败，请重试'));
     } finally {
       if (mounted) setState(() => _deleting = false);
     }
@@ -148,7 +148,7 @@ class _PluginViewPageState extends State<PluginViewPage> {
     try {
       await _controller.onReorder(oldIndex, newIndex);
     } catch (_) {
-      AnikumoDialog.showToast(message: '保存规则顺序失败');
+      AnikumoDialog.showToast(message: S.t('保存规则顺序失败'));
     }
   }
 
@@ -159,17 +159,17 @@ class _PluginViewPageState extends State<PluginViewPage> {
           if (!didPop && _selecting) _leaveSelection();
         },
         child: SettingsDetailScaffold(
-          title: Text(_selecting ? '已选择 ${_selected.length} 条' : '规则管理'),
+          title: Text(_selecting ? S.f('已选择 {} 条', [_selected.length]) : S.t('规则管理')),
           leading: _selecting
               ? IconButton(
-                  tooltip: '退出多选',
+                  tooltip: S.t('退出多选'),
                   onPressed: _leaveSelection,
                   icon: const Icon(AnikumoIcons.close_rounded))
               : null,
           actions: [
             if (_selecting)
               IconButton(
-                tooltip: '删除所选规则',
+                tooltip: S.t('删除所选规则'),
                 onPressed: _selected.isEmpty || _deleting
                     ? null
                     : () => _delete(Set.of(_selected)),
@@ -177,7 +177,7 @@ class _PluginViewPageState extends State<PluginViewPage> {
               )
             else
               IconButton(
-                tooltip: '批量选择',
+                tooltip: S.t('批量选择'),
                 onPressed: () => setState(() => _selecting = true),
                 icon: const Icon(AnikumoIcons.checklist_rounded),
               ),
@@ -210,8 +210,8 @@ class _PluginViewPageState extends State<PluginViewPage> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         RulePageIntro(
-                          title: '我的规则',
-                          description: '管理你的番剧来源。拖动调整搜索顺序，点按规则进行编辑。',
+                          title: S.t('我的规则'),
+                          description: S.t('管理你的番剧来源。拖动调整搜索顺序，点按规则进行编辑。'),
                           icon: AnikumoIcons.extension_rounded,
                           actions: [
                             FilledButton.icon(
@@ -219,7 +219,7 @@ class _PluginViewPageState extends State<PluginViewPage> {
                                     minimumSize: const Size(120, 48)),
                                 onPressed: _add,
                                 icon: const Icon(AnikumoIcons.add_rounded),
-                                label: const Text('添加规则')),
+                                label: Text(S.t('添加规则'))),
                             OutlinedButton.icon(
                                 style: OutlinedButton.styleFrom(
                                     minimumSize: const Size(120, 48)),
@@ -227,7 +227,7 @@ class _PluginViewPageState extends State<PluginViewPage> {
                                     '/settings/plugin/repository'),
                                 icon: const Icon(
                                     AnikumoIcons.inventory_2_outlined),
-                                label: const Text('规则仓库')),
+                                label: Text(S.t('规则仓库'))),
                           ],
                         ),
                         const SizedBox(height: 20),
@@ -235,12 +235,12 @@ class _PluginViewPageState extends State<PluginViewPage> {
                           controller: _search,
                           onChanged: (_) => setState(() {}),
                           decoration: ruleInputDecoration(context,
-                              hint: '搜索名称或站点',
+                              hint: S.t('搜索名称或站点'),
                               prefix: const Icon(AnikumoIcons.search_rounded),
                               suffix: query.isEmpty
                                   ? null
                                   : IconButton(
-                                      tooltip: '清除搜索',
+                                      tooltip: S.t('清除搜索'),
                                       onPressed: () => setState(_search.clear),
                                       icon: const Icon(AnikumoIcons.close_rounded))),
                         ),
@@ -251,7 +251,7 @@ class _PluginViewPageState extends State<PluginViewPage> {
                           crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             Chip(
-                                label: Text('全部 ${all.length}'),
+                                label: Text(S.f('全部 {}', [all.length])),
                                 visualDensity: VisualDensity.compact),
                             if (_selecting)
                               TextButton(
@@ -268,8 +268,8 @@ class _PluginViewPageState extends State<PluginViewPage> {
                                   child: Text(visible.isNotEmpty &&
                                           visible.every(
                                               (p) => _selected.contains(p.name))
-                                      ? '取消全选'
-                                      : '全选当前列表')),
+                                      ? S.t('取消全选')
+                                      : S.t('全选当前列表'))),
                           ],
                         ),
                         const SizedBox(height: 8),
@@ -279,9 +279,9 @@ class _PluginViewPageState extends State<PluginViewPage> {
                         ? Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const GeneralEmptyState(
+                              GeneralEmptyState(
                                 icon: AnikumoIcons.extension_rounded,
-                                title: '还没有安装规则',
+                                title: S.t('还没有安装规则'),
                                 compact: true,
                               ),
                               // Batch 61: no built-in library —
@@ -291,22 +291,22 @@ class _PluginViewPageState extends State<PluginViewPage> {
                               RuleAddGuide(options: [
                                 RuleAddOption(
                                   icon: AnikumoIcons.content_paste_rounded,
-                                  title: '从剪贴板导入',
-                                  subtitle: '粘贴规则链接或 JSON，链接会自动下载',
+                                  title: S.t('从剪贴板导入'),
+                                  subtitle: S.t('粘贴规则链接或 JSON，链接会自动下载'),
                                   onTap: () =>
                                       _runAddSource(RuleAddSource.clipboard),
                                 ),
                                 RuleAddOption(
                                   icon: AnikumoIcons.file_open_outlined,
-                                  title: '从文件导入',
-                                  subtitle: '读取本地 JSON 规则文件',
+                                  title: S.t('从文件导入'),
+                                  subtitle: S.t('读取本地 JSON 规则文件'),
                                   onTap: () =>
                                       _runAddSource(RuleAddSource.file),
                                 ),
                                 RuleAddOption(
                                   icon: AnikumoIcons.edit_note_rounded,
-                                  title: '新建规则',
-                                  subtitle: '从模板开始编写',
+                                  title: S.t('新建规则'),
+                                  subtitle: S.t('从模板开始编写'),
                                   onTap: () =>
                                       _runAddSource(RuleAddSource.create),
                                 ),
@@ -316,12 +316,12 @@ class _PluginViewPageState extends State<PluginViewPage> {
                         : visible.isEmpty
                             ? GeneralEmptyState(
                                 icon: AnikumoIcons.search_off_rounded,
-                                title: '没有符合条件的规则',
+                                title: S.t('没有符合条件的规则'),
                                 actions: [
                                   StateActionButton.tonal(
                                       onPressed: () =>
                                           setState(_search.clear),
-                                      text: '显示全部规则'),
+                                      text: S.t('显示全部规则')),
                                 ],
                               )
                             : null,
@@ -355,7 +355,7 @@ class _PluginViewPageState extends State<PluginViewPage> {
                           if (_controller.validityTracker
                               .isSearchValid(plugin.name))
                             RuleTag(
-                                label: '搜索通过',
+                                label: S.t('搜索通过'),
                                 background: colors.tertiaryContainer,
                                 foreground: colors.onTertiaryContainer),
                         ],
@@ -364,13 +364,13 @@ class _PluginViewPageState extends State<PluginViewPage> {
                           if (_selecting)
                             Checkbox(
                                 value: _selected.contains(plugin.name),
-                                semanticLabel: '选择 ${plugin.name}',
+                                semanticLabel: S.f('选择 {}', [plugin.name]),
                                 onChanged: (_) => _toggleSelection(plugin.name))
                           else
                             _menu(plugin, actualIndex),
                           if (canReorder)
                             Tooltip(
-                              message: '拖动排序',
+                              message: S.t('拖动排序'),
                               child: ReorderableDragStartListener(
                                 index: index,
                                 child: const SizedBox.square(
@@ -396,35 +396,35 @@ class _PluginViewPageState extends State<PluginViewPage> {
           padding: const WidgetStatePropertyAll(EdgeInsets.all(8)),
         ),
         builder: (context, toggle) => IconButton(
-            tooltip: '${plugin.name} 的更多操作',
+            tooltip: S.f('{} 的更多操作', [plugin.name]),
             onPressed: toggle,
             icon: const Icon(AnikumoIcons.more_horiz_rounded)),
         menuChildren: [
           AnikumoMenuItem(
               onPressed: () => context.pushNamed('/settings/plugin/editor',
                   arguments: plugin),
-              label: '编辑规则'),
+              label: S.t('编辑规则')),
           AnikumoMenuItem(
               onPressed: () =>
                   context.pushNamed('/settings/plugin/test', arguments: plugin),
-              label: '测试规则'),
+              label: S.t('测试规则')),
           AnikumoMenuItem(
               onPressed: () => showRuleShareDialog(context, plugin),
-              label: '分享规则'),
+              label: S.t('分享规则')),
           const Divider(),
           AnikumoMenuItem(
               onPressed: index == 0 ? null : () => _reorder(index, index - 1),
-              label: '上移'),
+              label: S.t('上移')),
           AnikumoMenuItem(
               onPressed: index == _controller.pluginList.length - 1
                   ? null
                   : () => _reorder(index, index + 1),
-              label: '下移'),
+              label: S.t('下移')),
           const Divider(),
           AnikumoMenuItem(
               destructive: true,
               onPressed: _deleting ? null : () => _delete({plugin.name}),
-              label: '删除规则'),
+              label: S.t('删除规则')),
         ],
       );
 }

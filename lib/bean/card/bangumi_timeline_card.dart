@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:anikumo/bean/card/network_img_layer.dart';
 import 'package:anikumo/modules/bangumi/bangumi_item.dart';
@@ -56,7 +57,7 @@ class BangumiTimelineCard extends StatelessWidget {
         ? bangumiItem.metaTags
         : bangumiItem.tags.map((tag) => tag.name);
     final metadata = <String>[
-      if (episodes != null) '${episodes.group(1)} 话',
+      if (episodes != null) S.f('{} 话', [episodes.group(1)]),
       ...tags
           .map((name) => name.trim())
           .where((name) => name.isNotEmpty)
@@ -153,7 +154,7 @@ class BangumiTimelineCard extends StatelessWidget {
               if (isWatching) ...[
                 if (showRating) const SizedBox(width: 8),
                 Tooltip(
-                  message: '正在追',
+                  message: S.t('正在追'),
                   child: Icon(AnikumoIcons.bookmark_rounded,
                       size: 20, color: colors.primary),
                 ),
@@ -207,14 +208,14 @@ class BangumiTimelineCard extends StatelessWidget {
       height: _labelLineHeight,
     );
     if (bangumiItem.ratingScore <= 0) {
-      return Text('暂无评分',
+      return Text(S.t('暂无评分'),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: labelStyle?.copyWith(color: colors.onSurfaceVariant));
     }
     final score = bangumiItem.ratingScore.toStringAsFixed(1);
     return Semantics(
-      label: '评分 $score',
+      label: S.f('评分 {}', [score]),
       excludeSemantics: true,
       child: Container(
         padding: _ratingPadding,

@@ -8,6 +8,7 @@ import 'package:anikumo/request/apis/bangumi_api.dart';
 import 'package:anikumo/services/browse/daily_picks.dart';
 import 'package:anikumo/utils/constants.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// 每日推荐： from trends and this week's calendar, a deterministic
 /// sample changes once a day. Titles already in the watch history
@@ -72,11 +73,11 @@ class _DailyPageState extends State<DailyPage> {
     final theme = Theme.of(context);
     final now = DateTime.now();
     return Scaffold(
-      appBar: AppBar(title: const Text('每日推荐')),
+      appBar: AppBar(title: Text(S.t('每日推荐'))),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _failed
-              ? const Center(child: Text('加载失败，请检查网络后重试'))
+              ? Center(child: Text(S.t('加载失败，请检查网络后重试')))
               : ListView(
                   padding: const EdgeInsets.fromLTRB(
                     StyleString.pagePadding,
@@ -94,7 +95,7 @@ class _DailyPageState extends State<DailyPage> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              '${now.month} 月 ${now.day} 日 · 今天这几部值得一看，每天零点更新',
+                              S.f('{} 月 {} 日 · 今天这几部值得一看，每天零点更新', [now.month, now.day]),
                               style: theme.textTheme.bodyMedium,
                             ),
                           ),

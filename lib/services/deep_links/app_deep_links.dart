@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -45,7 +46,7 @@ class AppDeepLinks {
     unawaited(_open(link, session).catchError((Object error) {
       if (session.isStale) return;
       AnikumoLogger().w('Deep link: failed to open', error: error);
-      AnikumoDialog.showToast(message: '无法打开链接');
+      AnikumoDialog.showToast(message: S.t('无法打开链接'));
     }));
   }
 
@@ -62,12 +63,12 @@ class AppDeepLinks {
       case BangumiDeepLink(:final id):
         await _dialogs.run((task) async {
           final item = await task.loading(
-            message: '正在获取番剧信息',
+            message: S.t('正在获取番剧信息'),
             barrierDismissible: isDesktop(),
             action: () => BangumiApi.getBangumiInfoByID(id),
           );
           if (item == null) {
-            AnikumoDialog.showToast(message: '无法获取番剧详情');
+            AnikumoDialog.showToast(message: S.t('无法获取番剧详情'));
             return;
           }
           _push(session, '/info/', arguments: item);
@@ -82,7 +83,7 @@ class AppDeepLinks {
     final navigator = rootNavigatorKey.currentState;
     if (session.isStale || navigator == null || !navigator.mounted) return;
     if (!popForExternalNavigation(navigator)) {
-      AnikumoDialog.showToast(message: '当前操作进行中，未打开链接');
+      AnikumoDialog.showToast(message: S.t('当前操作进行中，未打开链接'));
       return;
     }
     unawaited(navigator.context.pushNamed(path, arguments: arguments));

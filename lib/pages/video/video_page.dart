@@ -38,6 +38,7 @@ import 'package:anikumo/services/player/timed_shutdown_service.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/utils/device.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class VideoPage extends StatefulWidget {
   const VideoPage({
@@ -592,7 +593,7 @@ class _VideoPageState extends State<VideoPage>
                       final errorMessage = videoPageController.errorMessage;
                       if (errorMessage != null) {
                         return MediaErrorWidget(
-                          title: '暂时无法播放',
+                          title: S.t('暂时无法播放'),
                           errMsg: errorMessage,
                           icon: AnikumoIcons.videocam_off_outlined,
                         );
@@ -609,8 +610,8 @@ class _VideoPageState extends State<VideoPage>
                             const SizedBox(height: 10),
                             Text(
                               videoPageController.loading
-                                  ? '视频资源解析中'
-                                  : '视频资源解析成功, 播放器加载中',
+                                  ? S.t('视频资源解析中')
+                                  : S.t('视频资源解析成功, 播放器加载中'),
                               style: const TextStyle(color: Colors.white),
                             ),
                           ],

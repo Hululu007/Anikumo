@@ -13,6 +13,7 @@ import 'package:anikumo/repositories/collect_repository.dart';
 import 'package:anikumo/request/apis/bangumi_api.dart';
 import 'package:anikumo/utils/constants.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// 今日上新 (hub 区一）: today's slice of the weekly broadcast calendar,
 /// with the shows the user is actually following pulled out on top.
@@ -71,18 +72,18 @@ class _TodayPageState extends State<TodayPage> {
     final now = DateTime.now();
     final watching = _items.where((item) => _watchingIds.contains(item.id)).toList();
     return Scaffold(
-      appBar: const SysAppBar(title: Text('今日上新')),
+      appBar: SysAppBar(title: Text(S.t('今日上新'))),
       body: _loading
           ? const Center(child: LoadingIndicator())
           : _failed
               ? GeneralErrorWidget(
-                  errMsg: '今日上新暂时拉不到，请稍后重试。',
+                  errMsg: S.t('今日上新暂时拉不到，请稍后重试。'),
                   onRetry: _load,
                 )
               : _items.isEmpty
-                  ? const GeneralEmptyState(
+                  ? GeneralEmptyState(
                       icon: AnikumoIcons.event_busy_outlined,
-                      title: '今天没有新番播出',
+                      title: S.t('今天没有新番播出'),
                     )
                   : CustomScrollView(
                       slivers: [
@@ -108,7 +109,7 @@ class _TodayPageState extends State<TodayPage> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        '${now.month}月${now.day}日 · 星期${'一二三四五六日'[now.weekday - 1]}',
+                                        S.f('{}月{}日 · 星期{}', [now.month, now.day, S.t('一二三四五六日'[now.weekday - 1])]),
                                         style: Theme.of(context)
                                             .textTheme
                                             .titleMedium
@@ -117,7 +118,7 @@ class _TodayPageState extends State<TodayPage> {
                                             ),
                                       ),
                                       Text(
-                                        '今日共 ${_items.length} 部更新 · 你在追 ${watching.length} 部',
+                                        S.f('今日共 {} 部更新 · 你在追 {} 部', [_items.length, watching.length]),
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodySmall,
@@ -133,10 +134,10 @@ class _TodayPageState extends State<TodayPage> {
                           const SliverToBoxAdapter(
                             child: SizedBox(height: StyleString.sectionSpace),
                           ),
-                          const SliverToBoxAdapter(
+                          SliverToBoxAdapter(
                             child: BrowseSectionHeader(
-                              title: '正在追的',
-                              subtitle: '你追的番今天有更新',
+                              title: S.t('正在追的'),
+                              subtitle: S.t('你追的番今天有更新'),
                             ),
                           ),
                           SliverToBoxAdapter(
@@ -163,10 +164,10 @@ class _TodayPageState extends State<TodayPage> {
                         const SliverToBoxAdapter(
                           child: SizedBox(height: StyleString.sectionSpace),
                         ),
-                        const SliverToBoxAdapter(
+                        SliverToBoxAdapter(
                           child: BrowseSectionHeader(
-                            title: '今日全部',
-                            subtitle: '今天播出的所有番剧',
+                            title: S.t('今日全部'),
+                            subtitle: S.t('今天播出的所有番剧'),
                           ),
                         ),
                         SliverPadding(

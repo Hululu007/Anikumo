@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:anikumo/bean/dialog/dialog.dart';
 import 'package:anikumo/models/novel_item.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/pages/novel/novel_widgets.dart';
 import 'package:anikumo/services/novel/novel_cabinets.dart';
 import 'package:anikumo/services/novel/novel_library.dart';
@@ -61,13 +62,13 @@ class _NovelCabinetsTabState extends State<NovelCabinetsTab> {
           controller: controller,
           autofocus: true,
           maxLength: 20,
-          decoration: const InputDecoration(hintText: '柜子名称'),
+          decoration: InputDecoration(hintText: S.t('柜子名称')),
           onSubmitted: (value) => Navigator.pop(dialogContext, value),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, controller.text),
@@ -79,19 +80,20 @@ class _NovelCabinetsTabState extends State<NovelCabinetsTab> {
   }
 
   Future<void> _createCabinet() async {
-    final name = await _nameDialog(title: '新建柜子', confirmLabel: '创建');
+    final name =
+        await _nameDialog(title: S.t('新建柜子'), confirmLabel: S.t('创建'));
     if (name == null) return;
     await NovelCabinets.create(name);
     if (mounted) {
-      AnikumoDialog.showToast(message: '已创建柜子');
+      AnikumoDialog.showToast(message: S.t('已创建柜子'));
     }
   }
 
   Future<void> _renameCabinet(NovelCabinet cabinet) async {
     final name = await _nameDialog(
-      title: '重命名柜子',
+      title: S.t('重命名柜子'),
       initial: cabinet.name,
-      confirmLabel: '保存',
+      confirmLabel: S.t('保存'),
     );
     if (name == null) return;
     await NovelCabinets.rename(cabinet.id, name);
@@ -101,16 +103,18 @@ class _NovelCabinetsTabState extends State<NovelCabinetsTab> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('删除柜子'),
-        content: Text('确定要删除《${cabinet.name}》吗？柜子里的小说会回到默认柜子，不会被删除。'),
+        title: Text(S.t('删除柜子')),
+        content: Text(S.f(
+            '确定要删除《{}》吗？柜子里的小说会回到默认柜子，不会被删除。',
+            [cabinet.name])),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('删除'),
+            child: Text(S.t('删除')),
           ),
         ],
       ),
@@ -129,7 +133,7 @@ class _NovelCabinetsTabState extends State<NovelCabinetsTab> {
           children: [
             ListTile(
               title: Text(
-                '把《${book.title}》移动到',
+                S.f('把《{}》移动到', [book.title]),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -151,7 +155,7 @@ class _NovelCabinetsTabState extends State<NovelCabinetsTab> {
     if (target == null || target == current) return;
     await NovelCabinets.assign(book.storageKey, target);
     if (mounted) {
-      AnikumoDialog.showToast(message: '已移动');
+      AnikumoDialog.showToast(message: S.t('已移动'));
     }
   }
 
@@ -169,10 +173,10 @@ class _NovelCabinetsTabState extends State<NovelCabinetsTab> {
             padding: const EdgeInsets.fromLTRB(20, 16, 16, 8),
             child: Row(
               children: [
-                Text('书柜', style: theme.textTheme.headlineSmall),
+                Text(S.t('书柜'), style: theme.textTheme.headlineSmall),
                 const SizedBox(width: 10),
                 Text(
-                  '我的小说',
+                  S.t('我的小说'),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -181,7 +185,7 @@ class _NovelCabinetsTabState extends State<NovelCabinetsTab> {
                 FilledButton.icon(
                   onPressed: _createCabinet,
                   icon: const Icon(AnikumoIcons.add_rounded, size: 18),
-                  label: const Text('新建柜子'),
+                  label: Text(S.t('新建柜子')),
                 ),
               ],
             ),
@@ -216,10 +220,10 @@ class _NovelCabinetsTabState extends State<NovelCabinetsTab> {
               color: theme.colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 16),
-            const Text('书柜还是空的'),
+            Text(S.t('书柜还是空的')),
             const SizedBox(height: 8),
             Text(
-              '收藏或开始阅读的小说会自动放进默认柜子，\n你也可以新建柜子，把书分类放好。',
+              S.t('收藏或开始阅读的小说会自动放进默认柜子，\n你也可以新建柜子，把书分类放好。'),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
@@ -259,7 +263,7 @@ class _NovelCabinetsTabState extends State<NovelCabinetsTab> {
               ),
               const SizedBox(width: 8),
               Text(
-                '${books.length} 本',
+                S.f('{} 本', [books.length]),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -274,9 +278,11 @@ class _NovelCabinetsTabState extends State<NovelCabinetsTab> {
                       _deleteCabinet(cabinet);
                     }
                   },
-                  itemBuilder: (context) => const [
-                    PopupMenuItem(value: 'rename', child: Text('重命名')),
-                    PopupMenuItem(value: 'delete', child: Text('删除柜子')),
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                        value: 'rename', child: Text(S.t('重命名'))),
+                    PopupMenuItem(
+                        value: 'delete', child: Text(S.t('删除柜子'))),
                   ],
                 ),
             ],
@@ -286,7 +292,7 @@ class _NovelCabinetsTabState extends State<NovelCabinetsTab> {
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
             child: Text(
-              '这个柜子还是空的 — 长按任意一本小说可以把它移动到这里。',
+              S.t('这个柜子还是空的 — 长按任意一本小说可以把它移动到这里。'),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),

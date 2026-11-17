@@ -4,6 +4,7 @@ import 'package:anikumo/pages/info/info_controller.dart';
 import 'package:anikumo/pages/info/info_page.dart';
 import 'package:anikumo/pages/route_error_page.dart';
 import 'package:anikumo/plugins/plugins_controller.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 final infoModule = createModule(
   path: '/info',
@@ -14,7 +15,7 @@ final infoModule = createModule(
       child: (context, state) {
         final bangumiItem = state.arguments;
         if (bangumiItem is! BangumiItem) {
-          return const RouteErrorPage(message: '番组详情参数无效，请返回后重新打开。');
+          return RouteErrorPage(message: S.t('番组详情参数无效，请返回后重新打开。'));
         }
         return InfoPage(
           inputBangumiItem: bangumiItem,

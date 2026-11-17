@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -90,7 +91,7 @@ class CustomFontService {
   }) async {
     final bytes = await File(pickedPath).readAsBytes();
     if (bytes.isEmpty) {
-      throw StateError('字体文件是空的');
+      throw StateError(S.t('字体文件是空的'));
     }
     final target = await _fontFile();
     await target.writeAsBytes(bytes, flush: true);

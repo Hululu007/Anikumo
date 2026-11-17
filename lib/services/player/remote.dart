@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'dart:async';
 
 import 'package:dlna_dart/dlna.dart';
@@ -16,7 +17,7 @@ class RemotePlay {
     await AnikumoDialog.show(builder: (BuildContext context) {
       return StatefulBuilder(builder: (context, setState) {
         return AlertDialog(
-          title: const Text('远程投屏'),
+          title: Text(S.t('远程投屏')),
           content: SingleChildScrollView(
             child: Column(
               children: dlnaDevice,
@@ -29,14 +30,14 @@ class RemotePlay {
                 AnikumoDialog.dismiss();
               },
               child: Text(
-                '退出',
+                S.t('退出'),
                 style: TextStyle(color: Theme.of(context).colorScheme.outline),
               ),
             ),
             TextButton(
                 onPressed: () {
                   AnikumoDialog.showToast(
-                    message: '开始搜索',
+                    message: S.t('开始搜索'),
                   );
                   // The device stream is single-subscription.
                   subscription ??= dlna.devices.stream.listen((deviceList) {
@@ -58,7 +59,7 @@ class RemotePlay {
                           onTap: () async {
                             try {
                               AnikumoDialog.showToast(
-                                message: '尝试投屏至 ${value.info.friendlyName}',
+                                message: S.f('尝试投屏至 {}', [value.info.friendlyName]),
                               );
                               await value.setUrl(video, title: title);
                               await value.play();
@@ -67,7 +68,7 @@ class RemotePlay {
                                   'RemotePlay: failed to cast to device',
                                   error: e);
                               AnikumoDialog.showToast(
-                                message: 'DLNA 异常: $e \n尝试重新进入 DLNA 投屏或切换设备',
+                                message: S.f('DLNA 异常: {} \n尝试重新进入 DLNA 投屏或切换设备', [e]),
                               );
                             }
                           }));
@@ -79,7 +80,7 @@ class RemotePlay {
                   });
                 },
                 child: Text(
-                  '搜索',
+                  S.t('搜索'),
                   style:
                       TextStyle(color: Theme.of(context).colorScheme.outline),
                 )),

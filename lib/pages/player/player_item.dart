@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:image/image.dart' as img;
+import 'package:anikumo/pages/player/local_danmaku_mount.dart';
 import 'package:anikumo/pages/player/player_item_panel.dart';
 import 'package:anikumo/pages/player/player_keyboard_shortcuts.dart';
 import 'package:anikumo/pages/player/controller/player_super_resolution.dart';
@@ -40,6 +43,7 @@ import 'package:anikumo/services/player/audio_controller.dart';
 import 'package:anikumo/services/player/timed_shutdown_service.dart';
 import 'package:anikumo/utils/device.dart';
 import 'package:anikumo/services/platform/player_menu_service.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class PlayerItem extends StatefulWidget {
   const PlayerItem({
@@ -146,6 +150,10 @@ class _PlayerItemState extends State<PlayerItem>
   PlayerPanelHold? _progressBarDragHold;
   PointerDeviceKind? _lastTapPointerKind;
   PointerDeviceKind? _lastDoubleTapPointerKind;
+
+  /// Batch 273 (#54): horizontal position (0..1) of the
+  /// last double tap, for the side-seek action mode.
+  double? _lastDoubleTapFraction;
 
   late final AnimationController _panelVisibilityController;
   late final AnimationController _screenshotFeedbackController;
@@ -304,7 +312,7 @@ class _PlayerItemState extends State<PlayerItem>
       return;
     }
     if (!supported) {
-      AnikumoDialog.showToast(message: '当前设备不支持画中画');
+      AnikumoDialog.showToast(message: S.t('当前设备不支持画中画'));
       return;
     }
     setState(() {
@@ -322,7 +330,7 @@ class _PlayerItemState extends State<PlayerItem>
     if (entered || !mounted) {
       return;
     }
-    AnikumoDialog.showToast(message: '进入画中画失败');
+    AnikumoDialog.showToast(message: S.t('进入画中画失败'));
     setState(() {
       _pipEnterRequested = false;
     });
@@ -424,11 +432,11 @@ class _PlayerItemState extends State<PlayerItem>
     }
 
     if (targetEpisode > episodes.length) {
-      AnikumoDialog.showToast(message: '已经是最新一集');
+      AnikumoDialog.showToast(message: S.t('已经是最新一集'));
       return;
     }
     if (targetEpisode <= 0) {
-      AnikumoDialog.showToast(message: '已经是第一集');
+      AnikumoDialog.showToast(message: S.t('已经是第一集'));
       return;
     }
 
@@ -438,7 +446,7 @@ class _PlayerItemState extends State<PlayerItem>
     );
     final targetRef = videoPageController.resolveEpisode(targetSelection);
     if (targetRef != null) {
-      AnikumoDialog.showToast(message: '正在加载${targetRef.displayTitle}');
+      AnikumoDialog.showToast(message: S.f('正在加载{}', [targetRef.displayTitle]));
     }
     widget.changeEpisode(targetEpisode, currentRoad: currentRoad);
   }
@@ -519,6 +527,32 @@ class _PlayerItemState extends State<PlayerItem>
   }
 
   void _handleDoubleTap(PointerDeviceKind? pointerKind) {
+    // Batch 273 (#54): the double-tap action is a user
+    // setting — classic play/pause toggle, side seek,
+    // or fullscreen.
+    final action = GStorage.getSetting(SettingsKeys.doubleTapAction);
+    if (action == 'fullscreen') {
+      handleFullscreen();
+      return;
+    }
+    if (action == 'seek' && _lastDoubleTapFraction != null) {
+      final fraction = _lastDoubleTapFraction!;
+      if (fraction < 1 / 3) {
+        final target = playerController.playback.currentPosition -
+            const Duration(seconds: 10);
+        playerController.seek(target < Duration.zero ? Duration.zero : target);
+        return;
+      }
+      if (fraction > 2 / 3) {
+        playerController.seek(
+          playerController.playback.currentPosition +
+              const Duration(seconds: 10),
+        );
+        return;
+      }
+      playerController.playOrPause();
+      return;
+    }
     if (shouldToggleFullscreenOnDoubleTap(
       isDesktop: isDesktop(),
       isPip: videoPageController.isPip,
@@ -752,6 +786,78 @@ class _PlayerItemState extends State<PlayerItem>
     }
   }
 
+  bool _recordingGif = false;
+
+  /// Batch 273 (#10): records a short GIF from the
+  /// playing video — ten frames over three seconds,
+  /// downscaled to 480px wide, saved where the user
+  /// picks. Frame capture reuses the screenshot path.
+  Future<void> handleRecordGif() async {
+    if (_recordingGif || !mounted) return;
+    final player = playerController.playback.mediaPlayer;
+    if (player == null || videoPageController.loading) {
+      AnikumoDialog.showToast(message: S.t('暂未获取到画面，请等视频显示后重试'));
+      return;
+    }
+    if (!playerController.playback.playing) {
+      AnikumoDialog.showToast(message: S.t('请先播放视频再录制 GIF'));
+      return;
+    }
+    _recordingGif = true;
+    AnikumoDialog.showToast(message: S.t('正在录制 GIF…'));
+    try {
+      final frames = <img.Image>[];
+      for (var i = 0; i < 10; i++) {
+        final png = await playerController.screenshotPng();
+        if (png != null) {
+          final decoded = img.decodeImage(png);
+          if (decoded != null) {
+            frames.add(
+              decoded.width > 480
+                  ? img.copyResize(decoded, width: 480)
+                  : decoded,
+            );
+          }
+        }
+        if (i < 9) {
+          await Future<void>.delayed(const Duration(milliseconds: 300));
+        }
+      }
+      if (frames.isEmpty || !mounted) {
+        if (mounted) {
+          AnikumoDialog.showToast(message: S.t('GIF 录制失败'));
+        }
+        return;
+      }
+      final first = frames.first;
+      first.frameDuration = 300;
+      for (final frame in frames.skip(1)) {
+        frame.frameDuration = 300;
+        first.addFrame(frame);
+      }
+      final bytes = img.encodeGif(first);
+      final path = await FilePicker.platform.saveFile(
+        dialogTitle: S.t('保存 GIF'),
+        fileName:
+            'anikumo_${DateTime.now().millisecondsSinceEpoch}.gif',
+        type: FileType.custom,
+        allowedExtensions: ['gif'],
+      );
+      if (path == null) return;
+      await File(path).writeAsBytes(bytes);
+      if (mounted) {
+        AnikumoDialog.showToast(message: S.t('GIF 已保存'));
+      }
+    } catch (e) {
+      AnikumoLogger().w('GifRecord: failed', error: e);
+      if (mounted) {
+        AnikumoDialog.showToast(message: S.t('GIF 录制失败'));
+      }
+    } finally {
+      _recordingGif = false;
+    }
+  }
+
   Future<void> handleScreenshot() async {
     if (!mounted) return;
     if (!isDesktop()) {
@@ -763,7 +869,7 @@ class _PlayerItemState extends State<PlayerItem>
     final source = videoPageController.src;
     final player = playerController.playback.mediaPlayer;
     if (videoPageController.loading || player == null) {
-      AnikumoDialog.showToast(message: '暂未获取到画面，请等视频显示后重试');
+      AnikumoDialog.showToast(message: S.t('暂未获取到画面，请等视频显示后重试'));
       return;
     }
     final added = await _screenshots.capture(
@@ -771,7 +877,7 @@ class _PlayerItemState extends State<PlayerItem>
       title: videoPageController.title,
       episode:
           videoPageController.resolveEpisode(episode)?.displayTitle ??
-          '第 ${episode.episode} 集',
+          S.f('第 {} 集', [episode.episode]),
       position: player.state.position,
       isCurrent: () =>
           mounted &&
@@ -787,10 +893,10 @@ class _PlayerItemState extends State<PlayerItem>
       if (!added || _screenshots.candidates.length == 1) {
         AnikumoDialog.showToast(
           message: added
-              ? '已截取画面，点击右上角图库挑选保存'
-              : _screenshots.message ?? '截图失败，请重试',
+              ? S.t('已截取画面，点击右上角图库挑选保存')
+              : _screenshots.message ?? S.t('截图失败，请重试'),
           showActionButton: _screenshots.candidates.isNotEmpty,
-          actionLabel: '挑选截图',
+          actionLabel: S.t('挑选截图'),
           onActionPressed: showScreenshotCandidates,
         );
       }
@@ -803,7 +909,7 @@ class _PlayerItemState extends State<PlayerItem>
       final screenshot = await playerController.screenshotPng();
       if (!mounted) return;
       if (screenshot == null || screenshot.isEmpty) {
-        AnikumoDialog.showToast(message: '截图失败：未获取到图像');
+        AnikumoDialog.showToast(message: S.t('截图失败：未获取到图像'));
         return;
       }
       final result = await SaverGallery.saveImage(
@@ -813,10 +919,10 @@ class _PlayerItemState extends State<PlayerItem>
         skipIfExists: false,
       );
       if (mounted && !result.isSuccess) {
-        AnikumoDialog.showToast(message: '截图保存失败：${result.errorMessage}');
+        AnikumoDialog.showToast(message: S.f('截图保存失败：{}', [result.errorMessage]));
       }
     } catch (e) {
-      if (mounted) AnikumoDialog.showToast(message: '截图失败：$e');
+      if (mounted) AnikumoDialog.showToast(message: S.f('截图失败：{}', [e]));
     }
   }
 
@@ -883,15 +989,14 @@ class _PlayerItemState extends State<PlayerItem>
       if (androidVideoRenderer == 'mediacodec_embed') {
         await AnikumoDialog.show(builder: (context) {
           return AlertDialog(
-            title: const Text('兼容性提示'),
-            content: const Text('MediaCodec 渲染器不支持超分辨率功能。\n\n'
-                '如需使用超分辨率，请在播放设置中将视频渲染器切换为 gpu 或 gpu-next。'),
+            title: Text(S.t('兼容性提示')),
+            content: Text(S.t('MediaCodec 渲染器不支持超分辨率功能。\n\n如需使用超分辨率，请在播放设置中将视频渲染器切换为 gpu 或 gpu-next。')),
             actions: [
               TextButton(
                 onPressed: () {
                   AnikumoDialog.dismiss(context: context);
                 },
-                child: const Text('确定'),
+                child: Text(S.t('确定')),
               ),
             ],
           );
@@ -913,12 +1018,12 @@ class _PlayerItemState extends State<PlayerItem>
 
         return StatefulBuilder(builder: (context, setState) {
           return AlertDialog(
-            title: const Text('性能提示'),
+            title: Text(S.t('性能提示')),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('启用超分辨率（质量档）可能会造成设备卡顿，是否继续？'),
+                Text(S.t('启用超分辨率（质量档）可能会造成设备卡顿，是否继续？')),
                 const SizedBox(height: 12),
                 Row(
                   mainAxisSize: MainAxisSize.min,
@@ -928,7 +1033,7 @@ class _PlayerItemState extends State<PlayerItem>
                       onChanged: (value) =>
                           setState(() => dontAskAgain = value ?? false),
                     ),
-                    const Text('下次不再询问'),
+                    Text(S.t('下次不再询问')),
                   ],
                 ),
               ],
@@ -945,7 +1050,7 @@ class _PlayerItemState extends State<PlayerItem>
                   if (!context.mounted) return;
                   AnikumoDialog.dismiss(context: context);
                 },
-                child: const Text('取消'),
+                child: Text(S.t('取消')),
               ),
               TextButton(
                 onPressed: () async {
@@ -959,7 +1064,7 @@ class _PlayerItemState extends State<PlayerItem>
                   if (!context.mounted) return;
                   AnikumoDialog.dismiss(context: context);
                 },
-                child: const Text('确认'),
+                child: Text(S.t('确认')),
               ),
             ],
           );
@@ -1054,14 +1159,14 @@ class _PlayerItemState extends State<PlayerItem>
           index++;
           setPlaybackSpeed(defaultPlaySpeedList[index]);
         } else {
-          AnikumoDialog.showToast(message: '已达倍速上限');
+          AnikumoDialog.showToast(message: S.t('已达倍速上限'));
         }
       } else if (type == "down") {
         if (index > 0) {
           index--;
           setPlaybackSpeed(defaultPlaySpeedList[index]);
         } else {
-          AnikumoDialog.showToast(message: '已达倍速下限');
+          AnikumoDialog.showToast(message: S.t('已达倍速下限'));
         }
       }
     } catch (e) {
@@ -1276,7 +1381,7 @@ class _PlayerItemState extends State<PlayerItem>
           // Let the controller report resolution failures without retrying every tick.
           final nextRef = videoPageController.resolveEpisode(nextSelection);
           if (nextRef != null) {
-            AnikumoDialog.showToast(message: '正在加载${nextRef.displayTitle}');
+            AnikumoDialog.showToast(message: S.f('正在加载{}', [nextRef.displayTitle]));
           }
           try {
             playerTimer!.cancel();
@@ -1325,7 +1430,7 @@ class _PlayerItemState extends State<PlayerItem>
               .opSeconds;
       if (opSeconds > 0 && position < Duration(seconds: opSeconds)) {
         unawaited(playerController.seek(Duration(seconds: opSeconds)));
-        AnikumoDialog.showToast(message: '已跳过片头');
+        AnikumoDialog.showToast(message: S.t('已跳过片头'));
       }
     }
 
@@ -1355,7 +1460,7 @@ class _PlayerItemState extends State<PlayerItem>
         _edSkipHandledKey = key;
         _nextCountdownSeconds.value = null;
         unawaited(playerController.seek(duration));
-        AnikumoDialog.showToast(message: '已跳过片尾');
+        AnikumoDialog.showToast(message: S.t('已跳过片尾'));
         return;
       }
     }
@@ -1378,8 +1483,15 @@ class _PlayerItemState extends State<PlayerItem>
   void showDanmakuSwitch() {
     // Batch 208: external sessions do not use the anime
     // danmaku services; the owning zone adds its own source.
+    // Batch 272 (#33): that source is a local danmaku
+    // file the user mounts (XML / JSON / ASS).
     if (videoPageController.isExternalPlayback) {
-      AnikumoDialog.showToast(message: '该专区暂无弹幕源');
+      unawaited(
+        mountLocalDanmakuFile(
+          context,
+          danmakuController: playerController.danmaku,
+        ),
+      );
       return;
     }
     unawaited(showDanmakuSourceSheet(
@@ -1603,6 +1715,11 @@ class _PlayerItemState extends State<PlayerItem>
                           ? null
                           : (details) {
                               _lastDoubleTapPointerKind = details.kind;
+                              final width =
+                                  MediaQuery.sizeOf(context).width;
+                              _lastDoubleTapFraction = width > 0
+                                  ? details.globalPosition.dx / width
+                                  : null;
                             },
                       onDoubleTap: (playerController.panel.lockPanel)
                           ? null
@@ -1718,6 +1835,7 @@ class _PlayerItemState extends State<PlayerItem>
                             disableAnimations: widget.disableAnimations,
                             showSourceSwitch: widget.onSwitchSource,
                             handleScreenShot: handleScreenshot,
+                            handleRecordGif: handleRecordGif,
                             showScreenshotCandidates: showScreenshotCandidates,
                             skipOP: skipOP,
                           ),
@@ -1739,7 +1857,7 @@ class _PlayerItemState extends State<PlayerItem>
                                 Padding(
                                   padding: const EdgeInsets.only(left: 14),
                                   child: Text(
-                                    '$seconds 秒后播放下一集',
+                                    S.f('{} 秒后播放下一集', [seconds]),
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 13,
@@ -1752,7 +1870,7 @@ class _PlayerItemState extends State<PlayerItem>
                                         videoPageController.playbackEpisode);
                                     _nextCountdownSeconds.value = null;
                                   },
-                                  child: const Text('取消连播'),
+                                  child: Text(S.t('取消连播')),
                                 ),
                               ],
                             ),

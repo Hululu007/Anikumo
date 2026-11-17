@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class PlayerContentTabs extends StatelessWidget {
   const PlayerContentTabs({
@@ -37,8 +38,8 @@ class PlayerContentTabs extends StatelessWidget {
           if (index == 0) onEpisodesSelected();
         },
         tabs: [
-          Tab(text: '选集', height: height),
-          Tab(text: '评论', height: height),
+          Tab(text: S.t('选集'), height: height),
+          Tab(text: S.t('评论'), height: height),
         ],
       ),
     );

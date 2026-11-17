@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../../bean/dialog/dialog.dart';
 import '../../models/novel_item.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import '../../services/build_info.dart';
 import '../../services/novel/moyuan_host.dart';
 import '../../services/novel/novel_api.dart';
@@ -379,19 +380,19 @@ class _NovelDiagnosticsPageState extends State<NovelDiagnosticsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('小说源诊断')),
+      appBar: AppBar(title: Text(S.t('小说源诊断'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
           Text(
-            '构建 $kAnikumoBuildStamp',
+            S.f('构建 {}', [kAnikumoBuildStamp]),
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 8),
-          const Text(
-            '逐个源跑阅读链（搜索 → 章节 → 第一章内容），'
-            '每步显示真实结果或真实错误。跑完可点「复制报告」，'
-            '把报告发给开发者协助排查。',
+          Text(
+            S.t('逐个源跑阅读链（搜索 → 章节 → 第一章内容），'
+                '每步显示真实结果或真实错误。跑完可点「复制报告」，'
+                '把报告发给开发者协助排查。'),
           ),
           const SizedBox(height: 16),
           Row(
@@ -405,7 +406,7 @@ class _NovelDiagnosticsPageState extends State<NovelDiagnosticsPage> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(AnikumoIcons.play_arrow_rounded),
-                label: Text(_running ? '诊断中…' : '开始诊断'),
+                label: Text(_running ? S.t('诊断中…') : S.t('开始诊断')),
               ),
               const SizedBox(width: 12),
               OutlinedButton.icon(
@@ -415,10 +416,10 @@ class _NovelDiagnosticsPageState extends State<NovelDiagnosticsPage> {
                         await Clipboard.setData(
                           ClipboardData(text: _report),
                         );
-                        AnikumoDialog.showToast(message: '报告已复制');
+                        AnikumoDialog.showToast(message: S.t('报告已复制'));
                       },
                 icon: const Icon(AnikumoIcons.copy_rounded),
-                label: const Text('复制报告'),
+                label: Text(S.t('复制报告')),
               ),
             ],
           ),

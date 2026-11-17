@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:anikumo/services/hub/command_registry.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// 命令面板： type a few characters, jump straight to a feature.
 /// Matching is pure (see command_registry); this widget is only the
@@ -28,8 +29,8 @@ Future<void> showCommandPalette(BuildContext context) {
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                     child: TextField(
                       autofocus: true,
-                      decoration: const InputDecoration(
-                        hintText: '输入功能名，如 备份 / 排行 / 弹幕',
+                      decoration: InputDecoration(
+                        hintText: S.t('输入功能名，如 备份 / 排行 / 弹幕'),
                         prefixIcon: Icon(AnikumoIcons.search_rounded),
                         border: OutlineInputBorder(),
                       ),
@@ -39,7 +40,7 @@ Future<void> showCommandPalette(BuildContext context) {
                   ),
                   Expanded(
                     child: results.isEmpty
-                        ? const Center(child: Text('没有匹配的功能'))
+                        ? Center(child: Text(S.t('没有匹配的功能')))
                         : ListView.builder(
                             itemCount: results.length,
                             itemBuilder: (context, index) {
@@ -47,7 +48,7 @@ Future<void> showCommandPalette(BuildContext context) {
                               return ListTile(
                                 leading: const Icon(
                                     AnikumoIcons.arrow_forward_rounded),
-                                title: Text(command.title),
+                                title: Text(S.t(command.title)),
                                 onTap: () {
                                   Navigator.of(sheetContext).pop();
                                   context.pushNamed(command.route);

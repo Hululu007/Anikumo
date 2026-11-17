@@ -76,6 +76,18 @@
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
         </receiver>
+        <!-- Batch 276 (#61): continue-watching home-screen widget. -->
+        <receiver
+            android:name=".ContinueWidgetProvider"
+            android:exported="false"
+            android:label="Anikumo 继续观看">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/continue_widget_info" />
+        </receiver>
     </application>
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />

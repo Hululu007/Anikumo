@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:anikumo/bean/widget/editorial_kit.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/modules/my/watch_stats.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
 
@@ -85,7 +86,7 @@ class _ProfileHead extends StatelessWidget {
           Row(
             children: [
               Text(
-                'PROFILE · 个人档案',
+                S.t('PROFILE · 个人档案'),
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: scheme.outline,
                   fontWeight: FontWeight.w700,
@@ -94,25 +95,25 @@ class _ProfileHead extends StatelessWidget {
               ),
               const Spacer(),
               IconButton(
-                tooltip: '全部设置',
+                tooltip: S.t('全部设置'),
                 onPressed: onSettings,
                 icon: const Icon(AnikumoIcons.tune_rounded),
               ),
             ],
           ),
           Text(
-            '我的',
+            S.t('我的'),
             style: theme.textTheme.headlineMedium
                 ?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 14),
           Row(
             children: [
-              _stat(context, '${stats.watchedBangumiCount}', '看过的番剧'),
+              _stat(context, '${stats.watchedBangumiCount}', S.t('看过的番剧')),
               _divider(context),
-              _stat(context, '${stats.watchedEpisodeCount}', '观看集数'),
+              _stat(context, '${stats.watchedEpisodeCount}', S.t('观看集数')),
               _divider(context),
-              _stat(context, '${stats.downloadTaskCount}', '下载任务'),
+              _stat(context, '${stats.downloadTaskCount}', S.t('下载任务')),
             ],
           ),
         ],
@@ -242,74 +243,74 @@ class _CompactSpaceLayout extends StatelessWidget {
         const SizedBox(height: 18),
         _FeatureRow(
           icon: AnikumoIcons.history_rounded,
-          title: '历史记录',
+          title: S.t('历史记录'),
           caption:
-              stats.watchedBangumiCount == 0 ? '暂无观看记录' : '查看观看记录',
+              stats.watchedBangumiCount == 0 ? S.t('暂无观看记录') : S.t('查看观看记录'),
           onTap: () => onOpen(MyDestination.history),
         ),
         _FeatureRow(
           icon: AnikumoIcons.download_rounded,
-          title: '离线下载',
+          title: S.t('离线下载'),
           caption: stats.downloadTaskCount == 0
-              ? '管理离线内容'
-              : '${stats.downloadTaskCount} 集下载任务',
+              ? S.t('管理离线内容')
+              : S.f('{} 集下载任务', [stats.downloadTaskCount]),
           onTap: () => onOpen(MyDestination.downloads),
         ),
-        const EditorialSectionHeader(
+        EditorialSectionHeader(
           index: '01',
           label: 'PREFERENCES',
-          title: '内容与偏好',
+          title: S.t('内容与偏好'),
         ),
         EditorialIndexRow(
           index: '01',
           icon: AnikumoIcons.extension_rounded,
-          title: '规则设置',
+          title: S.t('规则设置'),
           onTap: () => onOpen(MyDestination.rules),
         ),
         const EditorialHairline(),
         EditorialIndexRow(
           index: '02',
           icon: AnikumoIcons.palette_rounded,
-          title: '外观设置',
+          title: S.t('外观设置'),
           onTap: () => onOpen(MyDestination.theme),
         ),
         const EditorialHairline(),
         EditorialIndexRow(
           index: '03',
           icon: AnikumoIcons.play_circle_rounded,
-          title: '播放设置',
+          title: S.t('播放设置'),
           onTap: () => onOpen(MyDestination.player),
         ),
         const EditorialHairline(),
         EditorialIndexRow(
           index: '04',
           icon: AnikumoIcons.subtitles_rounded,
-          title: '弹幕设置',
+          title: S.t('弹幕设置'),
           onTap: () => onOpen(MyDestination.danmaku),
         ),
-        const EditorialSectionHeader(
+        EditorialSectionHeader(
           index: '02',
           label: 'DATA & APP',
-          title: '数据与应用',
+          title: S.t('数据与应用'),
         ),
         EditorialIndexRow(
           index: '01',
           icon: AnikumoIcons.cloud_sync_rounded,
-          title: '同步备份',
+          title: S.t('同步备份'),
           onTap: () => onOpen(MyDestination.sync),
         ),
         const EditorialHairline(),
         EditorialIndexRow(
           index: '02',
           icon: AnikumoIcons.cleaning_services_rounded,
-          title: '存储管理',
+          title: S.t('存储管理'),
           onTap: () => onOpen(MyDestination.storage),
         ),
         const EditorialHairline(),
         EditorialIndexRow(
           index: '03',
           icon: AnikumoIcons.info_outline_rounded,
-          title: '关于 Anikumo',
+          title: S.t('关于 Anikumo'),
           onTap: () => onOpen(MyDestination.about),
         ),
       ],
@@ -341,29 +342,29 @@ class _WideSpaceLayout extends StatelessWidget {
             Expanded(
               child: _FeatureRow(
                 icon: AnikumoIcons.history_rounded,
-                title: '历史记录',
+                title: S.t('历史记录'),
                 caption: stats.watchedBangumiCount == 0
-                    ? '暂无观看记录'
-                    : '查看观看记录',
+                    ? S.t('暂无观看记录')
+                    : S.t('查看观看记录'),
                 onTap: () => onOpen(MyDestination.history),
               ),
             ),
             Expanded(
               child: _FeatureRow(
                 icon: AnikumoIcons.download_rounded,
-                title: '离线下载',
+                title: S.t('离线下载'),
                 caption: stats.downloadTaskCount == 0
-                    ? '管理离线内容'
-                    : '${stats.downloadTaskCount} 集下载任务',
+                    ? S.t('管理离线内容')
+                    : S.f('{} 集下载任务', [stats.downloadTaskCount]),
                 onTap: () => onOpen(MyDestination.downloads),
               ),
             ),
           ],
         ),
-        const EditorialSectionHeader(
+        EditorialSectionHeader(
           index: '01',
           label: 'PREFERENCES',
-          title: '内容与偏好',
+          title: S.t('内容与偏好'),
         ),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -374,14 +375,14 @@ class _WideSpaceLayout extends StatelessWidget {
                   EditorialIndexRow(
                     index: '01',
                     icon: AnikumoIcons.extension_rounded,
-                    title: '规则设置',
+                    title: S.t('规则设置'),
                     onTap: () => onOpen(MyDestination.rules),
                   ),
                   const EditorialHairline(),
                   EditorialIndexRow(
                     index: '02',
                     icon: AnikumoIcons.palette_rounded,
-                    title: '外观设置',
+                    title: S.t('外观设置'),
                     onTap: () => onOpen(MyDestination.theme),
                   ),
                 ],
@@ -393,14 +394,14 @@ class _WideSpaceLayout extends StatelessWidget {
                   EditorialIndexRow(
                     index: '03',
                     icon: AnikumoIcons.play_circle_rounded,
-                    title: '播放设置',
+                    title: S.t('播放设置'),
                     onTap: () => onOpen(MyDestination.player),
                   ),
                   const EditorialHairline(),
                   EditorialIndexRow(
                     index: '04',
                     icon: AnikumoIcons.subtitles_rounded,
-                    title: '弹幕设置',
+                    title: S.t('弹幕设置'),
                     onTap: () => onOpen(MyDestination.danmaku),
                   ),
                 ],
@@ -408,29 +409,29 @@ class _WideSpaceLayout extends StatelessWidget {
             ),
           ],
         ),
-        const EditorialSectionHeader(
+        EditorialSectionHeader(
           index: '02',
           label: 'DATA & APP',
-          title: '数据与应用',
+          title: S.t('数据与应用'),
         ),
         EditorialIndexRow(
           index: '01',
           icon: AnikumoIcons.cloud_sync_rounded,
-          title: '同步备份',
+          title: S.t('同步备份'),
           onTap: () => onOpen(MyDestination.sync),
         ),
         const EditorialHairline(),
         EditorialIndexRow(
           index: '02',
           icon: AnikumoIcons.cleaning_services_rounded,
-          title: '存储管理',
+          title: S.t('存储管理'),
           onTap: () => onOpen(MyDestination.storage),
         ),
         const EditorialHairline(),
         EditorialIndexRow(
           index: '03',
           icon: AnikumoIcons.info_outline_rounded,
-          title: '关于 Anikumo',
+          title: S.t('关于 Anikumo'),
           onTap: () => onOpen(MyDestination.about),
         ),
       ],
@@ -448,7 +449,7 @@ class MySettingsButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      tooltip: '全部设置',
+      tooltip: S.t('全部设置'),
       onPressed: onTap,
       icon: const Icon(AnikumoIcons.tune_rounded),
     );

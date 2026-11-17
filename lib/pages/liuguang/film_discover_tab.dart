@@ -5,6 +5,8 @@ import 'package:anikumo/pages/liuguang/film_widgets.dart';
 import 'package:anikumo/services/liuguang/cms_api_source.dart';
 import 'package:anikumo/services/liuguang/film_prefs.dart';
 import 'package:anikumo/services/liuguang/video_engine.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
+import 'package:anikumo/services/i18n/film_vocab_i18n.dart';
 
 /// Batch 205: 发现 — the five-dimension filter wall the
 /// user specified, all combinable:
@@ -387,7 +389,7 @@ class _FilmDiscoverTabState extends State<FilmDiscoverTab> {
       _loading = false;
       _loadingMore = false;
       if (_categoriesLoaded && page == 1) {
-        _error = '当前数据源没有直播分类。';
+        _error = S.t('当前数据源没有直播分类。');
       }
       if (mounted) setState(() {});
       return;
@@ -437,7 +439,7 @@ class _FilmDiscoverTabState extends State<FilmDiscoverTab> {
       _totalPages = totalPages;
       _error = null;
     } catch (e) {
-      if (gen == _loadGen && page == 1) _error = '加载失败：$e';
+      if (gen == _loadGen && page == 1) _error = S.f('加载失败：{}', [e]);
     } finally {
       if (gen == _loadGen) {
         _loading = false;
@@ -516,7 +518,7 @@ class _FilmDiscoverTabState extends State<FilmDiscoverTab> {
           },
         );
         if (gen != _loadGen) return;
-        _error = _items.isEmpty ? '全部接口都没有取到直播内容。' : null;
+        _error = _items.isEmpty ? S.t('全部接口都没有取到直播内容。') : null;
         return;
       }
       // A picked category is identified by NAME across
@@ -588,7 +590,7 @@ class _FilmDiscoverTabState extends State<FilmDiscoverTab> {
       );
       if (gen != _loadGen) return;
       if (landedCount == 0) {
-        if (page == 1) _error = '全部接口都没有返回内容，请稍后重试。';
+        if (page == 1) _error = S.t('全部接口都没有返回内容，请稍后重试。');
         return;
       }
     } finally {
@@ -613,38 +615,39 @@ class _FilmDiscoverTabState extends State<FilmDiscoverTab> {
   /// Batch 222: the standalone page's headline — the tag
   /// the page is currently filtered to.
   String get _standaloneTitle {
-    if (_genre != null) return _genre!;
+    if (_genre != null) return filmGenreLabel(_genre!);
     if (_area != null) {
       for (final (label, value) in _areaVocab) {
-        if (value == _area) return label;
+        if (value == _area) return filmAreaLabel(label);
       }
-      return _area!;
+      return filmAreaLabel(_area!);
     }
-    if (_year != null) return '$_year 新作';
-    return '全部内容';
+    if (_year != null) return S.f('{} 新作', [_year]);
+    return S.t('全部内容');
   }
 
   String get _standaloneEyebrow {
     final dimension = _genre != null
-        ? '题材'
+        ? S.t('题材')
         : _area != null
-        ? '地区'
+        ? S.t('地区')
         : _year != null
-        ? '年份'
-        : '全部';
-    return '${_kindFilter.label} · $dimension';
+        ? S.t('年份')
+        : filmKindLabel('全部');
+    return '${filmKindLabel(_kindFilter.label)} · $dimension';
   }
 
   @override
   Widget build(BuildContext context) {
     final service = VideoEngineService.instance;
     if (!service.hasSources) {
-      return const FilmEmptyState(
+      return FilmEmptyState(
         icon: AnikumoIcons.travel_explore_rounded,
-        title: '还没有可用的数据源',
-        message:
-            '添加仓库或接口后，这里可以按电视剧 / 电影、'
-            '分类、题材标签、年代和地区筛选浏览。',
+        title: S.t('还没有可用的数据源'),
+        message: S.t(
+          '添加仓库或接口后，这里可以按电视剧 / 电影、'
+          '分类、题材标签、年代和地区筛选浏览。',
+        ),
       );
     }
     final roots = _categories.where((c) => c.isRoot).toList();
@@ -680,8 +683,8 @@ class _FilmDiscoverTabState extends State<FilmDiscoverTab> {
             ],
           )
         : FilmEditorialTitle(
-            eyebrow: 'DISCOVER · 发现',
-            title: filmHeadline(context, '发现'),
+            eyebrow: S.t('DISCOVER · 发现'),
+            title: filmHeadline(context, S.t('发现')),
           );
     final chipsWidget = Padding(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 2),
@@ -701,7 +704,7 @@ class _FilmDiscoverTabState extends State<FilmDiscoverTab> {
               FilmKindFilter.other,
             ])
               ChoiceChip(
-                label: Text(filter.label),
+                label: Text(filmKindLabel(filter.label)),
                 selected:
                     _kindFilter == filter &&
                     (_typeId == null || filter == FilmKindFilter.live),
@@ -749,7 +752,7 @@ class _FilmDiscoverTabState extends State<FilmDiscoverTab> {
             ]),
           _chipRow([
             ChoiceChip(
-              label: const Text('全部题材'),
+              label: Text(filmKindLabel('全部题材')),
               selected: _genre == null,
               onSelected: (_) {
                 _genre = null;
@@ -758,7 +761,7 @@ class _FilmDiscoverTabState extends State<FilmDiscoverTab> {
             ),
             for (final g in [..._genreVocab, '其他'])
               ChoiceChip(
-                label: Text(g),
+                label: Text(filmGenreLabel(g)),
                 selected: _genre == g,
                 onSelected: (_) {
                   _genre = g;
@@ -768,7 +771,7 @@ class _FilmDiscoverTabState extends State<FilmDiscoverTab> {
           ]),
           _chipRow([
             ChoiceChip(
-              label: const Text('全部年代'),
+              label: Text(filmKindLabel('全部年代')),
               selected: _year == null,
               onSelected: (_) {
                 _year = null;
@@ -787,7 +790,7 @@ class _FilmDiscoverTabState extends State<FilmDiscoverTab> {
           ]),
           _chipRow([
             ChoiceChip(
-              label: const Text('全部地区'),
+              label: Text(filmKindLabel('全部地区')),
               selected: _area == null,
               onSelected: (_) {
                 _area = null;
@@ -796,7 +799,7 @@ class _FilmDiscoverTabState extends State<FilmDiscoverTab> {
             ),
             for (final (label, value) in [..._areaVocab, ('其他', '其他')])
               ChoiceChip(
-                label: Text(label),
+                label: Text(filmAreaLabel(label)),
                 selected: _area == value,
                 onSelected: (_) {
                   _area = value;
@@ -862,21 +865,21 @@ class _FilmDiscoverTabState extends State<FilmDiscoverTab> {
         SliverFillRemaining(
           child: FilmEmptyState(
             icon: AnikumoIcons.travel_explore_rounded,
-            title: '发现',
+            title: S.t('发现'),
             message: _error!,
-            actionLabel: '重试',
+            actionLabel: S.t('重试'),
             onAction: _resetAndLoad,
           ),
         ),
       ];
     }
     if (_items.isEmpty) {
-      return const [
+      return [
         SliverFillRemaining(
           child: FilmEmptyState(
             icon: AnikumoIcons.travel_explore_rounded,
-            title: '没有符合条件的内容',
-            message: '换一组筛选条件试试。',
+            title: S.t('没有符合条件的内容'),
+            message: S.t('换一组筛选条件试试。'),
           ),
         ),
       ];

@@ -13,6 +13,8 @@ import 'package:anikumo/pages/player/controller/player_aspect_ratio.dart';
 import 'package:anikumo/pages/player/controller/player_super_resolution.dart';
 import 'package:anikumo/bean/widget/embedded_native_control_area.dart';
 import 'package:anikumo/pages/player/player_panel_hold.dart';
+import 'package:anikumo/pages/player/player_track_sheets.dart';
+import 'package:anikumo/services/player/danmaku_heatmap.dart';
 import 'package:anikumo/pages/player/pip_settings_sheet.dart';
 import 'package:anikumo/services/player/pip_utils.dart';
 import 'package:anikumo/services/player/skip_settings.dart';
@@ -34,6 +36,7 @@ import 'package:anikumo/pages/player/player_transport_bar.dart';
 import 'package:anikumo/pages/player/player_screenshot_controls.dart';
 import 'package:anikumo/pages/player/player_progress_bar.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class PlayerItemPanel extends StatefulWidget {
   const PlayerItemPanel({
@@ -47,6 +50,7 @@ class PlayerItemPanel extends StatefulWidget {
     required this.handleFullscreen,
     required this.enterAndroidPictureInPicture,
     required this.handleScreenShot,
+    required this.handleRecordGif,
     required this.showScreenshotCandidates,
     required this.onNextEpisode,
     required this.handleProgressBarDragStart,
@@ -76,6 +80,7 @@ class PlayerItemPanel extends StatefulWidget {
   final VoidCallback handleFullscreen;
   final Future<void> Function() enterAndroidPictureInPicture;
   final VoidCallback handleScreenShot;
+  final VoidCallback handleRecordGif;
   final VoidCallback showScreenshotCandidates;
   final VoidCallback handleProgressBarDragStart;
   final void Function(bool cancelled) handleProgressBarDragEnd;
@@ -141,7 +146,7 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
     textFieldFocus.unfocus();
 
     if (message.trim().isEmpty) {
-      AnikumoDialog.showToast(message: '弹幕内容为空');
+      AnikumoDialog.showToast(message: S.t('弹幕内容为空'));
       _holdResumeForDestinationSheet = false;
       _onDanmakuEditFocusChanged();
       return;
@@ -159,18 +164,18 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
 
     widget.keyboardFocus.requestFocus();
     if (message.length > 100) {
-      AnikumoDialog.showToast(message: '弹幕内容过长');
+      AnikumoDialog.showToast(message: S.t('弹幕内容过长'));
       return;
     }
 
     if (destination == DanmakuDestination.chatRoom) {
       if (playerController.syncplay.syncplayRoom.isEmpty) {
-        AnikumoDialog.showToast(message: '你还没有加入一起看，无法发送聊天室弹幕');
+        AnikumoDialog.showToast(message: S.t('你还没有加入一起看，无法发送聊天室弹幕'));
         return;
       }
 
       final sender =
-          playerController.syncplay.syncplayController?.username ?? '我';
+          playerController.syncplay.syncplayController?.username ?? S.t('我');
       playerController.danmaku.canvasController.addDanmaku(
         DanmakuContentItem(
           '$sender：$message',
@@ -257,8 +262,8 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
                 fillColor: Colors.white38,
                 floatingLabelBehavior: FloatingLabelBehavior.never,
                 hintText: playerController.danmaku.danmakuOn
-                    ? '发个友善的弹幕见证当下'
-                    : '已关闭弹幕',
+                    ? S.t('发个友善的弹幕见证当下')
+                    : S.t('已关闭弹幕'),
                 hintStyle: TextStyle(
                     fontSize: isDesktop() ? 15 : 13, color: Colors.white60),
                 alignLabelWithHint: true,
@@ -289,7 +294,7 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
                               BorderRadius.circular(isDesktop() ? 8 : 20),
                         ),
                       ),
-                      child: const Text('发送'),
+                      child: Text(S.t('发送')),
                     ),
                   ],
                 ),
@@ -310,7 +315,7 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
     AnikumoDialog.show(builder: (context) {
       var input = '';
       return AlertDialog(
-        title: const Text('跳过秒数'),
+        title: Text(S.t('跳过秒数')),
         content: TextField(
           inputFormatters: [
             FilteringTextInputFormatter.digitsOnly,
@@ -327,7 +332,7 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
           TextButton(
             onPressed: () => AnikumoDialog.dismiss(),
             child: Text(
-              '取消',
+              S.t('取消'),
               style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
           ),
@@ -338,7 +343,7 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
               }
               AnikumoDialog.dismiss();
             },
-            child: const Text('确定'),
+            child: Text(S.t('确定')),
           ),
         ],
       );
@@ -417,14 +422,14 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
               )
             : (danmakuOn ? _danmakuOnIcon(context) : _cachedDanmakuOffIcon),
         onPressed: danmakuLoading ? null : widget.handleDanmaku,
-        tooltip: danmakuLoading ? '弹幕加载中...' : (danmakuOn ? '关闭弹幕' : '打开弹幕'),
+        tooltip: danmakuLoading ? S.t('弹幕加载中...') : (danmakuOn ? S.t('关闭弹幕') : S.t('打开弹幕')),
       );
     });
   }
 
   Widget _forwardButton() {
     return Tooltip(
-      message: '快进${playerController.playback.buttonSkipTime}秒，长按修改时间',
+      message: S.f('快进{}秒，长按修改时间', [playerController.playback.buttonSkipTime]),
       child: GestureDetector(
         onLongPress: _showForwardChange,
         child: IconButton(
@@ -633,7 +638,7 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
 
   List<Widget> get _aspectRatioItems => _choiceItems(
         PlayerAspectRatio.values,
-        label: (value) => value.label,
+        label: (value) => S.t(value.label),
         selected: (value) => value == playerController.panel.aspectRatioMode,
         onSelected: (value) => playerController.panel.aspectRatioMode = value,
       );
@@ -647,7 +652,7 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
 
   List<Widget> get _superResolutionItems => _choiceItems(
         SuperResolutionMode.values,
-        label: (value) => value.label,
+        label: (value) => S.t(value.label),
         selected: (value) =>
             value == playerController.playback.superResolutionMode,
         onSelected: widget.handleSuperResolutionChange,
@@ -670,7 +675,7 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
         onPressed: _showDanmakuSettings,
         color: Colors.white,
         icon: _cachedDanmakuSettingsIcon,
-        tooltip: '弹幕设置',
+        tooltip: S.t('弹幕设置'),
       );
 
   Widget get _desktopDanmakuControls => LayoutBuilder(
@@ -689,12 +694,12 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
 
   Widget get _syncPlayMenuItem => AnikumoMenuItem(
         onPressed: widget.showSyncPlayPanel,
-        label: '一起看',
+        label: S.t('一起看'),
       );
 
   Widget get _danmakuSettingsMenuItem => AnikumoMenuItem(
         onPressed: _showDanmakuSettings,
-        label: '弹幕设置',
+        label: S.t('弹幕设置'),
       );
 
   // Batch 18: the 播放增强 profile used to live only in
@@ -718,12 +723,12 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
       await PlayerEnhance.applyTo(runningPlayer);
     }
     if (!mounted) return;
-    AnikumoDialog.showToast(message: '播放增强已应用到当前播放');
+    AnikumoDialog.showToast(message: S.t('播放增强已应用到当前播放'));
   }
 
   Widget get _playerEnhanceMenuItem => AnikumoMenuItem(
         onPressed: _openPlayerEnhance,
-        label: '播放增强',
+        label: S.t('播放增强'),
       );
 
   Widget get _wideControls => Row(children: [
@@ -735,7 +740,7 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
                 ? _danmakuOnIcon(context)
                 : _cachedDanmakuOffIcon,
             onPressed: widget.handleDanmaku,
-            tooltip: playerController.danmaku.danmakuOn ? '关闭弹幕' : '打开弹幕',
+            tooltip: playerController.danmaku.danmakuOn ? S.t('关闭弹幕') : S.t('打开弹幕'),
           ),
           if (playerController.danmaku.danmakuOn) ...[
             _danmakuSettingsButton,
@@ -744,27 +749,27 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
             const Spacer(),
         ],
         _menuButton(
-          child: const Text('超分辨率', style: TextStyle(color: Colors.white)),
+          child: Text(S.t('超分辨率'), style: const TextStyle(color: Colors.white)),
           items: _superResolutionItems,
         ),
         _menuButton(
           child: Text(
               playerController.playback.playerSpeed == 1
-                  ? '倍速'
+                  ? S.t('倍速')
                   : '${playerController.playback.playerSpeed}x',
               style: const TextStyle(color: Colors.white)),
           items: _speedItems,
         ),
         _menuButton(
           child: const Icon(AnikumoIcons.aspect_ratio_rounded, color: Colors.white),
-          tooltip: '视频比例',
+          tooltip: S.t('视频比例'),
           items: _aspectRatioItems,
         ),
         if (widget.onToggleSidePanel != null)
           IconButton(
             color: Colors.white,
             icon: const Icon(AnikumoIcons.menu_open_rounded),
-            tooltip: '选集面板',
+            tooltip: S.t('选集面板'),
             onPressed: widget.onToggleSidePanel,
           ),
       ]);
@@ -787,7 +792,7 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
               desktop: isDesktop(),
             ),
             playPause: IconButton(
-              tooltip: playerController.playback.playing ? '暂停' : '播放',
+              tooltip: playerController.playback.playing ? S.t('暂停') : S.t('播放'),
               onPressed: () => playerController.playOrPause(),
               icon: PlayPauseIcon(
                 iconColor: Colors.white,
@@ -797,7 +802,7 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
             nextEpisode: IconButton(
               color: Colors.white,
               icon: const Icon(AnikumoIcons.skip_next_rounded),
-              tooltip: '下一集',
+              tooltip: S.t('下一集'),
               onPressed: widget.onNextEpisode,
             ),
             // Playback ticks only rebuild the progress bar and its time labels.
@@ -807,6 +812,12 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
                       progress: playerController.playback.currentPosition,
                       buffered: playerController.playback.buffer,
                       total: playerController.playback.duration,
+                      // Batch 273 (#7): danmaku density strip.
+                      heatmap: danmakuHeatmapBuckets(
+                        playerController.danmaku.danDanmakus,
+                        totalSeconds:
+                            playerController.playback.duration.inSeconds,
+                      ),
                       onDragStart: widget.handleProgressBarDragStart,
                       onDragUpdate: (position) => playerController.seeking
                           .updateInteractiveSeek(position),
@@ -842,7 +853,7 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
       icon: Icon(videoPageController.isFullscreen
           ? AnikumoIcons.fullscreen_exit_rounded
           : AnikumoIcons.fullscreen_rounded),
-      tooltip: videoPageController.isFullscreen ? '退出全屏' : '全屏',
+      tooltip: videoPageController.isFullscreen ? S.t('退出全屏') : S.t('全屏'),
       onPressed: widget.handleFullscreen,
     );
   }
@@ -866,7 +877,7 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
               IconButton(
                 color: Colors.white,
                 icon: const Icon(AnikumoIcons.arrow_back_rounded),
-                tooltip: '返回',
+                tooltip: S.t('返回'),
                 onPressed: widget.onBackPressed,
               ),
               Expanded(
@@ -926,7 +937,7 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
                       }
                       await widget.enterAndroidPictureInPicture();
                     },
-                    tooltip: '画中画',
+                    tooltip: S.t('画中画'),
                     icon: const Icon(
                       AnikumoIcons.picture_in_picture,
                       color: Colors.white,
@@ -943,7 +954,7 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
                 builder: (context, toggle) {
                   return IconButton(
                     onPressed: toggle,
-                    tooltip: '更多选项',
+                    tooltip: S.t('更多选项'),
                     icon: const Icon(
                       AnikumoIcons.more_vert,
                       color: Colors.white,
@@ -954,39 +965,39 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
                   if (compact) ...[
                     SubmenuButton(
                         menuChildren: _aspectRatioItems,
-                        child: const Text('视频比例')),
+                        child: Text(S.t('视频比例'))),
                     SubmenuButton(
-                        menuChildren: _speedItems, child: const Text('倍速')),
+                        menuChildren: _speedItems, child: Text(S.t('倍速'))),
                     SubmenuButton(
                         menuChildren: _superResolutionItems,
-                        child: const Text('超分辨率')),
+                        child: Text(S.t('超分辨率'))),
                     _syncPlayMenuItem,
                   ],
                   AnikumoMenuItem(
                     onPressed: widget.showDanmakuSwitch,
-                    label: '弹幕切换',
+                    label: S.t('弹幕切换'),
                   ),
                   if (widget.showSourceSwitch != null)
                     AnikumoMenuItem(
                       onPressed: widget.showSourceSwitch!,
-                      label: '切换片源',
+                      label: S.t('切换片源'),
                     ),
                   _playerEnhanceMenuItem,
                   if (compact) _danmakuSettingsMenuItem,
                   AnikumoMenuItem(
                     onPressed: widget.showVideoInfo,
-                    label: '视频详情',
+                    label: S.t('视频详情'),
                   ),
                   AnikumoMenuItem(
                     onPressed: () {
                       // Renderers fetch the URL themselves: they cannot reach
                       // a file on this device or send the rule's Referer.
                       if (playerController.isLocalPlayback) {
-                        AnikumoDialog.showToast(message: '暂不支持离线视频');
+                        AnikumoDialog.showToast(message: S.t('暂不支持离线视频'));
                         return;
                       }
                       if (playerController.referer.isNotEmpty) {
-                        AnikumoDialog.showToast(message: '暂不支持该规则');
+                        AnikumoDialog.showToast(message: S.t('暂不支持该规则'));
                         return;
                       }
                       final needRestart = playerController.playback.playing;
@@ -1000,17 +1011,60 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
                         }
                       });
                     },
-                    label: '远程投屏',
+                    label: S.t('远程投屏'),
                   ),
                   AnikumoMenuItem(
                     onPressed: playerController.launchExternalPlayer,
-                    label: '外部播放',
+                    label: S.t('外部播放'),
+                  ),
+                  // Batch 273 (#8, #51): subtitle tracks.
+                  AnikumoMenuItem(
+                    onPressed: () => showSubtitleSheet(
+                      context,
+                      playerController: playerController,
+                    ),
+                    label: S.t('字幕'),
+                  ),
+                  // Batch 273 (#52): audio equalizer.
+                  AnikumoMenuItem(
+                    onPressed: () => showAudioEqSheet(
+                      context,
+                      playerController: playerController,
+                    ),
+                    label: S.t('音频均衡器'),
+                  ),
+                  // Batch 273 (#12): timestamp bookmarks.
+                  AnikumoMenuItem(
+                    onPressed: () {
+                      final selection =
+                          videoPageController.playbackEpisode;
+                      final episodeRef =
+                          videoPageController.resolveEpisode(selection);
+                      final label = episodeRef?.displayTitle ??
+                          S.f('第 {} 集', [selection.episode]);
+                      final workId =
+                          videoPageController.bangumiItem.id > 0
+                              ? 'anime:${videoPageController.bangumiItem.id}'
+                              : 'ext:${videoPageController.title}';
+                      showVideoBookmarksSheet(
+                        context,
+                        playerController: playerController,
+                        episodeKey: '$workId:$label',
+                        episodeLabel: label,
+                      );
+                    },
+                    label: S.t('时间点书签'),
+                  ),
+                  // Batch 273 (#10): GIF recording.
+                  AnikumoMenuItem(
+                    onPressed: widget.handleRecordGif,
+                    label: S.t('录制 GIF'),
                   ),
                   SubmenuButton(
                     menuChildren: [
                       AnikumoMenuItem(
                         onPressed: TimedShutdownService().cancel,
-                        label: '不开启',
+                        label: S.t('不开启'),
                         selected: !TimedShutdownService().isActive,
                       ),
                       for (final int minutes in [15, 30, 60])
@@ -1019,10 +1073,12 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
                             TimedShutdownService().start(minutes,
                                 onExpired: widget.pauseForTimedShutdown);
                             AnikumoDialog.showToast(
-                                message:
-                                    '已设置 ${TimedShutdownService().formatMinutesToDisplay(minutes)} 后定时关闭');
+                                message: S.f('已设置 {} 后定时关闭', [
+                                  TimedShutdownService()
+                                      .formatMinutesToDisplay(minutes)
+                                ]));
                           },
-                          label: '$minutes 分钟',
+                          label: S.f('{} 分钟', [minutes]),
                           selected:
                               TimedShutdownService().setMinutes == minutes,
                         ),
@@ -1032,7 +1088,7 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
                             onExpired: widget.pauseForTimedShutdown,
                           );
                         },
-                        label: '自定义',
+                        label: S.t('自定义'),
                       ),
                     ],
                     child: ValueListenableBuilder<int>(
@@ -1040,8 +1096,10 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
                           TimedShutdownService().remainingSecondsNotifier,
                       builder: (context, remainingSeconds, _) => Text(
                         remainingSeconds > 0
-                            ? "定时关闭 (${TimedShutdownService().formatRemainingTime()})"
-                            : "定时关闭",
+                            ? S.f('定时关闭 ({})', [
+                                TimedShutdownService().formatRemainingTime()
+                              ])
+                            : S.t('定时关闭'),
                       ),
                     ),
                   ),
@@ -1050,7 +1108,7 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
                       AnikumoMenuItem(
                         onPressed: () => GStorage.putSetting<String>(
                             SettingsKeys.playbackMode, 'next'),
-                        label: '顺序连播',
+                        label: S.t('顺序连播'),
                         selected: GStorage.getSetting<String>(
                                 SettingsKeys.playbackMode) ==
                             'next',
@@ -1058,7 +1116,7 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
                       AnikumoMenuItem(
                         onPressed: () => GStorage.putSetting<String>(
                             SettingsKeys.playbackMode, 'loop'),
-                        label: '单集循环',
+                        label: S.t('单集循环'),
                         selected: GStorage.getSetting<String>(
                                 SettingsKeys.playbackMode) ==
                             'loop',
@@ -1066,17 +1124,17 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
                       AnikumoMenuItem(
                         onPressed: () => GStorage.putSetting<String>(
                             SettingsKeys.playbackMode, 'stop'),
-                        label: '播完暂停',
+                        label: S.t('播完暂停'),
                         selected: GStorage.getSetting<String>(
                                 SettingsKeys.playbackMode) ==
                             'stop',
                       ),
                     ],
-                    child: const Text('播放模式'),
+                    child: Text(S.t('播放模式')),
                   ),
                   AnikumoMenuItem(
                     onPressed: _showSkipSettingsSheet,
-                    label: '跳过片头片尾',
+                    label: S.t('跳过片头片尾'),
                   ),
                   if (!compact) _syncPlayMenuItem,
                 ],
@@ -1106,18 +1164,20 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
               ValueChanged<int> onChanged,
             ) {
               return ListTile(
-                title: Text(label),
-                subtitle: Text(value <= 0 ? '关闭' : '$value 秒'),
+                title: Text(S.t(label)),
+                subtitle: Text(value <= 0 ? S.t('关闭') : S.f('{} 秒', [value])),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
+                      tooltip: S.t('减少'),
                       icon: const Icon(AnikumoIcons.remove_circle_outline),
                       onPressed: value <= 0
                           ? null
                           : () => onChanged(value - 5 < 0 ? 0 : value - 5),
                     ),
                     IconButton(
+                      tooltip: S.t('增加'),
                       icon: const Icon(AnikumoIcons.add_circle_outline),
                       onPressed: () =>
                           onChanged(value + 5 > 180 ? 180 : value + 5),
@@ -1131,9 +1191,9 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const ListTile(
-                    title: Text('跳过片头片尾（本番）'),
-                    subtitle: Text('只对这部番生效，播放时自动跳过'),
+                  ListTile(
+                    title: Text(S.t('跳过片头片尾（本番）')),
+                    subtitle: Text(S.t('只对这部番生效，播放时自动跳过')),
                   ),
                   stepper(
                     '片头',
@@ -1159,7 +1219,7 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
                           child: OutlinedButton(
                             onPressed: () =>
                                 Navigator.of(sheetContext).pop(),
-                            child: const Text('取消'),
+                            child: Text(S.t('取消')),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -1172,9 +1232,9 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
                                 Navigator.of(sheetContext).pop();
                               }
                               AnikumoDialog.showToast(
-                                  message: '已保存本番跳过设置');
+                                  message: S.t('已保存本番跳过设置'));
                             },
-                            child: const Text('保存'),
+                            child: Text(S.t('保存')),
                           ),
                         ),
                       ],
@@ -1207,7 +1267,7 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
                   AnikumoIcons.photo_camera_outlined,
                   color: Colors.white,
                 ),
-                tooltip: '截图',
+                tooltip: S.t('截图'),
                 onPressed: widget.handleScreenShot,
               ),
             IconButton(
@@ -1217,7 +1277,7 @@ class _PlayerItemPanelState extends State<PlayerItemPanel> {
                     : AnikumoIcons.lock_open,
                 color: Colors.white,
               ),
-              tooltip: playerController.panel.lockPanel ? '解锁面板' : '锁定面板',
+              tooltip: playerController.panel.lockPanel ? S.t('解锁面板') : S.t('锁定面板'),
               onPressed: () {
                 playerController.panel.lockPanel =
                     !playerController.panel.lockPanel;

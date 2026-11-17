@@ -5,9 +5,11 @@ import 'package:anikumo/bean/settings/settings_detail_scaffold.dart';
 import 'package:anikumo/bean/settings/settings_list.dart';
 import 'package:anikumo/bean/widget/state_presentation.dart';
 import 'package:anikumo/pages/settings/sync/sync_settings_widgets.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/logging/logger.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/services/sync/webdav.dart';
+import 'package:anikumo/services/sync/zone_sync.dart';
 import 'package:anikumo/services/sync/danmaku_shield_sync_service.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
 
@@ -30,7 +32,7 @@ class _WebDavSyncPageState extends State<WebDavSyncPage> {
     setState(() {
       _busy = true;
       _failed = false;
-      _message = '正在连接 WebDAV…';
+      _message = S.t('正在连接 WebDAV…');
     });
     try {
       await action();
@@ -38,7 +40,7 @@ class _WebDavSyncPageState extends State<WebDavSyncPage> {
       AnikumoLogger().w('WebDAV settings operation failed', error: e);
       if (mounted) {
         _failed = true;
-        _message = '未能完成，请检查网络或服务器配置后重试。';
+        _message = S.t('未能完成，请检查网络或服务器配置后重试。');
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -57,9 +59,9 @@ class _WebDavSyncPageState extends State<WebDavSyncPage> {
         } else if (!webDav.isHistorySyncing) {
           await webDav.ping();
         }
-        if (mounted) setState(() => _message = '正在同步观看记录…');
+        if (mounted) setState(() => _message = S.t('正在同步观看记录…'));
         await webDav.syncHistory();
-        _message = '观看记录已同步';
+        _message = S.t('观看记录已同步');
       });
 
   Future<void> _configure() async {
@@ -73,9 +75,29 @@ class _WebDavSyncPageState extends State<WebDavSyncPage> {
   }
 
   Future<void> _syncDanmakuShield() => _run(() async {
-        if (mounted) setState(() => _message = '正在同步弹幕屏蔽词…');
+        if (mounted) setState(() => _message = S.t('正在同步弹幕屏蔽词…'));
         await widget.danmakuShieldSync.sync();
-        _message = '弹幕屏蔽词已同步';
+        _message = S.t('弹幕屏蔽词已同步');
+      });
+
+  /// Batch 274 (#36–#38): one zone bundle sync, with
+  /// the outcome surfaced in the page feedback line.
+  Future<void> _syncZone(String zone, String label) => _run(() async {
+        final webDav = WebDav();
+        if (!webDav.initialized) {
+          await webDav.init();
+        }
+        if (mounted) {
+          setState(() => _message = S.f('正在同步{}…', [label]));
+        }
+        final outcome = await webDav.syncZoneData(zone);
+        _message = switch (outcome) {
+          'uploaded' => S.f('{}已上传', [label]),
+          'downloaded' => S.f('{}已从服务器更新', [label]),
+          'conflict' => S.f('{}出现同步冲突，请到冲突页处理', [label]),
+          _ => S.f('{}已是最新', [label]),
+        };
+        if (mounted) setState(() {});
       });
 
   @override
@@ -90,34 +112,36 @@ class _WebDavSyncPageState extends State<WebDavSyncPage> {
     return PopScope(
       canPop: !_busy,
       child: SettingsDetailScaffold(
-        title: const Text('多设备同步'),
+        title: Text(S.t('多设备同步')),
         body: SyncPageBody(
           maxWidth: 720,
           children: [
-            const SyncPageIntro(
+            SyncPageIntro(
               icon: AnikumoIcons.devices_rounded,
               title: 'WebDAV',
-              description: '连接自己的云盘，同步观看记录、收藏与弹幕屏蔽词。',
+              description: S.t('连接自己的云盘，同步观看记录、收藏与弹幕屏蔽词。'),
             ),
             SettingsSection(
               margin: EdgeInsets.zero,
               tiles: [
                 SettingsTile(
                   leading: AnikumoIcons.dns_rounded,
-                  title: Text(configured ? '同步服务器' : '连接你的云盘'),
+                  title: Text(configured ? S.t('同步服务器') : S.t('连接你的云盘')),
                   description: Text(configured
-                      ? (host == null || host.isEmpty ? '已保存服务器地址' : host)
-                      : '需要支持 WebDAV 的云盘或服务器'),
+                      ? (host == null || host.isEmpty ? S.t('已保存服务器地址') : host)
+                      : S.t('需要支持 WebDAV 的云盘或服务器')),
                   trailing: const Icon(AnikumoIcons.chevron_right_rounded),
                   enabled: !_busy,
                   onPressed: (_) => _configure(),
                 ),
                 SettingsTile.switchTile(
                   leading: AnikumoIcons.cloud_sync_rounded,
-                  title: const Text('启用 WebDAV'),
+                  title: Text(S.t('启用 WebDAV')),
                   description: Text(configured
-                      ? (enabled ? '已开启，选择下方要同步的内容' : '开启后选择要同步的内容')
-                      : '请先配置服务器'),
+                      ? (enabled
+                          ? S.t('已开启，选择下方要同步的内容')
+                          : S.t('开启后选择要同步的内容'))
+                      : S.t('请先配置服务器')),
                   initialValue: enabled,
                   enabled: configured && !_busy,
                   onToggle: (value) => _setEnabled(value ?? !enabled),
@@ -125,13 +149,13 @@ class _WebDavSyncPageState extends State<WebDavSyncPage> {
               ],
             ),
             SettingsSection(
-              title: const Text('同步内容'),
+              title: Text(S.t('同步内容')),
               margin: EdgeInsets.zero,
               tiles: [
                 SettingsTile.switchTile(
                   leading: AnikumoIcons.history_rounded,
-                  title: const Text('观看记录'),
-                  description: const Text('自动同步播放进度与历史记录'),
+                  title: Text(S.t('观看记录')),
+                  description: Text(S.t('自动同步播放进度与历史记录')),
                   initialValue: history,
                   enabled: enabled && !_busy,
                   onToggle: (value) async {
@@ -142,8 +166,8 @@ class _WebDavSyncPageState extends State<WebDavSyncPage> {
                 ),
                 SettingsTile.switchTile(
                   leading: AnikumoIcons.favorite_rounded,
-                  title: const Text('收藏'),
-                  description: const Text('在收藏页同步所有追番分类'),
+                  title: Text(S.t('收藏')),
+                  description: Text(S.t('在收藏页同步所有追番分类')),
                   initialValue: collect,
                   enabled: enabled && !_busy,
                   onToggle: (value) async {
@@ -154,8 +178,8 @@ class _WebDavSyncPageState extends State<WebDavSyncPage> {
                 ),
                 SettingsTile.switchTile(
                   leading: AnikumoIcons.filter_alt_rounded,
-                  title: const Text('弹幕屏蔽词'),
-                  description: const Text('启动和修改规则后自动同步，包含关键词与正则表达式'),
+                  title: Text(S.t('弹幕屏蔽词')),
+                  description: Text(S.t('启动和修改规则后自动同步，包含关键词与正则表达式')),
                   initialValue: shield,
                   enabled: enabled && !_busy,
                   onToggle: (value) async {
@@ -169,15 +193,53 @@ class _WebDavSyncPageState extends State<WebDavSyncPage> {
                 ),
               ],
             ),
+            // Batch 274 (#36–#39): zone data bundles and
+            // the conflicts inbox.
+            SettingsSection(
+              title: Text(S.t('分区数据')),
+              margin: EdgeInsets.zero,
+              tiles: [
+                for (final (zone, label) in [
+                  ('manga', S.t('漫画区')),
+                  ('novel', S.t('小说区')),
+                  ('film', S.t('影视区')),
+                ])
+                  SettingsTile(
+                    leading: AnikumoIcons.cloud_sync_rounded,
+                    title: Text(S.f('同步{}', [label])),
+                    description: Text(S.t('收藏与阅读进度')),
+                    trailing: const Icon(AnikumoIcons.sync_rounded),
+                    enabled: enabled && !_busy,
+                    onPressed: (_) => _syncZone(zone, label),
+                  ),
+                SettingsTile(
+                  leading: AnikumoIcons.sync_problem_rounded,
+                  title: Text(S.t('同步冲突')),
+                  description: Text(
+                    SyncConflicts.load().isEmpty
+                        ? S.t('没有待处理的同步冲突')
+                        : S.f('{} 个冲突待处理', [
+                            SyncConflicts.load().length,
+                          ]),
+                  ),
+                  trailing: const Icon(AnikumoIcons.chevron_right_rounded),
+                  enabled: !_busy,
+                  onPressed: (_) async {
+                    await context.pushNamed('/settings/webdav/conflicts');
+                    if (mounted) setState(() {});
+                  },
+                ),
+              ],
+            ),
             StateActionButton(
               onPressed: enabled && !_busy ? _syncHistory : null,
-              text: _busy ? '请稍候…' : '立即同步观看记录',
+              text: _busy ? S.t('请稍候…') : S.t('立即同步观看记录'),
               icon: AnikumoIcons.sync_rounded,
             ),
             StateActionButton.tonal(
               onPressed:
                   enabled && shield && !_busy ? _syncDanmakuShield : null,
-              text: '立即同步弹幕屏蔽词',
+              text: S.t('立即同步弹幕屏蔽词'),
               icon: AnikumoIcons.sync_rounded,
             ),
             if (_message != null)

@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
@@ -33,8 +34,8 @@ class BackgroundDownloadService {
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
         channelId: 'anikumo_download_channel',
-        channelName: '下载服务',
-        channelDescription: '视频下载后台服务',
+        channelName: S.t('下载服务'),
+        channelDescription: S.t('视频下载后台服务'),
         channelImportance: NotificationChannelImportance.LOW,
         priority: NotificationPriority.LOW,
         onlyAlertOnce: true,
@@ -104,10 +105,10 @@ class BackgroundDownloadService {
 
     try {
       final result = await FlutterForegroundTask.startService(
-        notificationTitle: '正在下载',
-        notificationText: '准备中...',
+        notificationTitle: S.t('正在下载'),
+        notificationText: S.t('准备中...'),
         notificationButtons: [
-          const NotificationButton(id: 'pause_all', text: '暂停全部'),
+          NotificationButton(id: 'pause_all', text: S.t('暂停全部')),
         ],
         callback: _backgroundCallback,
       );
@@ -169,11 +170,11 @@ class BackgroundDownloadService {
     String text;
 
     if (activeCount == 0) {
-      title = '下载已暂停';
-      text = '共 $totalCount 个任务';
+      title = S.t('下载已暂停');
+      text = S.f('共 {} 个任务', [totalCount]);
     } else {
       final percent = (overallProgress * 100).toInt();
-      title = '正在下载 ($activeCount/$totalCount)';
+      title = S.f('正在下载 ({}/{})', [activeCount, totalCount]);
       text = '$percent% · $speedText';
     }
 

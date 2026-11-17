@@ -8,6 +8,7 @@ import 'package:anikumo/bean/widget/loading_indicator.dart';
 import 'package:anikumo/modules/bangumi/episode_item.dart';
 import 'package:anikumo/modules/comments/comment_item.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class EpisodeCommentsView extends StatelessWidget {
   const EpisodeCommentsView({
@@ -71,17 +72,17 @@ class EpisodeCommentsView extends StatelessWidget {
               SliverToBoxAdapter(
                 child: GeneralErrorWidget(
                   icon: AnikumoIcons.cloud_off_rounded,
-                  title: '评论暂时未能加载',
-                  errMsg: '请检查网络后重试，或切换分集查看讨论。',
+                  title: S.t('评论暂时未能加载'),
+                  errMsg: S.t('请检查网络后重试，或切换分集查看讨论。'),
                   onRetry: onRefresh,
-                  retryText: '重新加载',
+                  retryText: S.t('重新加载'),
                 ),
               )
             else if (!isLoading && comments.isEmpty)
-              const SliverToBoxAdapter(
+              SliverToBoxAdapter(
                 child: GeneralEmptyState(
                   icon: AnikumoIcons.chat_bubble_outline_rounded,
-                  title: '本集还没有讨论',
+                  title: S.t('本集还没有讨论'),
                 ),
               )
             else if (comments.isNotEmpty) ...[
@@ -96,7 +97,7 @@ class EpisodeCommentsView extends StatelessWidget {
                         padding: const EdgeInsets.fromLTRB(16, 4, 8, 4),
                         child: Row(children: [
                           Expanded(
-                            child: Text('刷新失败，已保留现有讨论',
+                            child: Text(S.t('刷新失败，已保留现有讨论'),
                                 style:
                                     TextStyle(color: colors.onErrorContainer)),
                           ),
@@ -104,7 +105,7 @@ class EpisodeCommentsView extends StatelessWidget {
                             onPressed: onRefresh,
                             style: TextButton.styleFrom(
                                 foregroundColor: colors.onErrorContainer),
-                            child: const Text('重试'),
+                            child: Text(S.t('重试')),
                           ),
                         ]),
                       ),
@@ -139,7 +140,7 @@ class EpisodeCommentsView extends StatelessWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                  child: Text('已显示全部 ${comments.length} 条讨论 · 来自 Bangumi',
+                  child: Text(S.f('已显示全部 {} 条讨论 · 来自 Bangumi', [comments.length]),
                       textAlign: TextAlign.center,
                       style: Theme.of(context)
                           .textTheme
@@ -162,7 +163,7 @@ class EpisodeCommentsView extends StatelessWidget {
     final type = Theme.of(context).textTheme;
     return LayoutBuilder(builder: (context, constraints) {
       final title = Row(mainAxisSize: MainAxisSize.min, children: [
-        Text('讨论',
+        Text(S.t('讨论'),
             style: type.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
         if ((!isLoading && !hasError) || comments.isNotEmpty) ...[
           const SizedBox(width: 8),
@@ -187,13 +188,13 @@ class EpisodeCommentsView extends StatelessWidget {
                   ? AnikumoIcons.arrow_upward_rounded
                   : AnikumoIcons.arrow_downward_rounded,
               size: 18),
-          label: Text(isAscending ? '最早优先' : '最新优先'),
+          label: Text(isAscending ? S.t('最早优先') : S.t('最新优先')),
         ),
         const SizedBox(width: 4),
         SizedBox.square(
           dimension: 48,
           child: IconButton.filledTonal(
-            tooltip: isLoading ? '正在加载评论' : '刷新评论',
+            tooltip: isLoading ? S.t('正在加载评论') : S.t('刷新评论'),
             onPressed: isLoading ? null : onRefresh,
             style: IconButton.styleFrom(
               backgroundColor: colors.secondaryContainer,
@@ -205,7 +206,7 @@ class EpisodeCommentsView extends StatelessWidget {
                 ? LoadingIndicator(
                     size: 24,
                     color: colors.onSecondaryContainer,
-                    semanticsLabel: '正在加载评论',
+                    semanticsLabel: S.t('正在加载评论'),
                   )
                 : const Icon(AnikumoIcons.refresh_rounded, size: 24),
           ),
@@ -246,7 +247,7 @@ class _EpisodeHeader extends StatelessWidget {
         ? translatedTitle
         : originalTitle.isNotEmpty
             ? originalTitle
-            : '第 $number 集';
+            : S.f('第 {} 集', [number]);
     final subtitle = originalTitle.isNotEmpty && originalTitle != title
         ? originalTitle
         : '';
@@ -290,7 +291,7 @@ class _EpisodeHeader extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                     ),
                     icon: const Icon(AnikumoIcons.video_library_outlined, size: 18),
-                    label: const Text('切换分集'),
+                    label: Text(S.t('切换分集')),
                   ),
                 ],
               ),

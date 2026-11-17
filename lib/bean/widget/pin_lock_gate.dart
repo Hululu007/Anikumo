@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:anikumo/services/privacy/app_lock.dart';
 import 'package:anikumo/services/ui/app_extras.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
 
 /// PIN app-lock gate (batch 15, G10). When a PIN is set, the
@@ -19,6 +21,29 @@ class _PinLockGateState extends State<PinLockGate> {
   bool _error = false;
 
   bool get _locked => PinLock.isEnabled && !PinLock.unlockedThisSession;
+
+  /// Batch 275 (#46): with the biometric lock enabled,
+  /// the PIN pad offers the system biometric / device
+  /// credential prompt as a shortcut — once on show,
+  /// and again from the fingerprint button.
+  bool get _biometricOffered => PrivacyGate.appLockEnabled;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_locked && _biometricOffered) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _locked) _tryBiometric();
+      });
+    }
+  }
+
+  Future<void> _tryBiometric() async {
+    if (await PrivacyGate.authenticate() && mounted) {
+      PinLock.unlockedThisSession = true;
+      setState(() => _entered = '');
+    }
+  }
 
   void _press(String digit) {
     if (_entered.length >= 6) return;
@@ -56,7 +81,7 @@ class _PinLockGateState extends State<PinLockGate> {
             ),
             const SizedBox(height: 14),
             Text(
-              _error ? 'PIN 不对，再试一次' : '输入 PIN 解锁 anikumo',
+              S.t(_error ? 'PIN 不对，再试一次' : '输入 PIN 解锁 anikumo'),
               style: theme.textTheme.titleMedium?.copyWith(
                 color: _error ? theme.colorScheme.error : null,
                 fontWeight: FontWeight.w700,
@@ -97,7 +122,16 @@ class _PinLockGateState extends State<PinLockGate> {
                       width: 76,
                       height: 60,
                       child: key.isEmpty
-                          ? const SizedBox()
+                          ? (_biometricOffered
+                              ? IconButton(
+                                  icon: const Icon(
+                                    Icons.fingerprint,
+                                    size: 30,
+                                  ),
+                                  tooltip: S.t('用指纹 / 面容解锁'),
+                                  onPressed: _tryBiometric,
+                                )
+                              : const SizedBox())
                           : TextButton(
                               onPressed: () {
                                 if (key == '⌫') {

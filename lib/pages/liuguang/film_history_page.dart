@@ -3,6 +3,7 @@ import 'package:liuguang_core/liuguang_core.dart';
 
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
 import 'package:anikumo/pages/liuguang/film_widgets.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/liuguang/video_engine.dart';
 
 /// Batch 224: the film zone's watch history — the user
@@ -37,7 +38,7 @@ String filmHistoryEpisodeLabel(String? episodeId) {
   if (episodeId == null || episodeId.isEmpty) return '';
   final tail = int.tryParse(episodeId.split('::').last);
   if (tail == null) return '';
-  return '第 ${tail + 1} 集';
+  return S.f('第 {} 集', [tail + 1]);
 }
 
 String _clock(Duration d) {
@@ -49,11 +50,11 @@ String _clock(Duration d) {
 
 String _when(DateTime at, DateTime now) {
   final diff = now.difference(at);
-  if (diff.inMinutes < 1) return '刚刚';
-  if (diff.inMinutes < 60) return '${diff.inMinutes} 分钟前';
-  if (diff.inHours < 24) return '${diff.inHours} 小时前';
-  if (diff.inDays < 30) return '${diff.inDays} 天前';
-  return '${at.month}月${at.day}日';
+  if (diff.inMinutes < 1) return S.t('刚刚');
+  if (diff.inMinutes < 60) return S.f('{} 分钟前', [diff.inMinutes]);
+  if (diff.inHours < 24) return S.f('{} 小时前', [diff.inHours]);
+  if (diff.inDays < 30) return S.f('{} 天前', [diff.inDays]);
+  return S.f('{}月{}日', [at.month, at.day]);
 }
 
 class FilmHistoryList extends StatefulWidget {
@@ -94,7 +95,7 @@ class FilmHistoryListState extends State<FilmHistoryList> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = '历史记录读取失败：$e';
+        _error = S.f('历史记录读取失败：{}', [e]);
         _loading = false;
       });
     }
@@ -116,17 +117,17 @@ class FilmHistoryListState extends State<FilmHistoryList> {
     if (_error != null) {
       return FilmEmptyState(
         icon: AnikumoIcons.history_rounded,
-        title: '历史记录',
+        title: S.t('历史记录'),
         message: _error!,
-        actionLabel: '重试',
+        actionLabel: S.t('重试'),
         onAction: _load,
       );
     }
     if (_titles.isEmpty) {
-      return const FilmEmptyState(
+      return FilmEmptyState(
         icon: AnikumoIcons.history_rounded,
-        title: '还没有观看记录',
-        message: '在影视区看过的电视剧、电影和综艺会出现在这里，点开就能接着看。',
+        title: S.t('还没有观看记录'),
+        message: S.t('在影视区看过的电视剧、电影和综艺会出现在这里，点开就能接着看。'),
       );
     }
     return ListView.builder(
@@ -176,9 +177,9 @@ class _FilmHistoryTileState extends State<_FilmHistoryTile> {
     final meta = [
       if (label.isNotEmpty) label,
       if (row.completed)
-        '已看完'
+        S.t('已看完')
       else if (row.duration > Duration.zero)
-        '看到 ${_clock(row.position)} / ${_clock(row.duration)}',
+        S.f('看到 {} / {}', [_clock(row.position), _clock(row.duration)]),
       _when(row.lastPlayedAt, DateTime.now()),
     ].join(' · ');
     return FutureBuilder<MediaDetail?>(
@@ -193,7 +194,7 @@ class _FilmHistoryTileState extends State<_FilmHistoryTile> {
             } else {
               ScaffoldMessenger.of(
                 context,
-              ).showSnackBar(const SnackBar(content: Text('暂时取不到这部内容，请稍后重试')));
+              ).showSnackBar(SnackBar(content: Text(S.t('暂时取不到这部内容，请稍后重试'))));
             }
           },
           child: Padding(
@@ -232,7 +233,7 @@ class _FilmHistoryTileState extends State<_FilmHistoryTile> {
                       Text(
                         row.title.isNotEmpty
                             ? row.title
-                            : (item?.title ?? '未知标题'),
+                            : (item?.title ?? S.t('未知标题')),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.titleSmall?.copyWith(
@@ -262,7 +263,7 @@ class _FilmHistoryTileState extends State<_FilmHistoryTile> {
                   ),
                 ),
                 IconButton(
-                  tooltip: '删除这条记录',
+                  tooltip: S.t('删除这条记录'),
                   icon: const Icon(AnikumoIcons.delete_outline_rounded),
                   onPressed: widget.onDelete,
                 ),
@@ -290,16 +291,16 @@ class _FilmHistoryPageState extends State<FilmHistoryPage> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('清空影视历史记录？'),
-        content: const Text('将删除影视区全部观看记录，此操作无法撤销。'),
+        title: Text(S.t('清空影视历史记录？')),
+        content: Text(S.t('将删除影视区全部观看记录，此操作无法撤销。')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('清空全部'),
+            child: Text(S.t('清空全部')),
           ),
         ],
       ),
@@ -314,10 +315,10 @@ class _FilmHistoryPageState extends State<FilmHistoryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('历史记录'),
+        title: Text(S.t('历史记录')),
         actions: [
           IconButton(
-            tooltip: '清空全部历史记录',
+            tooltip: S.t('清空全部历史记录'),
             icon: const Icon(AnikumoIcons.delete_sweep_outlined),
             onPressed: _clearAll,
           ),

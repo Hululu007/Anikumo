@@ -3,6 +3,7 @@ import 'package:flutter_modular/flutter_modular.dart';
 import 'package:liuguang_core/liuguang_core.dart';
 import 'package:anikumo/bean/theme/violet_glass.dart';
 import 'package:anikumo/pages/liuguang/film_detail_page.dart';
+import 'package:anikumo/pages/liuguang/film_calendar_page.dart';
 import 'package:anikumo/pages/liuguang/film_cloud_lists_page.dart';
 import 'package:anikumo/pages/liuguang/film_discover_tab.dart';
 import 'package:anikumo/pages/liuguang/film_history_page.dart';
@@ -11,6 +12,7 @@ import 'package:anikumo/pages/liuguang/film_feature_repo_page.dart';
 import 'package:anikumo/pages/liuguang/film_main_page.dart';
 import 'package:anikumo/pages/liuguang/film_search_page.dart';
 import 'package:anikumo/pages/route_error_page.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// The 影视专区 module (Batch 203), powered by the vendored
 /// 流光 LiuGuang engine. Same transition language as the
@@ -60,7 +62,7 @@ final liuguangModule = createModule(
         child: (context, state) {
           final args = state.arguments;
           if (args is! MediaItem) {
-            return const RouteErrorPage(message: '详情参数无效，请返回后重新打开。');
+            return RouteErrorPage(message: S.t('详情参数无效，请返回后重新打开。'));
           }
           return VioletZone(child: FilmDetailPage(item: args));
         },
@@ -73,7 +75,7 @@ final liuguangModule = createModule(
         child: (context, state) {
           final args = state.arguments;
           if (args is! FilmAllArgs) {
-            return const RouteErrorPage(message: '参数无效，请返回后重新打开。');
+            return RouteErrorPage(message: S.t('参数无效，请返回后重新打开。'));
           }
           return VioletZone(child: FilmAllPage(args: args));
         },
@@ -99,6 +101,13 @@ final liuguangModule = createModule(
         '/cloud',
         child: (context, state) =>
             const VioletZone(child: FilmCloudListsPage()),
+        transition: _filmTransition,
+      )
+      // Batch 272 (#31): the 追剧日历 over the favorites.
+      ..route(
+        '/calendar',
+        child: (context, state) =>
+            const VioletZone(child: FilmCalendarPage()),
         transition: _filmTransition,
       )
       // Batch 208: no zone-local player route — playback

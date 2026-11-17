@@ -18,14 +18,15 @@ class _SourceSearchGroup {
       status == PluginSearchStatus.success && results.isNotEmpty;
 
   String get statusLabel => switch (status) {
-        PluginSearchStatus.pending => '检索中…',
-        PluginSearchStatus.success =>
-          results.isEmpty ? '无结果' : '${results.length} 个结果',
-        PluginSearchStatus.noResult => '无结果',
-        PluginSearchStatus.error => '检索失败',
-        PluginSearchStatus.captcha => '需要验证',
-        PluginSearchStatus.circuitOpen => '暂时熔断',
-        PluginSearchStatus.timeout => '检索超时',
+        PluginSearchStatus.pending => S.t('检索中…'),
+        PluginSearchStatus.success => results.isEmpty
+            ? S.t('无结果')
+            : S.f('{} 个结果', [results.length]),
+        PluginSearchStatus.noResult => S.t('无结果'),
+        PluginSearchStatus.error => S.t('检索失败'),
+        PluginSearchStatus.captcha => S.t('需要验证'),
+        PluginSearchStatus.circuitOpen => S.t('暂时熔断'),
+        PluginSearchStatus.timeout => S.t('检索超时'),
       };
 }
 
@@ -151,12 +152,12 @@ class _SourceSheetViewState extends State<_SourceSheetView> {
                 children: [
                   IconButton(
                     icon: const Icon(AnikumoIcons.arrow_back_rounded, size: 20),
-                    tooltip: '重选集数',
+                    tooltip: S.t('重选集数'),
                     onPressed: widget.onBackToEpisodes,
                   ),
                   Expanded(
                     child: Text(
-                      '已选第${widget.pickedEpisode}集 · 下面选来源和线路',
+                      S.f('已选第{}集 · 下面选来源和线路', [widget.pickedEpisode]),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodyMedium
@@ -167,10 +168,11 @@ class _SourceSheetViewState extends State<_SourceSheetView> {
               ),
             ),
           MaterialBottomSheetHeader(
-            title: '播放来源',
+            title: S.t('播放来源'),
             description: pending > 0
-                ? '检索中 ${widget.groups.length - pending}/${widget.groups.length} · $resultCount 个结果'
-                : '${widget.groups.length} 个来源 · $resultCount 个结果',
+                ? S.f('检索中 {}/{} · {} 个结果',
+                    [widget.groups.length - pending, widget.groups.length, resultCount])
+                : S.f('{} 个来源 · {} 个结果', [widget.groups.length, resultCount]),
             compact: true,
             onClose: widget.onClose,
           ),
@@ -235,7 +237,7 @@ class _SourceSheetViewState extends State<_SourceSheetView> {
                   header: true,
                   button: true,
                   expanded: !collapsed,
-                  label: '来源规则：${group.name}，${group.statusLabel}',
+                  label: S.f('来源规则：{}，{}', [group.name, group.statusLabel]),
                   onTap: toggle,
                   excludeSemantics: true,
                   child: Material(
@@ -287,7 +289,7 @@ class _SourceSheetViewState extends State<_SourceSheetView> {
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
             child: Text(
-              '检索词：${group.keyword}',
+              S.f('检索词：{}', [group.keyword]),
               style: theme.textTheme.bodySmall
                   ?.copyWith(color: colors.onSurfaceVariant),
             ),
@@ -313,16 +315,16 @@ class _SourceSheetViewState extends State<_SourceSheetView> {
           PluginSearchStatus.noResult =>
             GeneralEmptyState(
               icon: AnikumoIcons.search_off_rounded,
-              title: '没有找到匹配结果',
+              title: S.t('没有找到匹配结果'),
               compact: true,
               actions: [
                 StateActionButton.tonal(
                   onPressed: () => widget.onSourceSearch(group.name),
-                  text: '修改检索词',
+                  text: S.t('修改检索词'),
                 ),
                 TextButton(
                   onPressed: () => widget.onSourceAliasSearch(group.name),
-                  child: const Text('使用别名'),
+                  child: Text(S.t('使用别名')),
                 ),
               ],
             ),
@@ -363,7 +365,7 @@ class _SourceSheetViewState extends State<_SourceSheetView> {
                   children: [
                     Flexible(
                       child: Text(
-                        showAll ? '收起全部条目' : '展开全部 ${group.results.length} 个结果',
+                        showAll ? S.t('收起全部条目') : S.f('展开全部 {} 个结果', [group.results.length]),
                         textAlign: TextAlign.center,
                         style: theme.textTheme.labelLarge
                             ?.copyWith(color: primary),
@@ -392,25 +394,25 @@ class _SourceSheetViewState extends State<_SourceSheetView> {
         child: AnikumoMenuButton(
           animated: true,
           builder: (context, toggle) => IconButton(
-            tooltip: '${group.name} 的更多操作',
+            tooltip: S.f('{} 的更多操作', [group.name]),
             icon: const Icon(AnikumoIcons.more_horiz_rounded, size: 20),
             onPressed: toggle,
           ),
           menuChildren: [
             AnikumoMenuItem(
-              label: '修改此来源的检索词',
+              label: S.t('修改此来源的检索词'),
               onPressed: () => widget.onSourceSearch(group.name),
             ),
             AnikumoMenuItem(
-              label: '使用别名检索此来源',
+              label: S.t('使用别名检索此来源'),
               onPressed: () => widget.onSourceAliasSearch(group.name),
             ),
             AnikumoMenuItem(
-              label: '重新检索此来源',
+              label: S.t('重新检索此来源'),
               onPressed: () => widget.onRetry(group.name),
             ),
             AnikumoMenuItem(
-              label: '在浏览器中打开',
+              label: S.t('在浏览器中打开'),
               onPressed: () => widget.onOpenBrowser(group.name),
             ),
           ],
@@ -428,7 +430,7 @@ class _SourceSheetViewState extends State<_SourceSheetView> {
       onTap: () => widget.onPlay(group.name, result),
       child: Semantics(
         button: true,
-        label: '播放 ${result.name}，来源 ${group.name}',
+        label: S.f('播放 {}，来源 {}', [result.name, group.name]),
         excludeSemantics: true,
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 64),
@@ -459,10 +461,10 @@ class _SourceSheetViewState extends State<_SourceSheetView> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
             children: [
-              const LoadingIndicator(size: 20, semanticsLabel: '正在检索'),
+              LoadingIndicator(size: 20, semanticsLabel: S.t('正在检索')),
               const SizedBox(width: 12),
               Expanded(
-                  child: Text('正在检索…',
+                  child: Text(S.t('正在检索…'),
                       style: Theme.of(context).textTheme.bodyMedium)),
             ],
           ),
@@ -476,16 +478,16 @@ class _SourceSheetViewState extends State<_SourceSheetView> {
     final (icon, title, hint, action, onAction) = requiresVerification
         ? (
             AnikumoIcons.verified_user_outlined,
-            '需要验证',
-            '完成网站验证后继续检索。',
-            '进行验证',
+            S.t('需要验证'),
+            S.t('完成网站验证后继续检索。'),
+            S.t('进行验证'),
             () => widget.onVerify(sourceName),
           )
         : (
             AnikumoIcons.error_outline_rounded,
-            '检索失败',
-            '可以重试，或打开网站检查是否可用。',
-            '重试',
+            S.t('检索失败'),
+            S.t('可以重试，或打开网站检查是否可用。'),
+            S.t('重试'),
             () => widget.onRetry(sourceName),
           );
     return Padding(
@@ -533,7 +535,7 @@ class _SourceSheetViewState extends State<_SourceSheetView> {
               FilledButton.tonal(onPressed: onAction, child: Text(action)),
               TextButton(
                 onPressed: () => widget.onOpenBrowser(sourceName),
-                child: const Text('打开网站'),
+                child: Text(S.t('打开网站')),
               ),
             ],
           ),
@@ -573,7 +575,7 @@ class _EpisodeAutoLoadView extends StatelessWidget {
                   const Spacer(),
                   IconButton(
                     icon: const Icon(AnikumoIcons.close_rounded),
-                    tooltip: '关闭',
+                    tooltip: S.t('关闭'),
                     onPressed: onClose,
                   ),
                 ],
@@ -582,7 +584,7 @@ class _EpisodeAutoLoadView extends StatelessWidget {
             const LoadingIndicator(),
             const SizedBox(height: 16),
             Text(
-              label,
+              S.t(label),
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -590,7 +592,7 @@ class _EpisodeAutoLoadView extends StatelessWidget {
             const SizedBox(height: 6),
             TextButton(
               onPressed: onManual,
-              child: const Text('手动选择来源'),
+              child: Text(S.t('手动选择来源')),
             ),
           ],
         ),
@@ -670,7 +672,7 @@ class _EpisodePickerView extends StatelessWidget {
                             ?.copyWith(fontWeight: FontWeight.w600),
                       ),
                       Text(
-                        '共 $episodeCount 集 · 先选集，再选线路',
+                        S.f('共 {} 集 · 先选集，再选线路', [episodeCount]),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -681,7 +683,7 @@ class _EpisodePickerView extends StatelessWidget {
                 if (onClose != null)
                   IconButton(
                     icon: const Icon(AnikumoIcons.close_rounded),
-                    tooltip: '关闭',
+                    tooltip: S.t('关闭'),
                     onPressed: onClose,
                   ),
               ],
@@ -790,7 +792,7 @@ class _EpisodePickerView extends StatelessWidget {
                                 Row(
                                   children: [
                                     Text(
-                                      '第$episode集',
+                                      S.f('第{}集', [episode]),
                                       style: theme.textTheme.titleSmall
                                           ?.copyWith(
                                         fontWeight: FontWeight.w700,
@@ -880,7 +882,7 @@ class _LineRoadsView extends StatelessWidget {
               children: [
                 IconButton(
                   icon: const Icon(AnikumoIcons.arrow_back_rounded),
-                  tooltip: '换个源',
+                  tooltip: S.t('换个源'),
                   onPressed: onBack,
                 ),
                 Expanded(
@@ -888,14 +890,14 @@ class _LineRoadsView extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '第$episode集',
+                        S.f('第{}集', [episode]),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.w600),
                       ),
                       Text(
-                        '$pluginName · 选择线路',
+                        S.f('{} · 选择线路', [pluginName]),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -906,7 +908,7 @@ class _LineRoadsView extends StatelessWidget {
                 if (onClose != null)
                   IconButton(
                     icon: const Icon(AnikumoIcons.close_rounded),
-                    tooltip: '关闭',
+                    tooltip: S.t('关闭'),
                     onPressed: onClose,
                   ),
               ],
@@ -923,7 +925,7 @@ class _LineRoadsView extends StatelessWidget {
                   contentPadding: const EdgeInsets.symmetric(horizontal: 4),
                   leading: const Icon(AnikumoIcons.play_circle_outline_rounded),
                   title: Text(road.name),
-                  subtitle: Text('${road.data.length} 集'),
+                  subtitle: Text(S.f('{} 集', [road.data.length])),
                   trailing: const Icon(AnikumoIcons.chevron_right_rounded),
                   onTap: () => onRoad(index),
                 );

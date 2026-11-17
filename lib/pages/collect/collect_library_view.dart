@@ -10,6 +10,7 @@ import 'package:anikumo/modules/collect/collect_module.dart';
 import 'package:anikumo/modules/collect/collect_type.dart';
 import 'package:anikumo/pages/collect/collect_library_query.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 part 'collect_library_card.dart';
 part 'collect_library_controls.dart';
@@ -277,7 +278,7 @@ class _CollectLibraryViewState extends State<CollectLibraryView>
             ),
             if (compact)
               IconButton(
-                tooltip: _searchExpanded ? '收起搜索' : '搜索收藏',
+                tooltip: _searchExpanded ? S.t('收起搜索') : S.t('搜索收藏'),
                 isSelected: _searchExpanded,
                 selectedIcon: const Icon(AnikumoIcons.search_off_rounded),
                 icon: const Icon(AnikumoIcons.search_rounded),
@@ -302,7 +303,7 @@ class _CollectLibraryViewState extends State<CollectLibraryView>
   Widget _countLabel(CollectLibraryQuery query) => ValueListenableBuilder(
     valueListenable: _selectedType,
     builder: (context, selected, _) => Text(
-      '${query.count(selected)} 部',
+      S.f('{} 部', [query.count(selected)]),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       style: Theme.of(context).textTheme.labelLarge?.copyWith(
@@ -312,7 +313,7 @@ class _CollectLibraryViewState extends State<CollectLibraryView>
   );
 
   Widget _searchBar() => Semantics(
-    label: '搜索收藏',
+    label: S.t('搜索收藏'),
     child: SearchBar(
       controller: _searchController,
       focusNode: _searchFocus,
@@ -320,7 +321,7 @@ class _CollectLibraryViewState extends State<CollectLibraryView>
       trailing: [
         if (_query.isNotEmpty)
           IconButton(
-            tooltip: '清除搜索',
+            tooltip: S.t('清除搜索'),
             onPressed: () {
               _searchController.clear();
               _search('');
@@ -444,14 +445,14 @@ class _CollectLibraryViewState extends State<CollectLibraryView>
     return Row(
       children: [
         Text(
-          groupType.label,
+          S.t(groupType.label),
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w800,
           ),
         ),
         const SizedBox(width: 8),
         Text(
-          '$count 部',
+          S.f('{} 部', [count]),
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -570,17 +571,17 @@ class _CollectLibraryViewState extends State<CollectLibraryView>
     final String title;
 
     if (searching) {
-      title = matchCount > 0 ? '当前分类没有匹配的番剧' : '没有找到匹配的番剧';
+      title = matchCount > 0 ? S.t('当前分类没有匹配的番剧') : S.t('没有找到匹配的番剧');
     } else if (matchCount == 0) {
-      title = '还没有收藏的番剧';
+      title = S.t('还没有收藏的番剧');
     } else {
       title = switch (type) {
-        CollectType.watching => '还没有在追的番剧',
-        CollectType.planToWatch => '还没有想看的番剧',
-        CollectType.watched => '还没有看过的番剧',
-        CollectType.onHold => '没有搁置的番剧',
-        CollectType.abandoned => '没有弃追的番剧',
-        _ => '还没有收藏的番剧',
+        CollectType.watching => S.t('还没有在追的番剧'),
+        CollectType.planToWatch => S.t('还没有想看的番剧'),
+        CollectType.watched => S.t('还没有看过的番剧'),
+        CollectType.onHold => S.t('没有搁置的番剧'),
+        CollectType.abandoned => S.t('没有弃追的番剧'),
+        _ => S.t('还没有收藏的番剧'),
       };
     }
     return GeneralEmptyState(

@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
@@ -118,7 +119,7 @@ class RuleRepository {
   static RuleCatalog parseCatalog(String raw) {
     final decoded = json.decode(raw);
     if (decoded is! List) {
-      throw const FormatException('仓库目录（index.json）格式不对：根节点必须是数组');
+      throw FormatException(S.t('仓库目录（index.json）格式不对：根节点必须是数组'));
     }
     final items = <RuleCatalogItem>[];
     var skipped = 0;
@@ -131,7 +132,7 @@ class RuleRepository {
       }
     }
     if (decoded.isNotEmpty && items.isEmpty) {
-      throw const FormatException('仓库目录里没有有效的规则条目');
+      throw FormatException(S.t('仓库目录里没有有效的规则条目'));
     }
     return RuleCatalog(items: items, skipped: skipped);
   }
@@ -141,7 +142,7 @@ class RuleRepository {
     final raw = await _getText(ruleUri(base, name).toString());
     final decoded = json.decode(raw);
     if (decoded is! Map) {
-      throw FormatException('规则「$name」的文件格式不对');
+      throw FormatException(S.f('规则「{}」的文件格式不对', [name]));
     }
     return Plugin.fromJson(Map<String, dynamic>.from(decoded));
   }

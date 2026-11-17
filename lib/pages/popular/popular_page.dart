@@ -16,6 +16,8 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:anikumo/services/logging/logger.dart';
 import 'package:anikumo/bean/appbar/drag_to_move_bar.dart' as dtb;
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/pages/discover/cross_zone_widgets.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// Batch 147: the back-to-top affordance appears only after
 /// the feed has actually scrolled about a screenful — at the
@@ -95,6 +97,16 @@ class _PopularPageState extends State<PopularPage> {
         controller: scrollController,
         slivers: [
           buildEditorialTitleBar(),
+          // Batch 275 (#45): mixed continue rail across
+          // all four zones (renders nothing when empty).
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: StyleString.cardSpace,
+              ),
+              child: CrossZoneContinueRail(),
+            ),
+          ),
           SliverToBoxAdapter(
             child: Observer(
               builder: (_) => AnimatedOpacity(
@@ -199,8 +211,8 @@ class _PopularPageState extends State<PopularPage> {
           EditorialHeroCarousel(
             items: top,
             kickerFor: (rank) => isTrend
-                ? '今日主视觉 · TOP ${rank + 1}'
-                : '标签精选 · TOP ${rank + 1}',
+                ? S.f('今日主视觉 · TOP {}', [rank + 1])
+                : S.f('标签精选 · TOP {}', [rank + 1]),
             onTap: (item) => context.pushNamed(
               '/info/',
               arguments: item,
@@ -209,8 +221,8 @@ class _PopularPageState extends State<PopularPage> {
           EditorialSectionHeader(
             index: '01',
             label: 'RANKING',
-            title: isTrend ? '本日榜单' : '标签人气榜',
-            subtitle: isTrend ? '大家正在追的五部' : '这个标签里最热的五部',
+            title: isTrend ? S.t('本日榜单') : S.t('标签人气榜'),
+            subtitle: isTrend ? S.t('大家正在追的五部') : S.t('这个标签里最热的五部'),
           ),
           for (var i = 0; i < top.length; i++)
             // Batch 123: the Top-5 rows cascade in with a 3D
@@ -236,8 +248,8 @@ class _PopularPageState extends State<PopularPage> {
           EditorialSectionHeader(
             index: '02',
             label: isTrend ? 'TRENDING' : 'TAG FEED',
-            title: isTrend ? '热门番组' : popularController.currentTag,
-            subtitle: '继续向下，慢慢挑',
+            title: isTrend ? S.t('热门番组') : popularController.currentTag,
+            subtitle: S.t('继续向下，慢慢挑'),
           ),
         ],
       ),
@@ -304,7 +316,7 @@ class _PopularPageState extends State<PopularPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'POPULAR · 今日推荐',
+                S.t('POPULAR · 今日推荐'),
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: Theme.of(context).colorScheme.outline,
                   fontWeight: FontWeight.w700,
@@ -323,7 +335,7 @@ class _PopularPageState extends State<PopularPage> {
                     menuChildren: [
                       for (final tag in ['', ...defaultAnimeTags])
                         AnikumoMenuItem(
-                          label: tag.isEmpty ? '热门番组' : tag,
+                          label: tag.isEmpty ? S.t('热门番组') : tag,
                           selected: tag == popularController.currentTag,
                           onPressed: () => _selectTag(tag),
                         ),
@@ -336,7 +348,7 @@ class _PopularPageState extends State<PopularPage> {
                         children: [
                           Text(
                             isTrend
-                                ? '热门番组'
+                                ? S.t('热门番组')
                                 : popularController.currentTag,
                             style: theme.textTheme.headlineMedium!
                                 .copyWith(fontWeight: FontWeight.w800),

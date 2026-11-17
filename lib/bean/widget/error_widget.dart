@@ -1,25 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:anikumo/bean/widget/state_presentation.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
 
 /// Shrink-wraps in slivers and scrolls within bounded page or media surfaces.
 class GeneralErrorWidget extends StatelessWidget {
   const GeneralErrorWidget({
     required this.errMsg,
-    this.title = '出了点问题',
+    this.title,
     this.icon = AnikumoIcons.error_outline_rounded,
     this.onRetry,
-    this.retryText = '重试',
+    this.retryText,
     this.actions = const [],
     this.compact = false,
     super.key,
   });
 
-  final String title;
+  final String? title;
   final String errMsg;
   final IconData icon;
   final VoidCallback? onRetry;
-  final String retryText;
+  final String? retryText;
   final List<Widget> actions;
   final bool compact;
 
@@ -31,7 +32,7 @@ class GeneralErrorWidget extends StatelessWidget {
       if (onRetry != null)
         StateActionButton(
           onPressed: onRetry,
-          text: retryText,
+          text: retryText ?? S.t('重试'),
           icon: AnikumoIcons.refresh_rounded,
         ),
       ...actions,
@@ -62,7 +63,7 @@ class GeneralErrorWidget extends StatelessWidget {
                     Semantics(
                       header: true,
                       child: Text(
-                        title,
+                        title ?? S.t('出了点问题'),
                         textAlign: TextAlign.center,
                         style: (compact
                                 ? theme.textTheme.titleMedium

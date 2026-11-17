@@ -5,6 +5,7 @@ import 'package:anikumo/bean/widget/loading_indicator.dart';
 import 'package:anikumo/modules/collect/collect_type.dart';
 import 'package:anikumo/modules/history/history_module.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class HistoryRecordTile extends StatelessWidget {
   const HistoryRecordTile({
@@ -38,7 +39,7 @@ class HistoryRecordTile extends StatelessWidget {
     final position = progress.inHours > 0
         ? '${progress.inHours}:$minutes:$seconds'
         : '${progress.inMinutes}:$seconds';
-    return '看到 $position';
+    return S.f('看到 {}', [position]);
   }
 
   @override
@@ -49,12 +50,12 @@ class HistoryRecordTile extends StatelessWidget {
         ? history.bangumiItem.name
         : history.bangumiItem.nameCn;
     final episode = history.lastWatchEpisodeName.isEmpty
-        ? '第 ${history.lastWatchEpisode} 话'
+        ? S.f('第 {} 话', [history.lastWatchEpisode])
         : history.lastWatchEpisodeName;
     final source = HistoryEntryKind.normalize(history.entryKind) ==
             HistoryEntryKind.offline
-        ? '缓存'
-        : '在线';
+        ? S.t('缓存')
+        : S.t('在线');
     final time =
         TimeOfDay.fromDateTime(history.lastWatchTime.toLocal()).format(context);
     final image = history.bangumiItem.images['large'] ?? '';
@@ -206,7 +207,7 @@ class HistoryRecordTile extends StatelessWidget {
     }
     if (editing) {
       return IconButton.filledTonal(
-        tooltip: '删除记录',
+        tooltip: S.t('删除记录'),
         style: IconButton.styleFrom(
           minimumSize: const Size(48, 48),
           backgroundColor: colors.errorContainer,
@@ -219,7 +220,7 @@ class HistoryRecordTile extends StatelessWidget {
 
     final buttons = [
       IconButton.filledTonal(
-        tooltip: '继续播放',
+        tooltip: S.t('继续播放'),
         style: IconButton.styleFrom(
           minimumSize: const Size(48, 48),
           backgroundColor: colors.primaryContainer,
@@ -232,7 +233,7 @@ class HistoryRecordTile extends StatelessWidget {
         menuChildren: [
           AnikumoMenuItem(
             onPressed: onDetails,
-            label: '番剧详情',
+            label: S.t('番剧详情'),
           ),
           SubmenuButton(
             menuChildren: [
@@ -242,20 +243,20 @@ class HistoryRecordTile extends StatelessWidget {
                   onPressed: onChangeCollect == null
                       ? null
                       : () => onChangeCollect!(type),
-                  label: type.label,
+                  label: S.t(type.label),
                 ),
             ],
-            child: Text(collectType.label),
+            child: Text(S.t(collectType.label)),
           ),
           const Divider(),
           AnikumoMenuItem(
             destructive: true,
             onPressed: onDelete,
-            label: '删除记录',
+            label: S.t('删除记录'),
           ),
         ],
         builder: (context, toggle) => IconButton(
-          tooltip: '更多操作',
+          tooltip: S.t('更多操作'),
           constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
           onPressed: toggle,
           icon: const Icon(AnikumoIcons.more_horiz_rounded),

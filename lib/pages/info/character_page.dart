@@ -13,6 +13,7 @@ import 'package:anikumo/modules/comments/comment_item.dart';
 import 'package:anikumo/pages/info/character_info_view.dart';
 import 'package:anikumo/request/apis/bangumi_api.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class CharacterPage extends StatefulWidget {
   const CharacterPage({
@@ -93,12 +94,12 @@ class _CharacterPageState extends State<CharacterPage> {
         body: Column(
           children: [
             MaterialBottomSheetHeader(
-              title: name.isEmpty ? '人物' : name,
+              title: name.isEmpty ? S.t('人物') : name,
               onClose: () => Navigator.of(context).pop(),
             ),
-            const ConnectedTabs(
+            ConnectedTabs(
               padding: materialBottomSheetTabsPadding,
-              labels: ['资料', '吐槽'],
+              labels: [S.t('资料'), S.t('吐槽')],
             ),
             Expanded(
               child: TabBarView(
@@ -115,8 +116,8 @@ class _CharacterPageState extends State<CharacterPage> {
     final character = _character;
     if (character != null && character.id == 0) {
       return GeneralErrorWidget(
-        title: '人物资料加载失败',
-        errMsg: '请检查网络连接后重试。',
+        title: S.t('人物资料加载失败'),
+        errMsg: S.t('请检查网络连接后重试。'),
         onRetry: _loadCharacter,
       );
     }
@@ -171,18 +172,18 @@ class _CharacterPageState extends State<CharacterPage> {
     if (_commentsError) {
       return SliverFillRemaining(
         child: GeneralErrorWidget(
-          title: '人物吐槽加载失败',
-          errMsg: '请检查网络连接后重试。',
+          title: S.t('人物吐槽加载失败'),
+          errMsg: S.t('请检查网络连接后重试。'),
           onRetry: _loadComments,
         ),
       );
     }
     if (_comments.isEmpty) {
-      return const SliverFillRemaining(
+      return SliverFillRemaining(
         hasScrollBody: false,
         child: GeneralEmptyState(
           icon: AnikumoIcons.chat_bubble_outline_rounded,
-          title: '还没有评论',
+          title: S.t('还没有评论'),
         ),
       );
     }

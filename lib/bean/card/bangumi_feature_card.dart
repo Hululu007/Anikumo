@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/utils/tap_debouncer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
@@ -17,11 +18,11 @@ class BangumiFeatureCard extends StatelessWidget {
   const BangumiFeatureCard({
     super.key,
     required this.bangumiItem,
-    this.badgeLabel = '本期精选',
+    this.badgeLabel,
   });
 
   final BangumiItem bangumiItem;
-  final String badgeLabel;
+  final String? badgeLabel;
 
   String get _title =>
       bangumiItem.nameCn.isNotEmpty ? bangumiItem.nameCn : bangumiItem.name;
@@ -75,7 +76,7 @@ class BangumiFeatureCard extends StatelessWidget {
               Positioned(
                 top: 12,
                 left: 12,
-                child: _Badge(label: badgeLabel),
+                child: _Badge(label: badgeLabel ?? S.t('本期精选')),
               ),
               Positioned(
                 left: 16,
@@ -105,7 +106,7 @@ class BangumiFeatureCard extends StatelessWidget {
                           ),
                         if (_year.isNotEmpty) _MetaChip(label: _year),
                         if (bangumiItem.rank > 0)
-                          _MetaChip(label: 'Bangumi 排名 ${bangumiItem.rank}'),
+                          _MetaChip(label: S.f('Bangumi 排名 {}', [bangumiItem.rank])),
                       ],
                     ),
                   ],

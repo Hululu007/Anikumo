@@ -3,6 +3,10 @@
 // The parsing half is pure and unit-tested: MangaDex entities carry
 // localized maps for title/description and relationships for the
 // cover file and author, all normalized here into flat models.
+// (Batch 265: only the display-label getters below consult the
+// i18n string layer; parsing itself stays untouched.)
+
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// Picks a display string from a MangaDex localized text map,
 /// preferring Simplified Chinese, then Traditional, English,
@@ -143,10 +147,10 @@ class MangaItem {
   }
 
   String get statusLabel => switch (status) {
-        'ongoing' => '连载中',
-        'completed' => '已完结',
-        'hiatus' => '休刊',
-        'cancelled' => '已取消',
+        'ongoing' => S.t('连载中'),
+        'completed' => S.t('已完结'),
+        'hiatus' => S.t('休刊'),
+        'cancelled' => S.t('已取消'),
         _ => '',
       };
 
@@ -241,7 +245,9 @@ class MangaChapter {
 
   String get displayLabel {
     final number = chapter;
-    final base = number == null || number.isEmpty ? '番外/单话' : '第 $number 话';
+    final base = number == null || number.isEmpty
+        ? S.t('番外/单话')
+        : S.f('第 {} 话', [number]);
     return title.isEmpty ? base : '$base $title';
   }
 
@@ -251,15 +257,15 @@ class MangaChapter {
   /// report 0 — showing "0 页" was a device-reported bug),
   /// plus the language when reported; empty when neither.
   String get detailSubtitle => [
-        if (pages > 0) '$pages 页',
+        if (pages > 0) S.f('{} 页', [pages]),
         if (languageLabel.isNotEmpty) languageLabel,
       ].join(' · ');
 
   String get languageLabel => switch (language) {
-        'zh' => '简中',
-        'zh-hk' => '繁中',
+        'zh' => S.t('简中'),
+        'zh-hk' => S.t('繁中'),
         'en' => 'English',
-        'ja' => '日本語',
+        'ja' => S.t('日本語'),
         _ => language,
       };
 
@@ -315,11 +321,11 @@ class MangaTag {
   final String group;
 
   String get groupLabel => switch (group) {
-        'genre' => '题材',
-        'theme' => '主题',
-        'format' => '形式',
-        'content' => '内容',
-        _ => '其他',
+        'genre' => S.t('题材'),
+        'theme' => S.t('主题'),
+        'format' => S.t('形式'),
+        'content' => S.t('内容'),
+        _ => S.t('其他'),
       };
 
   factory MangaTag.fromApi(Map<String, dynamic> json) {

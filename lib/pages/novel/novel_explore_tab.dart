@@ -4,6 +4,7 @@ import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter_modular/flutter_modular.dart';
 
 import '../../models/novel_item.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import '../../services/novel/novel_source.dart';
 import '../../services/novel/novel_sources.dart';
 import 'novel_widgets.dart';
@@ -55,10 +56,10 @@ class _NovelExploreTabState extends State<NovelExploreTab> {
     if (source == null) {
       // Batch 59: no sources imported yet — an import
       // prompt, not an endless spinner.
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(32),
-          child: Text('还没有书源。到「书源」页签用你自己的 URL 链接导入后即可探索。'),
+          padding: const EdgeInsets.all(32),
+          child: Text(S.t('还没有书源。到「书源」页签用你自己的 URL 链接导入后即可探索。')),
         ),
       );
     }
@@ -71,7 +72,7 @@ class _NovelExploreTabState extends State<NovelExploreTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            NovelSectionHeader(title: '探索 · ${source.name}'),
+            NovelSectionHeader(title: S.f('探索 · {}', [source.name])),
             const Expanded(child: Center(child: CircularProgressIndicator())),
           ],
         ),
@@ -91,13 +92,13 @@ class _NovelExploreTabState extends State<NovelExploreTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          NovelSectionHeader(title: '探索 · ${source.name}'),
+          NovelSectionHeader(title: S.f('探索 · {}', [source.name])),
           if (items.isEmpty)
-            const Expanded(
+            Expanded(
               child: Center(
                 child: Padding(
-                  padding: EdgeInsets.all(32),
-                  child: Text('这个源没有发现分类，用搜索找书吧'),
+                  padding: const EdgeInsets.all(32),
+                  child: Text(S.t('这个源没有发现分类，用搜索找书吧')),
                 ),
               ),
             )
@@ -159,9 +160,9 @@ class NovelCategoryPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(args.category.title)),
       body: source == null
-          ? const GeneralEmptyState(
+          ? GeneralEmptyState(
               icon: AnikumoIcons.find_in_page_outlined,
-              title: '书源不存在',
+              title: S.t('书源不存在'),
             )
           : NovelBookGrid(source: source, category: args.category),
     );
@@ -254,9 +255,9 @@ class _NovelBookGridState extends State<NovelBookGrid> {
       if (_errorText != null) {
         return NovelErrorState(message: _errorText!, onRetry: _loadFirst);
       }
-      return const GeneralEmptyState(
+      return GeneralEmptyState(
         icon: AnikumoIcons.inbox_rounded,
-        title: '这个分类暂时没有内容',
+        title: S.t('这个分类暂时没有内容'),
       );
     }
     return NotificationListener<ScrollNotification>(
@@ -320,9 +321,9 @@ class NovelSourcePage extends StatelessWidget {
     if (source == null) {
       return Scaffold(
         appBar: AppBar(),
-        body: const GeneralEmptyState(
+        body: GeneralEmptyState(
           icon: AnikumoIcons.find_in_page_outlined,
-          title: '书源不存在',
+          title: S.t('书源不存在'),
         ),
       );
     }
@@ -336,16 +337,16 @@ class NovelSourcePage extends StatelessWidget {
           if (!isActive)
             TextButton(
               onPressed: () => NovelSources.setActive(source.id),
-              child: const Text('切换到此源'),
+              child: Text(S.t('切换到此源')),
             ),
         ],
       ),
       body: (source.hasDynamicExplore && !source.exploreKindsResolved)
           ? const Center(child: CircularProgressIndicator())
           : categories.isEmpty
-              ? const GeneralEmptyState(
+              ? GeneralEmptyState(
                   icon: AnikumoIcons.explore_off_rounded,
-                  title: '这个源没有发现分类，用搜索找书吧',
+                  title: S.t('这个源没有发现分类，用搜索找书吧'),
                 )
               : ListView.builder(
                   scrollCacheExtent: const ScrollCacheExtent.pixels(700),
@@ -422,7 +423,7 @@ class _NovelCategoryRailState extends State<_NovelCategoryRail> {
                 category: widget.category,
               ),
             ),
-            child: const Text('全部'),
+            child: Text(S.t('全部')),
           ),
         ),
         if (_error != null)
@@ -445,7 +446,7 @@ class _NovelCategoryRailState extends State<_NovelCategoryRail> {
                     setState(() => _error = null);
                     _load();
                   },
-                  child: const Text('重试'),
+                  child: Text(S.t('重试')),
                 ),
               ],
             ),
@@ -456,9 +457,9 @@ class _NovelCategoryRailState extends State<_NovelCategoryRail> {
             child: Center(child: CircularProgressIndicator()),
           )
         else if (_items!.isEmpty)
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
-            child: Text('这个分类暂时没有内容'),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            child: Text(S.t('这个分类暂时没有内容')),
           )
         else
           SizedBox(

@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/utils/tap_debouncer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollCacheExtent;
@@ -31,11 +32,11 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('删除'),
+            child: Text(S.t('删除')),
           ),
         ],
       ),
@@ -45,28 +46,28 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> {
 
   Future<void> _deleteOne(MangaProgress entry) async {
     if (!await _confirm(
-      '删除这条记录？',
-      '将移除《${entry.mangaTitle}》的阅读进度，此操作无法撤销。',
+      S.t('删除这条记录？'),
+      S.f('将移除《{}》的阅读进度，此操作无法撤销。', [entry.mangaTitle]),
     )) {
       return;
     }
     await MangaLibraryStore.removeProgress(entry.key);
     if (!mounted) return;
     setState(() {});
-    AnikumoDialog.showToast(message: '已删除');
+    AnikumoDialog.showToast(message: S.t('已删除'));
   }
 
   Future<void> _clearAll(int count) async {
     if (!await _confirm(
-      '清空全部阅读历史？',
-      '将删除全部 $count 条漫画阅读记录，此操作无法撤销。',
+      S.t('清空全部阅读历史？'),
+      S.f('将删除全部 {} 条漫画阅读记录，此操作无法撤销。', [count]),
     )) {
       return;
     }
     await MangaLibraryStore.clearProgress();
     if (!mounted) return;
     setState(() {});
-    AnikumoDialog.showToast(message: '阅读历史已清空');
+    AnikumoDialog.showToast(message: S.t('阅读历史已清空'));
   }
 
   @override
@@ -74,18 +75,18 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> {
     final progress = MangaLibraryStore.loadProgressList();
     return Scaffold(
       appBar: AppBar(
-        title: Text('阅读历史（${progress.length}）'),
+        title: Text(S.f('阅读历史（{}）', [progress.length])),
         actions: [
           if (progress.isNotEmpty)
             IconButton(
-              tooltip: '清空全部',
+              tooltip: S.t('清空全部'),
               icon: const Icon(AnikumoIcons.delete_sweep_outlined),
               onPressed: () => _clearAll(progress.length),
             ),
         ],
       ),
       body: progress.isEmpty
-          ? const Center(child: Text('还没有阅读记录'))
+          ? Center(child: Text(S.t('还没有阅读记录')))
           : ListView.builder(
         scrollCacheExtent: const ScrollCacheExtent.pixels(700),
               padding: const EdgeInsets.symmetric(
@@ -141,7 +142,7 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> {
                               ),
                               const SizedBox(height: 3),
                               Text(
-                                '读到 ${entry.chapterLabel} · 第 ${entry.page + 1} / ${entry.totalPages} 页',
+                                S.f('读到 {} · 第 {} / {} 页', [entry.chapterLabel, entry.page + 1, entry.totalPages]),
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodySmall
@@ -154,7 +155,7 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> {
                           ),
                         ),
                         IconButton(
-                          tooltip: '删除记录',
+                          tooltip: S.t('删除记录'),
                           icon: const Icon(AnikumoIcons.delete_outline_rounded),
                           onPressed: () => _deleteOne(entry),
                         ),

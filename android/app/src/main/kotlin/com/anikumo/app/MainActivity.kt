@@ -28,9 +28,13 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import com.ryanheise.audioservice.AudioService
-import com.ryanheise.audioservice.AudioServiceActivity
+import com.ryanheise.audioservice.AudioServiceFragmentActivity
 
-class MainActivity: AudioServiceActivity() {
+// Release 1.1.0: the FragmentActivity variant of the
+// audio-service activity — local_auth's BiometricPrompt
+// requires a FragmentActivity; behavior is otherwise
+// identical to AudioServiceActivity.
+class MainActivity: AudioServiceFragmentActivity() {
     private val CHANNEL = "com.anikumo.app/intent"
     private val STORAGE_CHANNEL = "com.anikumo.app/storage"
     private val PIP_CHANNEL = "com.anikumo.app/pip"

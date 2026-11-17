@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../bean/widget/anikumo_icons.dart';
 import '../../models/novel_item.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import '../../services/novel/legado_http.dart';
 import '../../services/novel/moyuan_host.dart';
 import '../../services/novel/novel_api.dart';
@@ -143,7 +144,7 @@ class _NovelVerificationDialogState
       if (!mounted) return;
       setState(() {
         _loadingImage = false;
-        _errorText = '验证码图片加载失败，点刷新重试';
+        _errorText = S.t('验证码图片加载失败，点刷新重试');
       });
     }
   }
@@ -184,8 +185,9 @@ class _NovelVerificationDialogState
       if (status >= 400) {
         setState(() {
           _submitting = false;
-          _errorText =
-              '站点没有接受这次提交（$status）——可能正在限流，稍后再试，或改用网页中打开本章';
+          _errorText = S.f(
+              '站点没有接受这次提交（{}）——可能正在限流，稍后再试，或改用网页中打开本章',
+              [status]);
         });
         return;
       }
@@ -194,7 +196,7 @@ class _NovelVerificationDialogState
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _errorText = '提交没有送达——站点拒绝了连接或网络异常，稍后再试';
+        _errorText = S.t('提交没有送达——站点拒绝了连接或网络异常，稍后再试');
       });
     }
   }
@@ -203,7 +205,7 @@ class _NovelVerificationDialogState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return AlertDialog(
-      title: const Text('输入验证码'),
+      title: Text(S.t('输入验证码')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -224,12 +226,12 @@ class _NovelVerificationDialogState
                       )
                     : _imageBytes != null && _imageBytes!.isNotEmpty
                         ? Image.memory(_imageBytes!, height: 56)
-                        : const Center(child: Text('（图片不可用）')),
+                        : Center(child: Text(S.t('（图片不可用）'))),
               ),
               IconButton(
                 onPressed: _loadingImage ? null : _loadImage,
                 icon: const Icon(AnikumoIcons.refresh_rounded, size: 20),
-                tooltip: '换一张',
+                tooltip: S.t('换一张'),
               ),
             ],
           ),
@@ -238,9 +240,9 @@ class _NovelVerificationDialogState
             controller: _codeController,
             autofocus: true,
             textAlign: TextAlign.center,
-            decoration: const InputDecoration(
-              labelText: '验证码',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: S.t('验证码'),
+              border: const OutlineInputBorder(),
             ),
             onSubmitted: (_) => _submit(),
           ),
@@ -254,7 +256,7 @@ class _NovelVerificationDialogState
           ],
           const SizedBox(height: 8),
           Text(
-            '输入图中字符后点确认，本章会重新加载',
+            S.t('输入图中字符后点确认，本章会重新加载'),
             style: theme.textTheme.bodySmall
                 ?.copyWith(color: theme.colorScheme.outline),
           ),
@@ -264,11 +266,11 @@ class _NovelVerificationDialogState
         TextButton(
           onPressed:
               _submitting ? null : () => Navigator.pop(context, false),
-          child: const Text('取消'),
+          child: Text(S.t('取消')),
         ),
         FilledButton(
           onPressed: _submitting ? null : _submit,
-          child: Text(_submitting ? '提交中…' : '确认'),
+          child: Text(_submitting ? S.t('提交中…') : S.t('确认')),
         ),
       ],
     );

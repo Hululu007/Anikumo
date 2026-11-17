@@ -9,6 +9,7 @@ import 'package:anikumo/pages/player/episode_comments_view.dart';
 import 'package:anikumo/pages/video/video_controller.dart';
 import 'package:anikumo/pages/video/video_playback_args.dart';
 import 'package:anikumo/request/apis/bangumi_api.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class EpisodeCommentsSheet extends StatefulWidget {
   const EpisodeCommentsSheet({
@@ -125,12 +126,12 @@ class _EpisodeCommentsSheetState extends State<EpisodeCommentsSheet>
     final controller = _controller;
     await dialogs.run((task) async {
       final episodes = await task.loading(
-        message: '分集列表加载中',
+        message: S.t('分集列表加载中'),
         action: () =>
             BangumiApi.getBangumiEpisodesByID(controller.bangumiItem.id),
       );
       if (episodes.isEmpty) {
-        AnikumoDialog.showToast(message: '未找到分集列表');
+        AnikumoDialog.showToast(message: S.t('未找到分集列表'));
         return;
       }
       for (var index = 0; index < episodes.length; index++) {
@@ -145,7 +146,7 @@ class _EpisodeCommentsSheetState extends State<EpisodeCommentsSheet>
       if (selected == _selectedEpisode) return;
       _selectedEpisode = selected;
       unawaited(_loadComments());
-    }, errorMessage: '分集列表加载失败，请稍后重试');
+    }, errorMessage: S.t('分集列表加载失败，请稍后重试'));
   }
 
   @override
@@ -199,7 +200,7 @@ class _ExternalReviewsViewState extends State<_ExternalReviewsView> {
         }
         final reviews = snapshot.data ?? const <ExternalReview>[];
         if (reviews.isEmpty) {
-          return const Center(child: Text('暂无影评'));
+          return Center(child: Text(S.t('暂无影评')));
         }
         return ListView.separated(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -215,7 +216,7 @@ class _ExternalReviewsViewState extends State<_ExternalReviewsView> {
                   children: [
                     Expanded(
                       child: Text(
-                        review.author.isEmpty ? '匿名' : review.author,
+                        review.author.isEmpty ? S.t('匿名') : review.author,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontWeight: FontWeight.w700),

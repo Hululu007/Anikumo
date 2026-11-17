@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
 
@@ -72,7 +73,7 @@ class _ExitConfirmationDialogState extends State<ExitConfirmationDialog> {
         ),
       ),
       titlePadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-      title: const Text('关闭 Anikumo？', textAlign: TextAlign.center),
+      title: Text(S.t('关闭 Anikumo？'), textAlign: TextAlign.center),
       titleTextStyle: theme.textTheme.headlineSmall?.copyWith(
         color: colors.onSurface,
         fontWeight: FontWeight.w600,
@@ -85,7 +86,7 @@ class _ExitConfirmationDialogState extends State<ExitConfirmationDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              '选择关闭窗口后的操作',
+              S.t('选择关闭窗口后的操作'),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colors.onSurfaceVariant,
@@ -129,9 +130,9 @@ class _ExitConfirmationDialogState extends State<ExitConfirmationDialog> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              title: Text('记住我的选择', style: theme.textTheme.bodyMedium),
+              title: Text(S.t('记住我的选择'), style: theme.textTheme.bodyMedium),
               subtitle: Text(
-                '下次关闭窗口时不再询问',
+                S.t('下次关闭窗口时不再询问'),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: colors.onSurfaceVariant,
                 ),
@@ -146,7 +147,7 @@ class _ExitConfirmationDialogState extends State<ExitConfirmationDialog> {
         TextButton(
           style: buttonStyle,
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: Text(S.t('取消')),
         ),
         FilledButton(
           style: buttonStyle,
@@ -154,10 +155,10 @@ class _ExitConfirmationDialogState extends State<ExitConfirmationDialog> {
             ExitDialogResult(action: _action, rememberChoice: _rememberChoice),
           ),
           child: Text(
-            switch (_action) {
+            S.t(switch (_action) {
               ExitDialogAction.minimizeToTray => '最小化至托盘',
               ExitDialogAction.exit => '退出',
-            },
+            }),
           ),
         ),
       ],
@@ -200,11 +201,11 @@ class _ExitConfirmationDialogState extends State<ExitConfirmationDialog> {
         shape: RoundedRectangleBorder(borderRadius: borderRadius),
         secondary: Icon(icon, color: foreground),
         title: Text(
-          title,
+          S.t(title),
           style: theme.textTheme.titleSmall?.copyWith(color: foreground),
         ),
         subtitle: Text(
-          description,
+          S.t(description),
           style: theme.textTheme.bodySmall?.copyWith(
             color: selected
                 ? colors.onSecondaryContainer

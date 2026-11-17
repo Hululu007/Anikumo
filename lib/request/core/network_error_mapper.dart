@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:anikumo/request/core/network_exception.dart';
@@ -10,7 +11,7 @@ class NetworkErrorMapper {
       case DioExceptionType.badCertificate:
         return NetworkException(
           type: NetworkExceptionType.badCertificate,
-          message: '证书有误！',
+          message: S.t('证书有误！'),
           rawError: error,
           stackTrace: error.stackTrace,
         );
@@ -18,7 +19,7 @@ class NetworkErrorMapper {
         final statusCode = error.response?.statusCode;
         return NetworkException(
           type: NetworkExceptionType.badResponse,
-          message: '服务器异常，请稍后重试！',
+          message: S.t('服务器异常，请稍后重试！'),
           statusCode: statusCode,
           rawError: error,
           stackTrace: error.stackTrace,
@@ -26,42 +27,42 @@ class NetworkErrorMapper {
       case DioExceptionType.cancel:
         return NetworkException(
           type: NetworkExceptionType.cancel,
-          message: '请求已被取消，请重新请求',
+          message: S.t('请求已被取消，请重新请求'),
           rawError: error,
           stackTrace: error.stackTrace,
         );
       case DioExceptionType.connectionError:
         return NetworkException(
           type: NetworkExceptionType.connectionError,
-          message: '连接错误，请检查网络设置',
+          message: S.t('连接错误，请检查网络设置'),
           rawError: error,
           stackTrace: error.stackTrace,
         );
       case DioExceptionType.connectionTimeout:
         return NetworkException(
           type: NetworkExceptionType.connectionTimeout,
-          message: '网络连接超时，请检查网络设置',
+          message: S.t('网络连接超时，请检查网络设置'),
           rawError: error,
           stackTrace: error.stackTrace,
         );
       case DioExceptionType.receiveTimeout:
         return NetworkException(
           type: NetworkExceptionType.receiveTimeout,
-          message: '响应超时，请稍后重试！',
+          message: S.t('响应超时，请稍后重试！'),
           rawError: error,
           stackTrace: error.stackTrace,
         );
       case DioExceptionType.sendTimeout:
         return NetworkException(
           type: NetworkExceptionType.sendTimeout,
-          message: '发送请求超时，请检查网络设置',
+          message: S.t('发送请求超时，请检查网络设置'),
           rawError: error,
           stackTrace: error.stackTrace,
         );
       case DioExceptionType.transformTimeout:
         return NetworkException(
           type: NetworkExceptionType.parseError,
-          message: '响应解析超时，请稍后重试！',
+          message: S.t('响应解析超时，请稍后重试！'),
           rawError: error,
           stackTrace: error.stackTrace,
         );
@@ -74,7 +75,7 @@ class NetworkErrorMapper {
         } catch (_) {}
         return NetworkException(
           type: NetworkExceptionType.unknown,
-          message: '$connection 网络异常'.trimLeft(),
+          message: S.f('{} 网络异常', [connection]).trimLeft(),
           rawError: error,
           stackTrace: error.stackTrace,
         );
@@ -84,7 +85,7 @@ class NetworkErrorMapper {
   static NetworkException parse(Object error, StackTrace stackTrace) {
     return NetworkException(
       type: NetworkExceptionType.parseError,
-      message: '响应解析失败',
+      message: S.t('响应解析失败'),
       rawError: error,
       stackTrace: stackTrace,
     );
@@ -93,22 +94,22 @@ class NetworkErrorMapper {
   static Future<String> _connectionLabel() async {
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult.contains(ConnectivityResult.mobile)) {
-      return '正在使用移动流量';
+      return S.t('正在使用移动流量');
     }
     if (connectivityResult.contains(ConnectivityResult.wifi)) {
-      return '正在使用wifi';
+      return S.t('正在使用wifi');
     }
     if (connectivityResult.contains(ConnectivityResult.ethernet)) {
-      return '正在使用局域网';
+      return S.t('正在使用局域网');
     }
     if (connectivityResult.contains(ConnectivityResult.vpn)) {
-      return '正在使用代理网络';
+      return S.t('正在使用代理网络');
     }
     if (connectivityResult.contains(ConnectivityResult.other)) {
-      return '正在使用其他网络';
+      return S.t('正在使用其他网络');
     }
     if (connectivityResult.contains(ConnectivityResult.none)) {
-      return '未连接到任何网络';
+      return S.t('未连接到任何网络');
     }
     return '';
   }

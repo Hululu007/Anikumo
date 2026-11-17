@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/storage/storage.dart';
 
 /// The zones of the app. Each zone's own name mark in its
@@ -55,16 +56,59 @@ const List<(String, List<AppZone>)> zoneSwitcherGroups = [
   ('阅读', [AppZone.manga, AppZone.novel]),
 ];
 
+/// Batch 275 (#44): parses the user's custom zone order
+/// (a CSV of zone names). Unknown or missing zones fall
+/// back gracefully — the result is always a complete
+/// permutation of the four zones.
+List<AppZone> parseZoneOrder(String raw) {
+  final byName = {for (final z in AppZone.values) z.name: z};
+  final seen = <AppZone>{};
+  final ordered = <AppZone>[];
+  for (final part in raw.split(',')) {
+    final zone = byName[part.trim()];
+    if (zone != null && seen.add(zone)) ordered.add(zone);
+  }
+  for (final zone in AppZone.values) {
+    if (seen.add(zone)) ordered.add(zone);
+  }
+  return ordered;
+}
+
+/// The zones in the user's preferred order (default:
+/// enum order). Storage failures (unit tests, early
+/// boot) fall back to the default.
+List<AppZone> orderedZones() {
+  try {
+    return parseZoneOrder(GStorage.getSetting(SettingsKeys.zoneOrderCsv));
+  } catch (_) {
+    return AppZone.values;
+  }
+}
+
+/// [zoneSwitcherGroups] with each group's members
+/// sorted by the user's zone order.
+List<(String, List<AppZone>)> orderedZoneSwitcherGroups() {
+  final order = orderedZones();
+  int rank(AppZone z) => order.indexOf(z);
+  return [
+    for (final (label, members) in zoneSwitcherGroups)
+      (label, [...members]..sort((a, b) => rank(a).compareTo(rank(b)))),
+  ];
+}
+
 /// The zone shown at wheel position [index]. The wheel is
 /// endless in both directions, so indices run far past the
 /// zone count in either direction.
-AppZone zoneForWheelIndex(int index) =>
-    AppZone.values[index % AppZone.values.length];
+AppZone zoneForWheelIndex(int index) {
+  final zones = orderedZones();
+  return zones[index % zones.length];
+}
 
 /// The wheel page the switcher opens on: a large round
 /// multiple of the zone count (so the modulo mapping stays
 /// aligned) plus the current zone's own offset.
-int zoneWheelInitialPage(AppZone current) => 3000 + current.index;
+int zoneWheelInitialPage(AppZone current) =>
+    3000 + orderedZones().indexOf(current);
 
 /// Batch 240 (user direction): the switcher is no longer
 /// one fixed presentation — the user picks the style in
@@ -174,7 +218,7 @@ class ZoneWheelChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Tooltip(
-      message: '切换专区',
+      message: S.t('切换专区'),
       child: InkWell(
         borderRadius: BorderRadius.circular(999),
         onTap: () => showZoneSwitcher(context, current: current),
@@ -190,7 +234,7 @@ class ZoneWheelChip extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                english ? current.english : current.label,
+                english ? current.english : S.t(current.label),
                 style: TextStyle(
                   fontSize: english ? 10.5 : 12.5,
                   fontWeight: FontWeight.w800,
@@ -241,7 +285,7 @@ Future<void> showZoneSwitcher(
   return showGeneralDialog<void>(
     context: context,
     barrierDismissible: true,
-    barrierLabel: '切换专区',
+    barrierLabel: S.t('切换专区'),
     barrierColor: Colors.transparent,
     transitionDuration: const Duration(milliseconds: 300),
     transitionBuilder: (context, animation, _, child) => child,
@@ -364,13 +408,13 @@ class _ZoneSheetState extends State<_ZoneSheet>
     }
   }
 
-  String get _subtitle => switch (widget.style) {
+  String get _subtitle => S.t(switch (widget.style) {
     ZoneSwitcherStyle.panel => '点按进入 · 下拉面板关闭',
     ZoneSwitcherStyle.wheel => '左右转动滚轮 · 点中间的卡片进入',
     ZoneSwitcherStyle.slide => '左右滑动 · 点中间的卡片进入',
     ZoneSwitcherStyle.grid => '点按进入 · 下拉面板关闭',
     ZoneSwitcherStyle.segment => '点按切换 · 下拉面板关闭',
-  };
+ });
 
   void _onDragUpdate(DragUpdateDetails d) {
     if (_leaving) return;
@@ -403,6 +447,7 @@ class _ZoneSheetState extends State<_ZoneSheet>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final groups = orderedZoneSwitcherGroups();
     final scheme = theme.colorScheme;
     return Material(
       type: MaterialType.transparency,
@@ -448,6 +493,7 @@ class _ZoneSheetState extends State<_ZoneSheet>
   }
 
   Widget _sheet(ThemeData theme, ColorScheme scheme) {
+    final groups = orderedZoneSwitcherGroups();
     return GestureDetector(
       key: _sheetKey,
       onVerticalDragUpdate: _onDragUpdate,
@@ -487,7 +533,7 @@ class _ZoneSheetState extends State<_ZoneSheet>
                 _stagger(
                   0,
                   Text(
-                    '切换专区',
+                    S.t('切换专区'),
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.5,
@@ -506,13 +552,13 @@ class _ZoneSheetState extends State<_ZoneSheet>
                 ),
                 const SizedBox(height: 8),
                 if (widget.style == ZoneSwitcherStyle.panel) ...[
-                for (var g = 0; g < zoneSwitcherGroups.length; g++) ...[
+                for (var g = 0; g < groups.length; g++) ...[
                   _stagger(
                     2 + g * 3,
                     Padding(
                       padding: const EdgeInsets.only(top: 10, bottom: 6),
                       child: Text(
-                        zoneSwitcherGroups[g].$1,
+                        S.t(groups[g].$1),
                         style: theme.textTheme.labelMedium?.copyWith(
                           color: scheme.outline,
                           fontWeight: FontWeight.w700,
@@ -524,18 +570,18 @@ class _ZoneSheetState extends State<_ZoneSheet>
                   Row(
                     children: [
                       for (var i = 0;
-                          i < zoneSwitcherGroups[g].$2.length;
+                          i < groups[g].$2.length;
                           i++) ...[
                         if (i > 0) const SizedBox(width: 12),
                         Expanded(
                           child: _stagger(
                             3 + g * 3 + i,
                             _ZoneRow(
-                              zone: zoneSwitcherGroups[g].$2[i],
+                              zone: groups[g].$2[i],
                               isCurrent:
-                                  zoneSwitcherGroups[g].$2[i] == widget.current,
+                                  groups[g].$2[i] == widget.current,
                               onTap: () =>
-                                  _select(zoneSwitcherGroups[g].$2[i]),
+                                  _select(groups[g].$2[i]),
                             ),
                           ),
                         ),
@@ -686,7 +732,7 @@ class _ZoneRowState extends State<_ZoneRow> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.zone.label,
+                        S.t(widget.zone.label),
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w900,
                         ),
@@ -711,7 +757,7 @@ class _ZoneRowState extends State<_ZoneRow> {
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
-                      '你在这里',
+                      S.t('你在这里'),
                       style: TextStyle(
                         fontSize: 10.5,
                         fontWeight: FontWeight.w700,
@@ -908,7 +954,7 @@ class _ZoneCard extends StatelessWidget {
                   ),
                 const SizedBox(height: 12),
                 Text(
-                  zone.label,
+                  S.t(zone.label),
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w900,
                   ),
@@ -924,9 +970,9 @@ class _ZoneCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 if (isCurrent)
-                  _badge(scheme, '你在这里', scheme.outline)
+                  _badge(scheme, S.t('你在这里'), scheme.outline)
                 else if (isCentred)
-                  _badge(scheme, '点击进入', accent),
+                  _badge(scheme, S.t('点击进入'), accent),
               ],
             ),
           ),
@@ -1103,7 +1149,7 @@ class _ZoneSlideBodyState extends State<_ZoneSlideBody> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        zone.label,
+                                        S.t(zone.label),
                                         style: Theme.of(context)
                                             .textTheme
                                             .titleLarge
@@ -1138,7 +1184,7 @@ class _ZoneSlideBodyState extends State<_ZoneSlideBody> {
                                         ),
                                       ),
                                       child: Text(
-                                        '你在这里',
+                                        S.t('你在这里'),
                                         style: TextStyle(
                                           fontSize: 10.5,
                                           fontWeight: FontWeight.w700,
@@ -1201,20 +1247,21 @@ class _ZoneGridBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final groups = orderedZoneSwitcherGroups();
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        for (var g = 0; g < zoneSwitcherGroups.length; g++) ...[
+        for (var g = 0; g < groups.length; g++) ...[
           if (g > 0) const SizedBox(height: 12),
           Row(
             children: [
-              for (var i = 0; i < zoneSwitcherGroups[g].$2.length; i++) ...[
+              for (var i = 0; i < groups[g].$2.length; i++) ...[
                 if (i > 0) const SizedBox(width: 12),
                 Expanded(
                   child: _ZoneGridTile(
-                    zone: zoneSwitcherGroups[g].$2[i],
-                    isCurrent: zoneSwitcherGroups[g].$2[i] == current,
-                    onTap: () => onSelect(zoneSwitcherGroups[g].$2[i]),
+                    zone: groups[g].$2[i],
+                    isCurrent: groups[g].$2[i] == current,
+                    onTap: () => onSelect(groups[g].$2[i]),
                   ),
                 ),
               ],
@@ -1286,7 +1333,7 @@ class _ZoneGridTile extends StatelessWidget {
                 ),
               const SizedBox(height: 10),
               Text(
-                zone.label,
+                S.t(zone.label),
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w900,
                 ),
@@ -1311,7 +1358,7 @@ class _ZoneGridTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    '你在这里',
+                    S.t('你在这里'),
                     style: TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w700,
@@ -1342,15 +1389,16 @@ class _ZoneSegmentBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final groups = orderedZoneSwitcherGroups();
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (var g = 0; g < zoneSwitcherGroups.length; g++) ...[
+        for (var g = 0; g < groups.length; g++) ...[
           Padding(
             padding: EdgeInsets.only(top: g == 0 ? 2 : 14, bottom: 7),
             child: Text(
-              zoneSwitcherGroups[g].$1,
+              S.t(groups[g].$1),
               style: theme.textTheme.labelMedium?.copyWith(
                 color: scheme.outline,
                 fontWeight: FontWeight.w700,
@@ -1366,12 +1414,12 @@ class _ZoneSegmentBody extends StatelessWidget {
             ),
             child: Row(
               children: [
-                for (var i = 0; i < zoneSwitcherGroups[g].$2.length; i++) ...[
+                for (var i = 0; i < groups[g].$2.length; i++) ...[
                   if (i > 0) const SizedBox(width: 5),
                   Expanded(
                     child: _segment(
                       context,
-                      zoneSwitcherGroups[g].$2[i],
+                      groups[g].$2[i],
                     ),
                   ),
                 ],
@@ -1406,7 +1454,7 @@ class _ZoneSegmentBody extends StatelessWidget {
               ),
               const SizedBox(width: 7),
               Text(
-                zone.label,
+                S.t(zone.label),
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: isCurrent ? Colors.white : scheme.onSurface,

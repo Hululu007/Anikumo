@@ -6,6 +6,7 @@ import 'package:anikumo/modules/collect/collect_type.dart';
 import 'package:anikumo/services/library/user_library.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/utils/constants.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// 即将开播： shows in the 想看 (plan-to-watch) collection whose air
 /// date is still ahead, sorted by how soon they start, each with a
@@ -31,9 +32,9 @@ class ComingPage extends StatelessWidget {
     upcoming.sort((a, b) => a.days.compareTo(b.days));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('即将开播')),
+      appBar: AppBar(title: Text(S.t('即将开播'))),
       body: upcoming.isEmpty
-          ? const Center(child: Text('「想看」里没有尚未开播的番'))
+          ? Center(child: Text(S.t('「想看」里没有尚未开播的番')))
           : ListView.separated(
               padding: const EdgeInsets.fromLTRB(
                 StyleString.pagePadding,
@@ -74,7 +75,7 @@ class ComingPage extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '${entry.airDate.year} 年 ${entry.airDate.month} 月 ${entry.airDate.day} 日开播',
+                                S.f('{} 年 {} 月 {} 日开播', [entry.airDate.year, entry.airDate.month, entry.airDate.day]),
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.outline,
                                 ),
@@ -87,8 +88,8 @@ class ComingPage extends StatelessWidget {
                           child: Chip(
                             label: Text(
                               entry.days == 0
-                                  ? '今天开播'
-                                  : '还有 ${entry.days} 天',
+                                  ? S.t('今天开播')
+                                  : S.f('还有 {} 天', [entry.days]),
                             ),
                             visualDensity: VisualDensity.compact,
                           ),

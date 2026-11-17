@@ -11,6 +11,7 @@ import 'package:anikumo/modules/roads/road_module.dart';
 import 'package:anikumo/pages/download/download_controller.dart';
 import 'package:anikumo/pages/video/video_controller.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class DownloadEpisodeSheet extends StatefulWidget {
   final int road;
@@ -102,10 +103,10 @@ class _DownloadEpisodeSheetState extends State<DownloadEpisodeSheet> {
           return Column(
             children: [
               MaterialBottomSheetHeader(
-                title: '下载选集',
+                title: S.t('下载选集'),
                 description: downloadedCount > 0
-                    ? '$episodeCount 集 · 已下载 $downloadedCount 集'
-                    : '共 $episodeCount 集',
+                    ? S.f('{} 集 · 已下载 {} 集', [episodeCount, downloadedCount])
+                    : S.f('共 {} 集', [episodeCount]),
                 onClose: () => Navigator.of(context).pop(),
               ),
               Expanded(
@@ -173,8 +174,8 @@ class _DownloadEpisodeSheetState extends State<DownloadEpisodeSheet> {
                         child: Stack(
                           alignment: Alignment.center,
                           children: [
-                            const Opacity(opacity: 0, child: Text('取消全选')),
-                            Text(allSelected ? '取消全选' : '全选'),
+                            Opacity(opacity: 0, child: Text(S.t('取消全选'))),
+                            Text(allSelected ? S.t('取消全选') : S.t('全选')),
                           ],
                         ),
                       ),
@@ -189,8 +190,8 @@ class _DownloadEpisodeSheetState extends State<DownloadEpisodeSheet> {
                               : () => _startBatchDownload(context),
                           icon: const Icon(AnikumoIcons.download_rounded),
                           label: Text(_selectedEpisodes.isEmpty
-                              ? '选择集数'
-                              : '下载 ${_selectedEpisodes.length} 集'),
+                              ? S.t('选择集数')
+                              : S.f('下载 {} 集', [_selectedEpisodes.length])),
                         ),
                       ),
                     ],
@@ -231,7 +232,7 @@ class _DownloadEpisodeSheetState extends State<DownloadEpisodeSheet> {
     }
 
     AnikumoDialog.showToast(
-      message: '已添加 ${sortedEpisodes.length} 集到下载队列，可在下载管理中查看',
+      message: S.f('已添加 {} 集到下载队列，可在下载管理中查看', [sortedEpisodes.length]),
     );
   }
 }

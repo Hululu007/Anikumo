@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
 
@@ -31,7 +32,7 @@ class RulePageIntro extends StatelessWidget {
         children: [
           Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Expanded(
-              child: Text(title,
+              child: Text(S.t(title),
                   style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: colors.onPrimaryContainer)),
@@ -40,7 +41,7 @@ class RulePageIntro extends StatelessWidget {
             Icon(icon, size: 32, color: colors.onPrimaryContainer),
           ]),
           const SizedBox(height: 8),
-          Text(description,
+          Text(S.t(description),
               style: theme.textTheme.bodyMedium
                   ?.copyWith(color: colors.onPrimaryContainer)),
           if (actions.isNotEmpty) ...[
@@ -85,13 +86,13 @@ class RuleSection extends StatelessWidget {
                 const SizedBox(width: 12),
               ],
               Expanded(
-                  child: Text(title,
+                  child: Text(S.t(title),
                       style: theme.textTheme.titleLarge
                           ?.copyWith(fontWeight: FontWeight.w600))),
             ]),
             if (description != null) ...[
               const SizedBox(height: 6),
-              Text(description!,
+              Text(S.t(description!),
                   style: theme.textTheme.bodyMedium
                       ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
             ],
@@ -125,8 +126,7 @@ class RuleAddGuide extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            '规则就是一个站点的访问说明，App 靠它来搜索和播放番剧。'
-            '没有内置规则库，用下面任一方式添加你自己的：',
+            S.t('规则就是一个站点的访问说明，App 靠它来搜索和播放番剧。没有内置规则库，用下面任一方式添加你自己的：'),
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium
                 ?.copyWith(color: colors.onSurfaceVariant),
@@ -151,8 +151,8 @@ class RuleAddGuide extends StatelessWidget {
                     child: Icon(option.icon,
                         size: 20, color: colors.onPrimaryContainer),
                   ),
-                  title: Text(option.title),
-                  subtitle: Text(option.subtitle),
+                  title: Text(S.t(option.title)),
+                  subtitle: Text(S.t(option.subtitle)),
                   trailing:
                       const Icon(AnikumoIcons.arrow_forward_rounded, size: 20),
                   onTap: option.onTap,

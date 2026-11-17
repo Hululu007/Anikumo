@@ -6,6 +6,7 @@ import 'package:liuguang_core/liuguang_core.dart';
 import 'package:anikumo/request/core/dio_factory.dart';
 import 'package:anikumo/services/liuguang/cms_api_source.dart';
 import 'package:anikumo/services/liuguang/tvmaze_covers.dart';
+import 'package:anikumo/services/i18n/app_language.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/services/tmdb/tmdb_episodes.dart';
 
@@ -523,7 +524,7 @@ class TmdbPosterService {
   bool _persistDirty = false;
 
   String _key(MediaItem item) =>
-      '${tmdbOverseasMode() ? 'intl' : 'cn'}|'
+      '${tmdbOverseasMode() ? 'intl' : tmdbLanguageForCurrentMode()}|'
       '${normalizeTmdbTitle(item.title)}|${item.year ?? ''}|'
       '${item.mediaType == MediaType.series ? 'tv' : 'movie'}';
 
@@ -627,7 +628,7 @@ class TmdbPosterService {
         '${TmdbEnrichService._apiBase}/search/$kind',
         queryParameters: {
           'api_key': TmdbEpisodeService.effectiveKey,
-          if (!tmdbOverseasMode()) 'language': 'zh-CN',
+          if (!tmdbOverseasMode()) 'language': tmdbLanguageForCurrentMode(),
           'query': cmsBaseTitle(item.title),
         },
       );
@@ -730,7 +731,7 @@ class TmdbEpisodeNamesService {
   bool _persistDirty = false;
 
   String _key(MediaItem item) =>
-      '${tmdbOverseasMode() ? 'intl' : 'cn'}|'
+      '${tmdbOverseasMode() ? 'intl' : tmdbLanguageForCurrentMode()}|'
       '${normalizeTmdbTitle(item.title)}|${item.year ?? ''}';
 
   void _loadCache() {
@@ -826,7 +827,7 @@ class TmdbEpisodeNamesService {
           '${TmdbEnrichService._apiBase}$path',
           queryParameters: {
             'api_key': apiKey,
-            if (!overseas) 'language': 'zh-CN',
+            if (!overseas) 'language': tmdbLanguageForCurrentMode(),
             ...?query,
           },
         );
@@ -906,12 +907,13 @@ class TmdbEnrichService {
   Timer? _persistTimer;
   bool _persistDirty = false;
 
-  // Batch 242/243: the v3 prefix orphans enrichments
+  // Batch 264: the v5 prefix orphans enrichments cached
+  // before TMDB followed the UI language; Batch 242/243: the v3 prefix orphans enrichments
   // cached before the zh-first reviews switch; the mode
   // segment keeps 国内 and 海外 enrichments apart (a
   // poster's language differs between the two).
   String _key(MediaItem item) =>
-      'v4|${tmdbOverseasMode() ? 'intl' : 'cn'}|'
+      'v5|${tmdbOverseasMode() ? 'intl' : tmdbLanguageForCurrentMode()}|'
       '${normalizeTmdbTitle(item.title)}|${item.year ?? ''}|'
       '${item.mediaType == MediaType.series ? 'tv' : 'movie'}';
 
@@ -974,7 +976,7 @@ class TmdbEnrichService {
         '$_apiBase/search/multi',
         queryParameters: {
           'api_key': TmdbEpisodeService.effectiveKey,
-          if (!tmdbOverseasMode()) 'language': 'zh-CN',
+          if (!tmdbOverseasMode()) 'language': tmdbLanguageForCurrentMode(),
           'query': query,
         },
       );
@@ -1026,7 +1028,7 @@ class TmdbEnrichService {
           '$_apiBase$path',
           queryParameters: {
             'api_key': key,
-            if (zh && !overseas) 'language': 'zh-CN',
+            if (zh && !overseas) 'language': tmdbLanguageForCurrentMode(),
             ...?query,
           },
         );

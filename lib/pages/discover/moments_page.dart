@@ -13,6 +13,7 @@ import 'package:anikumo/services/stats/report_stats.dart';
 import 'package:anikumo/services/stats/watch_stats.dart';
 import 'package:anikumo/utils/constants.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// 时光 tab (batch 37): everything personal that used to sit
 /// at the bottom of the discover page as 「我的时光」 — moved
@@ -60,7 +61,7 @@ class _MomentsPageState extends State<MomentsPage> {
   }
 
   String _progressLabel(History history) {
-    final base = '看到第 ${history.lastWatchEpisode} 集';
+    final base = S.f('看到第 {} 集', [history.lastWatchEpisode]);
     final progress = history.progresses[history.lastWatchEpisode];
     if (progress == null || progress.progress == Duration.zero) {
       return base;
@@ -103,7 +104,7 @@ class _MomentsPageState extends State<MomentsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'ARCHIVE · 观看档案',
+                    S.t('ARCHIVE · 观看档案'),
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: scheme.outline,
                       fontWeight: FontWeight.w700,
@@ -112,13 +113,13 @@ class _MomentsPageState extends State<MomentsPage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '我的时光',
+                    S.t('我的时光'),
                     style: theme.textTheme.headlineMedium
                         ?.copyWith(fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '接着上次看到的地方继续',
+                    S.t('接着上次看到的地方继续'),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),
@@ -135,31 +136,31 @@ class _MomentsPageState extends State<MomentsPage> {
                     _statColumn(
                       context,
                       '${stats.distinctAnime}',
-                      '看过的番剧',
+                      S.t('看过的番剧'),
                     ),
                     _statDivider(context),
                     _statColumn(
                       context,
                       '${stats.totalEpisodes}',
-                      '观看集数',
+                      S.t('观看集数'),
                     ),
                     _statDivider(context),
                     _statColumn(
                       context,
                       stats.totalMinutes >= 60
-                          ? '${stats.totalMinutes ~/ 60} 小时'
-                          : '${stats.totalMinutes} 分钟',
-                      '观看时长',
+                          ? S.f('{} 小时', [stats.totalMinutes ~/ 60])
+                          : S.f('{} 分钟', [stats.totalMinutes]),
+                      S.t('观看时长'),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 6),
             ],
-            const EditorialSectionHeader(
+            EditorialSectionHeader(
               index: '01',
               label: 'CONTINUE',
-              title: '继续观看',
+              title: S.t('继续观看'),
             ),
             if (_recentHistories.isNotEmpty)
               SizedBox(
@@ -177,56 +178,56 @@ class _MomentsPageState extends State<MomentsPage> {
                 ),
               )
             else
-              const Padding(
-                padding: EdgeInsets.symmetric(
+              Padding(
+                padding: const EdgeInsets.symmetric(
                   horizontal: StyleString.pagePadding,
                   vertical: 8,
                 ),
                 child: GeneralEmptyState(
                   icon: AnikumoIcons.hourglass_empty_rounded,
-                  title: '还没有观看记录',
+                  title: S.t('还没有观看记录'),
                   compact: true,
                 ),
               ),
-            const EditorialSectionHeader(
+            EditorialSectionHeader(
               index: '02',
               label: 'LIBRARY',
-              title: '我的收藏夹',
-              subtitle: '榜单、统计、笔记、报告与成就',
+              title: S.t('我的收藏夹'),
+              subtitle: S.t('榜单、统计、笔记、报告与成就'),
             ),
             EditorialIndexRow(
               index: '01',
               icon: AnikumoIcons.list_alt_outlined,
-              title: '我的榜单',
-              subtitle: '自建片单',
-              trailingText: listCount > 0 ? '$listCount 个' : null,
+              title: S.t('我的榜单'),
+              subtitle: S.t('自建片单'),
+              trailingText: listCount > 0 ? S.f('{} 个', [listCount]) : null,
               onTap: () => context.pushNamed('/tab/discover/my-lists/'),
             ),
             const EditorialHairline(),
             EditorialIndexRow(
               index: '02',
               icon: AnikumoIcons.bar_chart_rounded,
-              title: '观看统计',
-              subtitle: '集数与时长',
+              title: S.t('观看统计'),
+              subtitle: S.t('集数与时长'),
               onTap: () => context.pushNamed('/tab/discover/watch-stats/'),
             ),
             const EditorialHairline(),
             EditorialIndexRow(
               index: '03',
               icon: AnikumoIcons.sticky_note_2_outlined,
-              title: '番剧笔记',
-              subtitle: '私人备注',
-              trailingText: noteCount > 0 ? '$noteCount 条' : null,
+              title: S.t('番剧笔记'),
+              subtitle: S.t('私人备注'),
+              trailingText: noteCount > 0 ? S.f('{} 条', [noteCount]) : null,
               onTap: () => context.pushNamed('/tab/discover/notes/'),
             ),
             const EditorialHairline(),
             EditorialIndexRow(
               index: '04',
               icon: AnikumoIcons.insights_outlined,
-              title: '观看报告',
-              subtitle: '月度总结与热力图',
+              title: S.t('观看报告'),
+              subtitle: S.t('月度总结与热力图'),
               trailingText: monthly != null && monthly.episodes > 0
-                  ? '本月 ${monthly.episodes} 集'
+                  ? S.f('本月 {} 集', [monthly.episodes])
                   : null,
               onTap: () => context.pushNamed('/tab/discover/report/'),
             ),
@@ -234,10 +235,10 @@ class _MomentsPageState extends State<MomentsPage> {
             EditorialIndexRow(
               index: '05',
               icon: AnikumoIcons.emoji_events_outlined,
-              title: '观看成就',
+              title: S.t('观看成就'),
               subtitle: achievements.isEmpty
-                  ? '里程碑徽章'
-                  : '里程碑徽章 · 已解锁 $unlocked/${achievements.length}',
+                  ? S.t('里程碑徽章')
+                  : S.f('里程碑徽章 · 已解锁 {}/{}', [unlocked, achievements.length]),
               onTap: () =>
                   context.pushNamed('/tab/discover/achievements/'),
             ),

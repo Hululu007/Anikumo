@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -102,7 +103,7 @@ class _PluginTestPageState extends State<PluginTestPage> {
     if (isTesting) return;
     final keyword = testKeywordController.text.trim();
     if (keyword.isEmpty) {
-      setState(() => errorMsg = '请输入一个番剧名称作为测试关键词。');
+      setState(() => errorMsg = S.t('请输入一个番剧名称作为测试关键词。'));
       return;
     }
     _resetState();
@@ -150,12 +151,12 @@ class _PluginTestPageState extends State<PluginTestPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return SettingsDetailScaffold(
-      title: const Text('规则测试'),
+      title: Text(S.t('规则测试')),
       actions: [
         IconButton(
           onPressed: _resetState,
           icon: const Icon(AnikumoIcons.restart_alt_rounded),
-          tooltip: '重置测试',
+          tooltip: S.t('重置测试'),
         ),
         const SizedBox(width: 8),
       ],
@@ -171,13 +172,13 @@ class _PluginTestPageState extends State<PluginTestPage> {
                 children: [
                   RulePageIntro(
                     title: plugin.name,
-                    description: '一次测试，检查搜索请求、结果解析和播放线路。',
+                    description: S.t('一次测试，检查搜索请求、结果解析和播放线路。'),
                     icon: AnikumoIcons.science_outlined,
                   ),
                   const SizedBox(height: 20),
                   RuleSection(
-                    title: '试着搜索一部番剧',
-                    description: '选集测试会使用第一条搜索结果。',
+                    title: S.t('试着搜索一部番剧'),
+                    description: S.t('选集测试会使用第一条搜索结果。'),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -192,7 +193,7 @@ class _PluginTestPageState extends State<PluginTestPage> {
                             icon: Icon(isTesting
                                 ? AnikumoIcons.stop_rounded
                                 : AnikumoIcons.play_arrow_rounded),
-                            label: Text(isTesting ? '停止测试' : '开始测试'),
+                            label: Text(isTesting ? S.t('停止测试') : S.t('开始测试')),
                           ),
                         ),
                         if (isTesting) ...[
@@ -210,7 +211,7 @@ class _PluginTestPageState extends State<PluginTestPage> {
                   _buildExpansionTile(
                       theme: theme,
                       number: 1,
-                      title: '搜索请求',
+                      title: S.t('搜索请求'),
                       subtitle: _getSearchSubtitle(),
                       completed: _hasSearchRaw,
                       expanded: false,
@@ -219,7 +220,7 @@ class _PluginTestPageState extends State<PluginTestPage> {
                   _buildExpansionTile(
                       theme: theme,
                       number: 2,
-                      title: '结果解析',
+                      title: S.t('结果解析'),
                       subtitle: _getParseSubtitle(),
                       completed: _hasSearchData,
                       expanded: _hasSearchData,
@@ -228,7 +229,7 @@ class _PluginTestPageState extends State<PluginTestPage> {
                   _buildExpansionTile(
                       theme: theme,
                       number: 3,
-                      title: '播放线路',
+                      title: S.t('播放线路'),
                       subtitle: _getChapterSubtitle(),
                       completed: _hasChapters,
                       expanded: _hasChapters,
@@ -309,8 +310,8 @@ class _PluginTestPageState extends State<PluginTestPage> {
   Widget _buildKeywordInput() => TextField(
         controller: testKeywordController,
         decoration: ruleInputDecoration(context,
-            label: '测试关键词',
-            hint: '输入番剧名称',
+            label: S.t('测试关键词'),
+            hint: S.t('输入番剧名称'),
             prefix: const Icon(AnikumoIcons.search_rounded)),
         enabled: !isTesting,
         textInputAction: TextInputAction.search,
@@ -338,7 +339,7 @@ class _PluginTestPageState extends State<PluginTestPage> {
                 style: TextButton.styleFrom(
                     backgroundColor:
                         theme.colorScheme.error.withValues(alpha: 0.1)),
-                child: Text('重试测试',
+                child: Text(S.t('重试测试'),
                     style:
                         TextStyle(color: theme.colorScheme.onErrorContainer)),
               ),
@@ -369,9 +370,9 @@ class _PluginTestPageState extends State<PluginTestPage> {
       );
 
   String _getSearchSubtitle() {
-    if (isTesting && !_hasSearchRaw) return '正在请求站点…';
-    if (!_hasSearchRaw) return _hasRun ? '没有收到响应' : '等待开始';
-    return '${plugin.searchMode == RuleMode.api ? 'JSON' : 'HTML'}长度：${searchRaw.length} 字符';
+    if (isTesting && !_hasSearchRaw) return S.t('正在请求站点…');
+    if (!_hasSearchRaw) return _hasRun ? S.t('没有收到响应') : S.t('等待开始');
+    return S.f('{}长度：{} 字符', [plugin.searchMode == RuleMode.api ? 'JSON' : 'HTML', searchRaw.length]);
   }
 
   Widget _codePanel(String raw, ThemeData theme,
@@ -386,20 +387,20 @@ class _PluginTestPageState extends State<PluginTestPage> {
           Padding(
             padding: const EdgeInsets.only(left: 16, right: 4, top: 4),
             child: Row(children: [
-              Expanded(child: Text('响应内容', style: theme.textTheme.labelLarge)),
+              Expanded(child: Text(S.t('响应内容'), style: theme.textTheme.labelLarge)),
               IconButton(
-                  tooltip: '复制响应内容',
+                  tooltip: S.t('复制响应内容'),
                   onPressed: () async {
                     try {
                       await Clipboard.setData(ClipboardData(text: raw));
                       if (mounted) {
                         AnikumoDialog.showToast(
-                            context: context, message: '已复制响应内容');
+                            context: context, message: S.t('已复制响应内容'));
                       }
                     } catch (_) {
                       if (mounted) {
                         AnikumoDialog.showToast(
-                            context: context, message: '复制失败，请重试');
+                            context: context, message: S.t('复制失败，请重试'));
                       }
                     }
                   },
@@ -426,7 +427,7 @@ class _PluginTestPageState extends State<PluginTestPage> {
 
   Widget _buildSearchContent(ThemeData theme) {
     if (isTesting && !_hasSearchRaw) return _buildLoading(theme);
-    if (!_hasSearchRaw) return _buildEmpty('输入关键词后，点击「开始测试」。', theme);
+    if (!_hasSearchRaw) return _buildEmpty(S.t('输入关键词后，点击「开始测试」。'), theme);
     return _codePanel(
         _formattedRaw(searchRaw, isJson: plugin.searchMode == RuleMode.api),
         theme,
@@ -434,18 +435,18 @@ class _PluginTestPageState extends State<PluginTestPage> {
   }
 
   String _getParseSubtitle() {
-    if (isTesting && !_hasSearchRaw) return '等待搜索响应';
-    if (!_hasSearchRaw) return _hasRun ? '等待有效响应' : '等待开始';
-    if (!_hasSearchData) return '未解析到结果';
+    if (isTesting && !_hasSearchRaw) return S.t('等待搜索响应');
+    if (!_hasSearchRaw) return _hasRun ? S.t('等待有效响应') : S.t('等待开始');
+    if (!_hasSearchData) return S.t('未解析到结果');
     final skipped =
-        searchDiagnostics.isEmpty ? '' : '，跳过 ${searchDiagnostics.length} 条';
-    return '解析到 ${searchRes?.data.length ?? 0} 条结果$skipped';
+        searchDiagnostics.isEmpty ? '' : S.f('，跳过 {} 条', [searchDiagnostics.length]);
+    return S.f('解析到 {} 条结果{}', [searchRes?.data.length ?? 0, skipped]);
   }
 
   Widget _buildParseContent(ThemeData theme) {
     if (isTesting && !_hasSearchRaw) return _buildLoading(theme);
-    if (!_hasSearchRaw) return _buildEmpty('请先完成搜索请求测试', theme);
-    if (!_hasSearchData) return _buildEmpty('未解析到搜索结果', theme, isError: true);
+    if (!_hasSearchRaw) return _buildEmpty(S.t('请先完成搜索请求测试'), theme);
+    if (!_hasSearchData) return _buildEmpty(S.t('未解析到搜索结果'), theme, isError: true);
 
     return Column(children: [
       _buildDiagnosticsWidget(searchDiagnostics, theme),
@@ -478,7 +479,7 @@ class _PluginTestPageState extends State<PluginTestPage> {
                 color: theme.colorScheme.error, size: 20),
             const SizedBox(width: 8.0),
             Expanded(
-                child: Text('部分节点被跳过（${diagnostics.length}）',
+                child: Text(S.f('部分节点被跳过（{}）', [diagnostics.length]),
                     style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onErrorContainer,
                         fontWeight: FontWeight.w500))),
@@ -499,7 +500,7 @@ class _PluginTestPageState extends State<PluginTestPage> {
 
   Widget _buildSearchItemCard(SearchItem item, int i, ThemeData theme) {
     final isShowingFragment = _shownFragmentIndex == i;
-    final fragment = _itemFragmentMap[i] ?? '无匹配片段';
+    final fragment = _itemFragmentMap[i] ?? S.t('无匹配片段');
 
     return Column(children: [
       Card(
@@ -514,7 +515,7 @@ class _PluginTestPageState extends State<PluginTestPage> {
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
               Expanded(
                 child: Text(
-                  '${i + 1}：${item.name}',
+                  S.f('{}：{}', [i + 1, item.name]),
                   style: theme.textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.w500),
                   maxLines: 2,
@@ -528,11 +529,11 @@ class _PluginTestPageState extends State<PluginTestPage> {
                   size: 18,
                   color: theme.colorScheme.primary,
                 ),
-                tooltip: isShowingFragment ? '隐藏匹配片段' : '查看匹配片段',
+                tooltip: isShowingFragment ? S.t('隐藏匹配片段') : S.t('查看匹配片段'),
               ),
             ]),
             _h8,
-            Text('链接：${item.src}',
+            Text(S.f('链接：{}', [item.src]),
                 style: theme.textTheme.bodySmall
                     ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
           ]),
@@ -548,22 +549,22 @@ class _PluginTestPageState extends State<PluginTestPage> {
   }
 
   String _getChapterSubtitle() {
-    if (!_hasRun) return '等待开始';
-    if (isTesting) return _hasSearchData ? '正在获取播放线路…' : '等待搜索结果';
-    if (!_hasSearchData) return '等待有效搜索结果';
-    if (!_needChapterParse) return '无需解析章节';
-    if (chapters == null) return '未获取章节数据';
+    if (!_hasRun) return S.t('等待开始');
+    if (isTesting) return _hasSearchData ? S.t('正在获取播放线路…') : S.t('等待搜索结果');
+    if (!_hasSearchData) return S.t('等待有效搜索结果');
+    if (!_needChapterParse) return S.t('无需解析章节');
+    if (chapters == null) return S.t('未获取章节数据');
     final skipped =
-        chapterDiagnostics.isEmpty ? '' : '，跳过 ${chapterDiagnostics.length} 条';
-    return '获取到 ${chapters?.length ?? 0} 个播放线路$skipped';
+        chapterDiagnostics.isEmpty ? '' : S.f('，跳过 {} 条', [chapterDiagnostics.length]);
+    return S.f('获取到 {} 个播放线路{}', [chapters?.length ?? 0, skipped]);
   }
 
   Widget _buildChapterContent(ThemeData theme) {
-    if (!_needChapterParse) return _buildEmpty('未填写章节规则', theme);
+    if (!_needChapterParse) return _buildEmpty(S.t('未填写章节规则'), theme);
     if (isTesting) return _buildLoading(theme);
-    if (!_hasSearchData) return _buildEmpty('请先解析到有效结果', theme);
-    if (chapters == null) return _buildEmpty('未获取章节数据', theme, isError: true);
-    if (!_hasChapters) return _buildEmpty('无可用章节', theme, isError: true);
+    if (!_hasSearchData) return _buildEmpty(S.t('请先解析到有效结果'), theme);
+    if (chapters == null) return _buildEmpty(S.t('未获取章节数据'), theme, isError: true);
+    if (!_hasChapters) return _buildEmpty(S.t('无可用章节'), theme, isError: true);
 
     return Column(
       children: [
@@ -610,12 +611,12 @@ class _PluginTestPageState extends State<PluginTestPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '播放线路 ${i + 1}：${road.name}',
+                  S.f('播放线路 {}：{}', [i + 1, road.name]),
                   style: theme.textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.w500),
                 ),
                 _h8,
-                Text('章节数量：${road.data.length}',
+                Text(S.f('章节数量：{}', [road.data.length]),
                     style: theme.textTheme.bodySmall
                         ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                 _h8,

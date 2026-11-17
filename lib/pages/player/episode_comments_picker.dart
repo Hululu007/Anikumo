@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:anikumo/modules/bangumi/episode_item.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class EpisodeCommentsPicker extends StatelessWidget {
   const EpisodeCommentsPicker({
@@ -32,11 +33,11 @@ class EpisodeCommentsPicker extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('选择讨论分集',
+                  Text(S.t('选择讨论分集'),
                       style: type.headlineSmall
                           ?.copyWith(fontWeight: FontWeight.w700)),
                   const SizedBox(height: 8),
-                  Text('切换想看的讨论，视频会继续播放。',
+                  Text(S.t('切换想看的讨论，视频会继续播放。'),
                       style: type.bodyMedium
                           ?.copyWith(color: colors.onSurfaceVariant)),
                 ],
@@ -105,7 +106,7 @@ class EpisodeCommentsPicker extends StatelessWidget {
                 child: TextButton(
                   onPressed: () => Navigator.pop(context),
                   style: TextButton.styleFrom(minimumSize: const Size(64, 48)),
-                  child: const Text('取消'),
+                  child: Text(S.t('取消')),
                 ),
               ),
             ),

@@ -21,6 +21,8 @@ import 'package:anikumo/services/plugin/rule_engine_models.dart'
     show RuleCancelToken;
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
 import 'package:anikumo/utils/device.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
+import 'package:anikumo/services/privacy/app_lock.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key, required this.controller});
@@ -101,7 +103,7 @@ class _HistoryPageState extends State<HistoryPage> with RouteAware {
       }
     } catch (_) {
       if (mounted) {
-        AnikumoDialog.showToast(context: context, message: '删除失败，请稍后重试');
+        AnikumoDialog.showToast(context: context, message: S.t('删除失败，请稍后重试'));
       }
     } finally {
       if (mounted) setState(() => _deleting.remove(history.key));
@@ -114,14 +116,14 @@ class _HistoryPageState extends State<HistoryPage> with RouteAware {
       context: context,
       builder: (context) => AlertDialog(
         icon: const Icon(AnikumoIcons.delete_sweep_outlined),
-        title: const Text('清空历史记录？'),
+        title: Text(S.t('清空历史记录？')),
         content: Text(
-          '将删除全部 ${widget.controller.histories.length} 条观看记录，包括在线和缓存记录。此操作无法撤销。',
+          S.f('将删除全部 {} 条观看记录，包括在线和缓存记录。此操作无法撤销。', [widget.controller.histories.length]),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -129,7 +131,7 @@ class _HistoryPageState extends State<HistoryPage> with RouteAware {
               foregroundColor: Theme.of(context).colorScheme.onError,
             ),
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('清空全部'),
+            child: Text(S.t('清空全部')),
           ),
         ],
       ),
@@ -141,7 +143,7 @@ class _HistoryPageState extends State<HistoryPage> with RouteAware {
       if (mounted) setState(() => _editing = false);
     } catch (_) {
       if (mounted) {
-        AnikumoDialog.showToast(context: context, message: '清空失败，请稍后重试');
+        AnikumoDialog.showToast(context: context, message: S.t('清空失败，请稍后重试'));
       }
     } finally {
       if (mounted) setState(() => _clearing = false);
@@ -153,6 +155,28 @@ class _HistoryPageState extends State<HistoryPage> with RouteAware {
     return Observer(
       builder: (context) {
         final entries = widget.controller.histories.toList();
+        // Batch 275 (#47): guest mode hides all history
+        // views (the page covers every zone's progress).
+        if (PrivacyGate.guestMode) {
+          return Scaffold(
+            appBar: SysAppBar(
+              title: Text(
+                S.t('历史记录'),
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+            ),
+            body: Center(
+              child: Text(
+                S.t('访客模式下历史记录已隐藏'),
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+              ),
+            ),
+          );
+        }
         return PopScope(
           canPop: !_editing,
           onPopInvokedWithResult: (didPop, result) {
@@ -163,7 +187,7 @@ class _HistoryPageState extends State<HistoryPage> with RouteAware {
           child: Scaffold(
             appBar: SysAppBar(
               title: Text(
-                '历史记录',
+                S.t('历史记录'),
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -180,17 +204,17 @@ class _HistoryPageState extends State<HistoryPage> with RouteAware {
                             onPressed: _clearing
                                 ? null
                                 : () => setState(() => _editing = false),
-                            child: const Text('完成'),
+                            child: Text(S.t('完成')),
                           )
                         : IconButton.filledTonal(
-                            tooltip: '管理历史记录',
+                            tooltip: S.t('管理历史记录'),
                             onPressed: () => setState(() => _editing = true),
                             icon: const Icon(AnikumoIcons.edit_outlined),
                           ),
                   ),
                   if (_editing)
                     IconButton(
-                      tooltip: '清空全部历史记录',
+                      tooltip: S.t('清空全部历史记录'),
                       onPressed: _clearing || _deleting.isNotEmpty
                           ? null
                           : _clearHistory,
@@ -216,30 +240,30 @@ class _HistoryPageState extends State<HistoryPage> with RouteAware {
                             _editing = false;
                           }
                         }),
-                        options: const [
+                        options: [
                           PillSwitchOption(
                             value: _HistoryView.all,
-                            label: '全部',
+                            label: S.t('全部'),
                             icon: AnikumoIcons.dashboard_rounded,
                           ),
                           PillSwitchOption(
                             value: _HistoryView.anime,
-                            label: '动漫',
+                            label: S.t('动漫'),
                             icon: AnikumoIcons.smart_display_rounded,
                           ),
                           PillSwitchOption(
                             value: _HistoryView.manga,
-                            label: '漫画',
+                            label: S.t('漫画'),
                             icon: AnikumoIcons.menu_book_rounded,
                           ),
                           PillSwitchOption(
                             value: _HistoryView.novel,
-                            label: '小说',
+                            label: S.t('小说'),
                             icon: AnikumoIcons.import_contacts_rounded,
                           ),
                           PillSwitchOption(
                             value: _HistoryView.film,
-                            label: '影视',
+                            label: S.t('影视'),
                             icon: AnikumoIcons.live_tv_rounded,
                           ),
                         ],
@@ -307,7 +331,7 @@ class _HistoryCardState extends State<_HistoryCard> with AnikumoDialogOwner {
     await dialogs.run((task) async {
       final cancelToken = RuleCancelToken();
       final result = await task.loading(
-        message: '获取中',
+        message: S.t('获取中'),
         barrierDismissible: isDesktop(),
         onCancel: cancelToken.cancel,
         action: () =>
@@ -321,7 +345,7 @@ class _HistoryCardState extends State<_HistoryCard> with AnikumoDialogOwner {
         case HistoryPlaybackUnavailable(:final reason):
           AnikumoDialog.showToast(message: reason);
       }
-    }, errorMessage: '暂时无法继续播放，请稍后重试');
+    }, errorMessage: S.t('暂时无法继续播放，请稍后重试'));
   }
 
   Future<void> _changeCollect(CollectType type) async {
@@ -333,7 +357,7 @@ class _HistoryCardState extends State<_HistoryCard> with AnikumoDialogOwner {
         type: type.value,
       );
     } catch (_) {
-      AnikumoDialog.showToast(message: '修改收藏状态失败，请稍后重试');
+      AnikumoDialog.showToast(message: S.t('修改收藏状态失败，请稍后重试'));
     } finally {
       if (mounted) setState(() => _updatingCollect = false);
     }

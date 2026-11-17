@@ -8,6 +8,8 @@ import 'package:anikumo/modules/bangumi/bangumi_collection.dart';
 import 'package:anikumo/modules/bangumi/bangumi_collection_type.dart';
 import 'package:anikumo/pages/liuguang/film_widgets.dart';
 import 'package:anikumo/request/apis/bangumi_api.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
+import 'package:anikumo/services/i18n/film_vocab_i18n.dart';
 import 'package:anikumo/services/liuguang/cms_api_source.dart';
 import 'package:anikumo/services/liuguang/film_accounts.dart';
 import 'package:anikumo/services/liuguang/video_engine.dart';
@@ -112,14 +114,14 @@ class _FilmCloudListsPageState extends State<FilmCloudListsPage> {
       if (pick == null) {
         AnikumoDialog.showToast(
           context: context,
-          message: '已装的接口里暂时没找到《$title》',
+          message: S.f('已装的接口里暂时没找到《{}》', [title]),
         );
         return;
       }
       openFilmDetail(context, pick);
     } catch (_) {
       if (mounted) {
-        AnikumoDialog.showToast(context: context, message: '查找失败，请稍后重试');
+        AnikumoDialog.showToast(context: context, message: S.t('查找失败，请稍后重试'));
       }
     } finally {
       if (mounted) setState(() => _opening = null);
@@ -140,7 +142,7 @@ class _FilmCloudListsPageState extends State<FilmCloudListsPage> {
     final empty =
         _tmdbWatchlist.isEmpty && _tmdbFavorites.isEmpty && _bgm.isEmpty;
     return Scaffold(
-      appBar: AppBar(title: const Text('我的云端片单')),
+      appBar: AppBar(title: Text(S.t('我的云端片单'))),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : empty
@@ -148,8 +150,10 @@ class _FilmCloudListsPageState extends State<FilmCloudListsPage> {
               child: Padding(
                 padding: const EdgeInsets.all(32),
                 child: Text(
-                  '云端还没有片单。\n在 TMDB / Bangumi 上收藏或标记想看的作品，'
-                  '就会出现在这里；点开任意一部即可在本应用里找源观看、下载。',
+                  S.t(
+                    '云端还没有片单。\n在 TMDB / Bangumi 上收藏或标记想看的作品，'
+                    '就会出现在这里；点开任意一部即可在本应用里找源观看、下载。',
+                  ),
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
@@ -159,23 +163,23 @@ class _FilmCloudListsPageState extends State<FilmCloudListsPage> {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               children: [
                 if (_tmdbWatchlist.isNotEmpty) ...[
-                  _header(context, 'TMDB · 想看'),
+                  _header(context, S.t('TMDB · 想看')),
                   for (final item in _tmdbWatchlist) _tmdbRow(item),
                 ],
                 if (_tmdbFavorites.isNotEmpty) ...[
-                  _header(context, 'TMDB · 收藏'),
+                  _header(context, S.t('TMDB · 收藏')),
                   for (final item in _tmdbFavorites) _tmdbRow(item),
                 ],
                 if (bgmWatching.isNotEmpty) ...[
-                  _header(context, 'Bangumi · 在看'),
+                  _header(context, S.t('Bangumi · 在看')),
                   for (final c in bgmWatching) _bgmRow(c),
                 ],
                 if (bgmPlan.isNotEmpty) ...[
-                  _header(context, 'Bangumi · 想看'),
+                  _header(context, S.t('Bangumi · 想看')),
                   for (final c in bgmPlan) _bgmRow(c),
                 ],
                 if (bgmWatched.isNotEmpty) ...[
-                  _header(context, 'Bangumi · 看过'),
+                  _header(context, S.t('Bangumi · 看过')),
                   for (final c in bgmWatched) _bgmRow(c),
                 ],
               ],
@@ -222,7 +226,7 @@ class _FilmCloudListsPageState extends State<FilmCloudListsPage> {
       subtitle: Text(
         [
           if (item.year != null) '${item.year}',
-          item.isSeries ? '剧集' : '电影',
+          item.isSeries ? S.t('剧集') : filmKindLabel('电影'),
           if (item.score > 0) 'TMDB ${item.score.toStringAsFixed(1)}',
         ].join(' · '),
       ),
@@ -256,7 +260,7 @@ class _FilmCloudListsPageState extends State<FilmCloudListsPage> {
         [
           if (year != null) '$year',
           if (c.score > 0) 'Bangumi ${c.score.toStringAsFixed(1)}',
-          if (c.eps > 0) '全 ${c.eps} 集',
+          if (c.eps > 0) S.f('全 {} 集', [c.eps]),
         ].join(' · '),
       ),
       trailing: busy

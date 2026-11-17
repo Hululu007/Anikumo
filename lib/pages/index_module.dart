@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:anikumo/bean/widget/error_widget.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/bean/widget/image_preview.dart';
 import 'package:anikumo/pages/collect/collect_module.dart';
 import 'package:anikumo/pages/discover/discover_module.dart';
@@ -103,7 +104,7 @@ final indexModule = createModule(
         '/error',
         child: (context, state) => Scaffold(
           appBar: AppBar(title: const Text('Anikumo')),
-          body: const GeneralErrorWidget(title: '初始化失败', errMsg: '请重新启动应用后再试。'),
+          body: GeneralErrorWidget(title: S.t('初始化失败'), errMsg: S.t('请重新启动应用后再试。')),
         ),
       )
       ..module(tabModule)
@@ -113,7 +114,7 @@ final indexModule = createModule(
         child: (context, state) {
           final args = state.arguments;
           if (args is! ImageViewerRouteArgs) {
-            return const RouteErrorPage(message: '图片预览参数无效，请返回后重试。');
+            return RouteErrorPage(message: S.t('图片预览参数无效，请返回后重试。'));
           }
           return ImageViewer(
             imageUrls: args.imageUrls,

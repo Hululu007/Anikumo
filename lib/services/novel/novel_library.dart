@@ -19,6 +19,11 @@ class NovelLibraryStore {
 
   static void _bump() => revision.value++;
 
+  /// Batch 274: a WebDAV zone sync replaced the
+  /// underlying settings strings wholesale; open pages
+  /// re-read through [revision].
+  static void bumpRevisionForSync() => _bump();
+
   // ----------------------------------------------------------
   // Favorites
   // ----------------------------------------------------------

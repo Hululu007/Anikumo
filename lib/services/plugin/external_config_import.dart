@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/plugins/api_rule_config.dart';
 import 'package:anikumo/plugins/plugins.dart';
 import 'package:anikumo/request/config/api_endpoints.dart';
@@ -59,22 +60,22 @@ ExternalSiteConversion convertExternalSiteConfig(
   final skipped = <String>[];
   final sites = config['sites'];
   if (sites is! List) {
-    return const ExternalSiteConversion(
+    return ExternalSiteConversion(
       plugins: [],
-      skipped: ['配置缺少源列表'],
+      skipped: [S.t('配置缺少源列表')],
     );
   }
   for (final raw in sites) {
     if (raw is! Map) {
-      skipped.add('一条源记录格式不对（不是 JSON 对象），已跳过');
+      skipped.add(S.t('一条源记录格式不对（不是 JSON 对象），已跳过'));
       continue;
     }
     final site = raw.map((key, value) => MapEntry(key.toString(), value));
     final name = (site['name'] as String? ?? '').trim();
     final api = (site['api'] as String? ?? '').trim();
-    final label = name.isEmpty ? '（未命名）' : name;
+    final label = name.isEmpty ? S.t('（未命名）') : name;
     if (name.isEmpty || api.isEmpty) {
-      skipped.add('源「$label」缺少名称或接口地址，已跳过');
+      skipped.add(S.f('源「{}」缺少名称或接口地址，已跳过', [label]));
       continue;
     }
     final type = site['type'];
@@ -83,13 +84,13 @@ ExternalSiteConversion convertExternalSiteConfig(
       case 1:
         plugins.add(_jsonApiPlugin(name: name, api: api, site: site));
       case 0:
-        skipped.add('源「$name」是 XML 接口，暂只支持 JSON 接口，已跳过');
+        skipped.add(S.f('源「{}」是 XML 接口，暂只支持 JSON 接口，已跳过', [name]));
       case 3:
-        skipped.add('源「$name」是脚本类源，需要专门的运行环境，暂不支持，已跳过');
+        skipped.add(S.f('源「{}」是脚本类源，需要专门的运行环境，暂不支持，已跳过', [name]));
       case 4:
-        skipped.add('源「$name」是远程源，暂不支持，已跳过');
+        skipped.add(S.f('源「{}」是远程源，暂不支持，已跳过', [name]));
       default:
-        skipped.add('源「$name」的类型（$type）无法识别，已跳过');
+        skipped.add(S.f('源「{}」的类型（{}）无法识别，已跳过', [name, type]));
     }
   }
   return ExternalSiteConversion(plugins: plugins, skipped: skipped);

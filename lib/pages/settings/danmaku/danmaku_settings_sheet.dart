@@ -10,6 +10,7 @@ import 'package:anikumo/pages/settings/danmaku/danmaku_ch_convert_tile.dart';
 import 'package:anikumo/pages/settings/danmaku/danmaku_shield_settings_sheet.dart';
 import 'package:anikumo/pages/settings/danmaku/danmaku_time_offset_sheet.dart';
 import 'package:anikumo/services/anime/anime_features.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
 
@@ -83,11 +84,12 @@ class _DanmakuSettingsSheetState extends State<_DanmakuSettingsSheet> {
       child: Column(
         children: [
           MaterialBottomSheetHeader(
-            title: '弹幕设置',
+            title: S.t('弹幕设置'),
             onClose: () => Navigator.of(context).pop(),
           ),
-          const ConnectedTabs(
-              padding: materialBottomSheetTabsPadding, labels: ['外观', '播放']),
+          ConnectedTabs(
+              padding: materialBottomSheetTabsPadding,
+              labels: [S.t('外观'), S.t('播放')]),
           Expanded(
               child: TabBarView(children: [
             ListView(
@@ -99,7 +101,7 @@ class _DanmakuSettingsSheetState extends State<_DanmakuSettingsSheet> {
                 // sliders below write.
                 if (AnimeFeatures.isInstalled(
                     AnimeFeatures.danmakuStyleId)) ...[
-                  ContentSection.group(title: '一键预设', children: [
+                  ContentSection.group(title: S.t('一键预设'), children: [
                     Padding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),
@@ -108,7 +110,7 @@ class _DanmakuSettingsSheetState extends State<_DanmakuSettingsSheet> {
                         children: [
                           for (final preset in DanmakuPreset.presets)
                             ActionChip(
-                              label: Text(preset.name),
+                              label: Text(S.t(preset.name)),
                               onPressed: () async {
                                 await preset.apply();
                                 _applyOption(_option.copyWith(
@@ -132,9 +134,9 @@ class _DanmakuSettingsSheetState extends State<_DanmakuSettingsSheet> {
                   ]),
                   const SizedBox(height: 12),
                 ],
-                ContentSection.group(title: '显示效果', children: [
+                ContentSection.group(title: S.t('显示效果'), children: [
                   SettingsSliderTile(
-                    title: Text('字体大小'),
+                    title: Text(S.t('字体大小')),
                     value: _option.fontSize,
                     min: 10,
                     max: 48,
@@ -147,7 +149,7 @@ class _DanmakuSettingsSheetState extends State<_DanmakuSettingsSheet> {
                     },
                   ),
                   SettingsSliderTile(
-                    title: Text('不透明度'),
+                    title: Text(S.t('不透明度')),
                     value: _option.opacity,
                     min: 0.1,
                     max: 1,
@@ -159,7 +161,7 @@ class _DanmakuSettingsSheetState extends State<_DanmakuSettingsSheet> {
                     },
                   ),
                   SettingsSliderTile(
-                    title: Text('显示区域'),
+                    title: Text(S.t('显示区域')),
                     value: _option.area,
                     min: 0,
                     max: 1,
@@ -172,7 +174,7 @@ class _DanmakuSettingsSheetState extends State<_DanmakuSettingsSheet> {
                     },
                   ),
                   SettingsSliderTile(
-                    title: Text('行间距'),
+                    title: Text(S.t('行间距')),
                     value: _option.lineHeight,
                     min: 0,
                     max: 3,
@@ -188,7 +190,7 @@ class _DanmakuSettingsSheetState extends State<_DanmakuSettingsSheet> {
                 ]),
                 const SizedBox(height: 24),
                 ContentSection(
-                  title: '弹幕类型',
+                  title: S.t('弹幕类型'),
                   child: Wrap(spacing: 8, runSpacing: 8, children: [
                     _typeChip('滚动', !_option.hideScroll, (show) {
                       _applyOption(_option.copyWith(hideScroll: !show));
@@ -212,14 +214,14 @@ class _DanmakuSettingsSheetState extends State<_DanmakuSettingsSheet> {
               key: const PageStorageKey('danmaku-playback'),
               padding: materialBottomSheetContentPadding,
               children: [
-                ContentSection.group(title: '速度', children: [
+                ContentSection.group(title: S.t('速度'), children: [
                   SettingsSliderTile(
-                    title: Text('停留时间'),
+                    title: Text(S.t('停留时间')),
                     value: _duration,
                     min: 2,
                     max: 16,
                     divisions: 14,
-                    valueLabel: '${_duration.round()} 秒',
+                    valueLabel: S.f('{} 秒', [_duration.round()]),
                     onChanged: (value) {
                       final duration = value.roundToDouble();
                       setState(() => _duration = duration);
@@ -238,17 +240,17 @@ class _DanmakuSettingsSheetState extends State<_DanmakuSettingsSheet> {
                       widget.onUpdateDanmakuSpeed();
                       setState(() {});
                     },
-                    title: Text('跟随视频倍速'),
+                    title: Text(S.t('跟随视频倍速')),
                     initialValue: GStorage.getSetting<bool>(
                         SettingsKeys.danmakuFollowSpeed),
                   ),
                 ]),
                 const SizedBox(height: 24),
-                ContentSection.group(title: '校准与过滤', children: [
+                ContentSection.group(title: S.t('校准与过滤'), children: [
                   const DanmakuChConvertTile(),
                   SettingsTile(
                     leading: AnikumoIcons.sync_rounded,
-                    title: const Text('时间校准'),
+                    title: Text(S.t('时间校准')),
                     description: Text(formatDanmakuTimeOffset(
                       normalizeDanmakuTimeOffset(GStorage.getSetting<double>(
                           SettingsKeys.danmakuTimeOffset)),
@@ -258,8 +260,8 @@ class _DanmakuSettingsSheetState extends State<_DanmakuSettingsSheet> {
                   ),
                   SettingsTile(
                     leading: AnikumoIcons.filter_alt_outlined,
-                    title: const Text('屏蔽规则'),
-                    description: const Text('关键词与正则表达式'),
+                    title: Text(S.t('屏蔽规则')),
+                    description: Text(S.t('关键词与正则表达式')),
                     onPressed: (context) => Navigator.of(context)
                         .pop(_DanmakuSettingsDestination.shield),
                   ),
@@ -274,6 +276,6 @@ class _DanmakuSettingsSheetState extends State<_DanmakuSettingsSheet> {
 
   Widget _typeChip(String label, bool selected, ValueChanged<bool> onSelected) {
     return FilterChip(
-        label: Text(label), selected: selected, onSelected: onSelected);
+        label: Text(S.t(label)), selected: selected, onSelected: onSelected);
   }
 }

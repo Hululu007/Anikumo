@@ -3,6 +3,7 @@ import 'package:flutter_modular/flutter_modular.dart';
 
 import 'package:anikumo/bean/settings/settings_detail_scaffold.dart';
 import 'package:anikumo/pages/my/my_controller.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/pages/settings/danmaku/danmaku_shield_editor.dart';
 
 class DanmakuShieldSettings extends StatelessWidget {
@@ -10,7 +11,7 @@ class DanmakuShieldSettings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SettingsDetailScaffold(
-        title: const Text('屏蔽规则'),
+        title: Text(S.t('屏蔽规则')),
         body: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 1000),

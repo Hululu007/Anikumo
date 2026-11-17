@@ -6,6 +6,7 @@ import 'package:anikumo/app_widget.dart';
 import 'package:anikumo/splash_gate.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:anikumo/bean/settings/theme_provider.dart';
+import 'package:anikumo/services/i18n/app_language.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:anikumo/services/deep_links/app_deep_links.dart';
 import 'package:anikumo/services/storage/cache_budget_trimmer.dart';
@@ -141,6 +142,7 @@ void main() async {
       defaultTransition: TransitionType.material,
       provide: (scoped) {
         scoped.addChangeNotifier<ThemeProvider>(ThemeProvider.new);
+        scoped.addChangeNotifier<LocaleProvider>(LocaleProvider.new);
       },
       // Batch 93: the animated launch intro overlays the
       // real app (which builds underneath it) on cold start.

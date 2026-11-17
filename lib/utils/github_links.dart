@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
@@ -142,7 +143,7 @@ class GithubLinks {
       if (meta is Map && meta['default_branch'] is String) {
         branch = meta['default_branch'] as String;
       } else {
-        throw const FormatException('读不到仓库信息（仓库不存在或不可见）');
+        throw FormatException(S.t('读不到仓库信息（仓库不存在或不可见）'));
       }
     }
     final pathPart = ref.subpath.isEmpty
@@ -162,7 +163,7 @@ class GithubLinks {
   }) {
     final decoded = json.decode(raw);
     if (decoded is! List) {
-      throw const FormatException('仓库目录读取失败（可能不是目录地址）');
+      throw FormatException(S.t('仓库目录读取失败（可能不是目录地址）'));
     }
     final files = <GithubFileEntry>[];
     for (final entry in decoded) {

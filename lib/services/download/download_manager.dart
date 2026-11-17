@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:dio/dio.dart';
@@ -26,7 +27,7 @@ class _InsufficientStorageException implements Exception {
   final int requiredBytes;
   _InsufficientStorageException(this.availableBytes, this.requiredBytes);
   @override
-  String toString() => '存储空间不足';
+  String toString() => S.t('存储空间不足');
 }
 
 class DownloadTask {
@@ -190,17 +191,17 @@ class DownloadManager implements IDownloadManager {
   String _getStorageErrorMessage(FileSystemException e) {
     // POSIX error code 28 = ENOSPC (No space left on device)
     if (e.osError?.errorCode == 28) {
-      return '存储空间不足，请清理后重试';
+      return S.t('存储空间不足，请清理后重试');
     }
     // POSIX error code 13 = EACCES (Permission denied)
     if (e.osError?.errorCode == 13) {
-      return '存储权限被拒绝';
+      return S.t('存储权限被拒绝');
     }
     // POSIX error code 30 = EROFS (Read-only file system)
     if (e.osError?.errorCode == 30) {
-      return '存储为只读，无法写入';
+      return S.t('存储为只读，无法写入');
     }
-    return '存储错误: ${e.message}';
+    return S.f('存储错误: {}', [e.message]);
   }
 
   @override
@@ -456,14 +457,14 @@ class DownloadManager implements IDownloadManager {
 
       if (!resolvedPlaylist.isVod) {
         episode.status = DownloadStatus.failed;
-        episode.errorMessage = '不支持下载直播流 (无有效分片)';
+        episode.errorMessage = S.t('不支持下载直播流 (无有效分片)');
         _notifyProgress(task, episode);
         return;
       }
 
       if (resolvedPlaylist.segments.isEmpty) {
         episode.status = DownloadStatus.failed;
-        episode.errorMessage = 'M3U8 中未找到可下载的分片';
+        episode.errorMessage = S.t('M3U8 中未找到可下载的分片');
         _notifyProgress(task, episode);
         return;
       }
@@ -592,7 +593,7 @@ class DownloadManager implements IDownloadManager {
 
       if (failedCount > 0) {
         episode.status = DownloadStatus.failed;
-        episode.errorMessage = '$failedCount 个分片下载失败';
+        episode.errorMessage = S.f('{} 个分片下载失败', [failedCount]);
         _notifyProgress(task, episode);
         return;
       }
@@ -624,7 +625,7 @@ class DownloadManager implements IDownloadManager {
     } on _InsufficientStorageException catch (e) {
       episode.status = DownloadStatus.failed;
       episode.errorMessage =
-          '存储空间不足 (可用: ${fmt.formatBytes(e.availableBytes)})';
+          S.f('存储空间不足 (可用: {})', [fmt.formatBytes(e.availableBytes)]);
       _notifyProgress(task, episode);
       AnikumoLogger().w('DownloadManager: insufficient storage space', error: e);
     } on FileSystemException catch (e) {
@@ -769,7 +770,7 @@ class DownloadManager implements IDownloadManager {
     } on _InsufficientStorageException catch (e) {
       episode.status = DownloadStatus.failed;
       episode.errorMessage =
-          '存储空间不足 (可用: ${fmt.formatBytes(e.availableBytes)})';
+          S.f('存储空间不足 (可用: {})', [fmt.formatBytes(e.availableBytes)]);
       _notifyProgress(task, episode);
       AnikumoLogger().w('DownloadManager: insufficient storage space', error: e);
     } on FileSystemException catch (e) {
@@ -822,7 +823,7 @@ class DownloadManager implements IDownloadManager {
     if (cancelToken.isCancelled) {
       throw NetworkException(
         type: NetworkExceptionType.cancel,
-        message: '请求已被取消，请重新请求',
+        message: S.t('请求已被取消，请重新请求'),
       );
     }
 
@@ -845,14 +846,14 @@ class DownloadManager implements IDownloadManager {
 
       final trimmed = content.trimLeft();
       if (!trimmed.startsWith('#EXTM3U')) {
-        throw _NotM3u8Exception('URL 不是 M3U8 播放列表');
+        throw _NotM3u8Exception(S.t('URL 不是 M3U8 播放列表'));
       }
 
       return content;
     } on NetworkException catch (e) {
       if (cancelToken.isCancelled) rethrow;
       if (e.type == NetworkExceptionType.cancel) {
-        throw _NotM3u8Exception('响应过大，非 M3U8 播放列表');
+        throw _NotM3u8Exception(S.t('响应过大，非 M3U8 播放列表'));
       }
       rethrow;
     }

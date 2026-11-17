@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:anikumo/modules/bangumi/bangumi_item.dart';
 import 'package:anikumo/request/core/dio_factory.dart';
+import 'package:anikumo/services/i18n/app_language.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/services/tmdb/tmdb_key.dart';
 
@@ -356,15 +357,15 @@ String _tmdbDateKey(DateTime day) =>
     '${day.day.toString().padLeft(2, '0')}';
 
 /// Batch 155: whether a TMDB stills cache entry may
-/// answer without a refetch: current format (v5 — see
-/// _cacheEntry for why v4 is not honoured) and written
+/// answer without a refetch: current format (v6 — see
+/// _cacheEntry for why v5 is not honoured) and written
 /// within the last week. Pure, for tests.
 bool tmdbCacheEntryIsFresh({
   required int version,
   required int writtenAtMs,
   required int nowMs,
 }) {
-  if (version != 5 || writtenAtMs <= 0) return false;
+  if (version != 6 || writtenAtMs <= 0) return false;
   final age = nowMs - writtenAtMs;
   return age >= 0 && age < const Duration(days: 7).inMilliseconds;
 }
@@ -447,7 +448,7 @@ class TmdbEpisodeService {
           '$_apiBase$path',
           queryParameters: {
             'api_key': key,
-            'language': 'zh-CN',
+            'language': tmdbLanguageForCurrentMode(),
             ...?query,
           },
         );
@@ -556,7 +557,8 @@ class TmdbEpisodeService {
   /// worth having. Cache format versions: v1 = batch 129
   /// single season, v2 = batch 148's merged-seasons format
   /// (reverted by batch 150 the same day), v3/v4 = the
-  /// batch-150/151 era. Only v5 is honoured: v4's
+  /// batch-150/151 era. Only v6 is honoured: v5's entries predate
+  /// UI-language TMDB fetches (batch 264), and v4's
   /// date-aligned entries were keyed by the franchise
   /// numbering batch 153 replaced with per-season local
   /// numbers — read back, every episode of a combined
@@ -575,7 +577,7 @@ class TmdbEpisodeService {
       final entry = decoded['$bangumiId'];
       if (entry is! Map) return null;
       final version = (entry['v'] as num?)?.toInt() ?? 0;
-      if (version != 5) return null;
+      if (version != 6) return null;
       final stills = entry['stills'];
       if (stills is! Map) return null;
       return (
@@ -606,7 +608,7 @@ class TmdbEpisodeService {
         if (decoded is Map) all = decoded.cast<String, dynamic>();
       }
       all['$bangumiId'] = {
-        'v': 5,
+        'v': 6,
         't': DateTime.now().millisecondsSinceEpoch,
         'stills': {
           for (final e in stills.entries) '${e.key}': e.value.toJson(),

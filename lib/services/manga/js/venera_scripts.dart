@@ -1922,6 +1922,15 @@ globalThis.__anikumoCall = async function (sourceKey, kind, args) {
     r = true;
   } else if (kind === 'loadInfo') {
     r = await src.comic.loadInfo(args.id);
+  } else if (kind === 'loadComments') {
+    // Batch 271: comic comments for the old engine, same
+    // contract as the MangaKit kinds.
+    if (!src.comic || typeof src.comic.loadComments !== 'function') return null;
+    r = await src.comic.loadComments(args.id, args.subId, args.page || 1, args.replyTo || null);
+  } else if (kind === 'sendComment') {
+    if (!src.comic || typeof src.comic.sendComment !== 'function') throw new Error('该源不支持发表评论');
+    await src.comic.sendComment(args.id, args.subId, args.content || '', args.replyTo || null);
+    r = true;
   } else if (kind === 'loadEp') {
     r = await src.comic.loadEp(args.id, args.ep);
   } else if (kind === 'imageConfigs') {

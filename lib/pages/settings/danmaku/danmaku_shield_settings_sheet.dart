@@ -3,6 +3,7 @@ import 'package:flutter_modular/flutter_modular.dart';
 
 import 'package:anikumo/bean/dialog/material_bottom_sheet.dart';
 import 'package:anikumo/pages/my/my_controller.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/pages/settings/danmaku/danmaku_shield_editor.dart';
 
 class DanmakuShieldSettingsSheet extends StatelessWidget {
@@ -14,7 +15,7 @@ class DanmakuShieldSettingsSheet extends StatelessWidget {
         body: Column(
           children: [
             MaterialBottomSheetHeader(
-              title: '屏蔽规则',
+              title: S.t('屏蔽规则'),
               onClose: () => Navigator.of(context).pop(),
             ),
             Expanded(

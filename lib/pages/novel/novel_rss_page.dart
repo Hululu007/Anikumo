@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../bean/dialog/dialog.dart';
 import '../../bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import '../../services/novel/moyuan_rss.dart';
 import '../../services/novel/rss_engine.dart' show RssArticle;
 import '../../services/novel/rss_sources.dart';
@@ -28,7 +29,7 @@ Future<void> openRssExternal(String url) async {
   if (uri == null) return;
   final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
   if (!ok) {
-    AnikumoDialog.showToast(message: '打不开这个链接');
+    AnikumoDialog.showToast(message: S.t('打不开这个链接'));
   }
 }
 
@@ -100,8 +101,8 @@ class _RssArticlesPageState extends State<RssArticlesPage> {
     final def = _def;
     if (def == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('订阅源')),
-        body: const Center(child: Text('这个订阅源已不存在')),
+        appBar: AppBar(title: Text(S.t('订阅源'))),
+        body: Center(child: Text(S.t('这个订阅源已不存在'))),
       );
     }
     return Scaffold(
@@ -138,7 +139,7 @@ class _RssArticlesPageState extends State<RssArticlesPage> {
 
   Widget _buildList(RssSourceDef def) {
     if (_categoriesError != null) {
-      return Center(child: Text('加载失败：$_categoriesError'));
+      return Center(child: Text(S.f('加载失败：{}', [_categoriesError])));
     }
     final future = _articlesFuture;
     if (future == null) {
@@ -151,12 +152,13 @@ class _RssArticlesPageState extends State<RssArticlesPage> {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(child: Text('加载失败：${snapshot.error}'));
+          return Center(
+              child: Text(S.f('加载失败：{}', [snapshot.error])));
         }
         final articles = snapshot.data ?? const [];
         if (articles.isEmpty) {
-          return const Center(
-            child: Text('没有取到文章（源站无结果，或这个源需要登录）'),
+          return Center(
+            child: Text(S.t('没有取到文章（源站无结果，或这个源需要登录）')),
           );
         }
         return ListView.separated(
@@ -221,13 +223,13 @@ class RssReaderPage extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(AnikumoIcons.open_in_new_rounded),
-            tooltip: '打开原文',
+            tooltip: S.t('打开原文'),
             onPressed: () => openRssExternal(args.article.link),
           ),
         ],
       ),
       body: def == null
-          ? const Center(child: Text('这个订阅源已不存在'))
+          ? Center(child: Text(S.t('这个订阅源已不存在')))
           : FutureBuilder<List<String>?>(
               future: MoyuanRssEngine.contentParagraphs(def, args.article),
               builder: (context, snapshot) {
@@ -235,11 +237,12 @@ class RssReaderPage extends StatelessWidget {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
-                  return Center(child: Text('正文加载失败：${snapshot.error}'));
+                  return Center(
+                      child: Text(S.f('正文加载失败：{}', [snapshot.error])));
                 }
                 final paragraphs = snapshot.data;
                 if (paragraphs == null || paragraphs.isEmpty) {
-                  return const Center(child: Text('没有取到正文'));
+                  return Center(child: Text(S.t('没有取到正文')));
                 }
                 return ListView(
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),

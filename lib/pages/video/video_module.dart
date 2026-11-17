@@ -9,6 +9,7 @@ import 'package:anikumo/pages/video/video_controller.dart';
 import 'package:anikumo/pages/video/video_page.dart';
 import 'package:anikumo/pages/video/video_playback_args.dart';
 import 'package:anikumo/services/player/mini_player_session.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 final videoModule = createModule(
   path: '/video',
@@ -21,7 +22,7 @@ final videoModule = createModule(
       child: (context, state) {
         final args = state.arguments;
         if (args is! VideoPlaybackArgs) {
-          return const RouteErrorPage(message: '播放参数无效，请返回后重试。');
+          return RouteErrorPage(message: S.t('播放参数无效，请返回后重试。'));
         }
         // Batch 113: the in-app mini player owns a live pair between
         // visits. Reopening the same video reattaches to that pair;

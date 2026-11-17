@@ -11,6 +11,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_js
   flutter_qjs
   flutter_volume_controller
+  local_auth_windows
   media_kit_video
   screen_retriever_windows
   tray_manager
@@ -20,6 +21,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
+  flutter_local_notifications_windows
   jni
 )
 

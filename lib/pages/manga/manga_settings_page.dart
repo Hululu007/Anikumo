@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:anikumo/bean/dialog/dialog_helper.dart';
 import 'package:anikumo/pages/manga/manga_feature_repo_page.dart';
+import 'package:anikumo/pages/settings/language_setting_tile.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/pages/manga/manga_downloads_page.dart';
 import 'package:anikumo/pages/manga/manga_sources_page.dart';
 import 'package:anikumo/services/manga/manga_features.dart';
@@ -64,8 +66,7 @@ class MangaSettingsIndex extends StatelessWidget {
           if (showHeader)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
-              child: Text(
-                '设置',
+              child: Text(S.t('设置'),
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w800,
                 ),
@@ -74,10 +75,11 @@ class MangaSettingsIndex extends StatelessWidget {
           Expanded(
             child: ListView(
               children: [
+                const LanguageSettingTile(),
                 for (final (icon, title, builder) in entries)
                   ListTile(
                     leading: Icon(icon),
-                    title: Text(title),
+                    title: Text(S.t(title)),
                     trailing: const Icon(AnikumoIcons.chevron_right_rounded),
                     onTap: () => Navigator.of(
                       context,
@@ -99,7 +101,7 @@ class MangaSettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('漫画设置')),
+      appBar: AppBar(title: Text(S.t('漫画设置'))),
       body: const MangaSettingsIndex(showHeader: false),
     );
   }
@@ -116,7 +118,7 @@ class _SettingsScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(title: Text(S.t(title))),
       body: ListView(children: children),
     );
   }
@@ -138,8 +140,8 @@ class _SwitchRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SwitchListTile(
-      title: Text(title),
-      subtitle: subtitle == null ? null : Text(subtitle!),
+      title: Text(S.t(title)),
+      subtitle: subtitle == null ? null : Text(S.t(subtitle!)),
       value: value,
       onChanged: onChanged,
     );
@@ -164,12 +166,12 @@ class _SelectRow<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      title: Text(title),
+      title: Text(S.t(title)),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            valueLabel,
+            S.t(valueLabel),
             style: TextStyle(color: Theme.of(context).colorScheme.outline),
           ),
           const Icon(AnikumoIcons.chevron_right_rounded),
@@ -179,14 +181,14 @@ class _SelectRow<T> extends StatelessWidget {
         final selected = await showDialog<T>(
           context: context,
           builder: (context) => SimpleDialog(
-            title: Text(title),
+            title: Text(S.t(title)),
             children: [
               for (final (value, label) in options)
                 SimpleDialogOption(
                   onPressed: () => Navigator.of(context).pop(value),
                   child: Row(
                     children: [
-                      Expanded(child: Text(label)),
+                      Expanded(child: Text(S.t(label))),
                       if (label == valueLabel)
                         Icon(
                           AnikumoIcons.check_rounded,
@@ -240,16 +242,16 @@ class _EngineSettingsPageState extends State<_EngineSettingsPage> {
           onChanged: (value) {
             if (value != null) _select(value);
           },
-          child: const Column(
+          child: Column(
             children: [
               RadioListTile<String>(
                 title: Text('MangaKit'),
-                subtitle: Text('默认引擎 · 带限流保护、渐进加载与验证码自动重试'),
+                subtitle: Text(S.t('默认引擎 · 带限流保护、渐进加载与验证码自动重试')),
                 value: 'mangakit',
               ),
               RadioListTile<String>(
-                title: Text('旧引擎'),
-                subtitle: Text('之前的 JS 引擎 · 每个源独立运行'),
+                title: Text(S.t('旧引擎')),
+                subtitle: Text(S.t('之前的 JS 引擎 · 每个源独立运行')),
                 value: 'legacy',
               ),
             ],
@@ -257,8 +259,7 @@ class _EngineSettingsPageState extends State<_EngineSettingsPage> {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-          child: Text(
-            '切换后重新进入漫画区生效；源的设置、登录状态与 Cookie 两个引擎共用，不会丢失。',
+          child: Text(S.t('切换后重新进入漫画区生效；源的设置、登录状态与 Cookie 两个引擎共用，不会丢失。'),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -299,8 +300,12 @@ class _ExploreSettingsPageState extends State<_ExploreSettingsPage> {
         ),
         _SelectRow<int>(
           title: '首页历史显示数量',
-          valueLabel: '$railCount 本',
-          options: const [(6, '6 本'), (10, '10 本'), (20, '20 本')],
+          valueLabel: S.f('{} 本', [railCount]),
+          options: [
+            (6, S.f('{} 本', [6])),
+            (10, S.f('{} 本', [10])),
+            (20, S.f('{} 本', [20])),
+          ],
           onSelected: (value) {
             GStorage.putSetting(SettingsKeys.mangaHistoryRailCount, value);
             setState(() {});
@@ -407,9 +412,10 @@ class _ReadingSettingsPageState extends State<_ReadingSettingsPage> {
         // play/pause control itself is in the reader.
         if (MangaFeatures.isInstalled(MangaFeatures.autoScrollId)) ...[
           ListTile(
-            title: const Text('自动滚动速度'),
+            title: Text(S.t('自动滚动速度')),
             subtitle: Text(
-              '${GStorage.getSetting(SettingsKeys.mangaAutoScrollSpeed)} 像素/秒（条漫模式）',
+              S.f('{} 像素/秒（条漫模式）',
+                  [GStorage.getSetting(SettingsKeys.mangaAutoScrollSpeed)]),
             ),
           ),
           Slider(
@@ -434,9 +440,10 @@ class _ReadingSettingsPageState extends State<_ReadingSettingsPage> {
         // Batch 252: reader chrome auto-hide delay,
         // shared with the novel reader (0.5–5 s).
         ListTile(
-          title: const Text('界面自动隐藏'),
+          title: Text(S.t('界面自动隐藏')),
           subtitle: Text(
-            '${readerChromeHideSeconds().toStringAsFixed(1)} 秒无操作后隐藏（漫画 / 小说阅读器共用）',
+            S.f('{} 秒无操作后隐藏（漫画 / 小说阅读器共用）',
+                [readerChromeHideSeconds().toStringAsFixed(1)]),
           ),
         ),
         Slider(
@@ -444,16 +451,18 @@ class _ReadingSettingsPageState extends State<_ReadingSettingsPage> {
           min: kReaderChromeHideMinSeconds,
           max: kReaderChromeHideMaxSeconds,
           divisions: 45,
-          label: '${readerChromeHideSeconds().toStringAsFixed(1)} 秒',
+          label: S.f('{} 秒', [readerChromeHideSeconds().toStringAsFixed(1)]),
           onChanged: (value) {
             GStorage.putSetting(SettingsKeys.readerChromeHideSeconds, value);
             setState(() {});
           },
         ),
         ListTile(
-          title: const Text('自动翻页间隔'),
+          title: Text(S.t('自动翻页间隔')),
           subtitle: Text(
-            autoSeconds == 0 ? '关（仅分页模式可用）' : '$autoSeconds 秒一页（仅分页模式）',
+            autoSeconds == 0
+                ? S.t('关（仅分页模式可用）')
+                : S.f('{} 秒一页（仅分页模式）', [autoSeconds]),
           ),
         ),
         Slider(
@@ -461,7 +470,7 @@ class _ReadingSettingsPageState extends State<_ReadingSettingsPage> {
           min: 0,
           max: 20,
           divisions: 20,
-          label: autoSeconds == 0 ? '关' : '$autoSeconds 秒',
+          label: autoSeconds == 0 ? S.t('关') : S.f('{} 秒', [autoSeconds]),
           onChanged: (value) {
             GStorage.putSetting(
               SettingsKeys.mangaAutoPageSeconds,
@@ -494,16 +503,20 @@ class _AppearanceSettingsPageState extends State<_AppearanceSettingsPage> {
       children: [
         _SelectRow<int>(
           title: '网格列数',
-          valueLabel: '$columns 列',
-          options: const [(2, '2 列'), (3, '3 列'), (4, '4 列')],
+          valueLabel: S.f('{} 列', [columns]),
+          options: [
+            (2, S.f('{} 列', [2])),
+            (3, S.f('{} 列', [3])),
+            (4, S.f('{} 列', [4])),
+          ],
           onSelected: (value) {
             GStorage.putSetting(SettingsKeys.mangaGridColumns, value);
             setState(() {});
           },
         ),
-        const ListTile(
-          title: Text('说明'),
-          subtitle: Text('列数作用于探索、收藏与分类结果的封面网格。'),
+        ListTile(
+          title: Text(S.t('说明')),
+          subtitle: Text(S.t('列数作用于探索、收藏与分类结果的封面网格。')),
         ),
       ],
     );
@@ -524,7 +537,7 @@ class _DataSettingsPageState extends State<_DataSettingsPage> {
     await Clipboard.setData(
       ClipboardData(text: MangaLibraryStore.exportLibrary()),
     );
-    AnikumoDialog.showToast(message: '书架已复制，去粘贴保存吧');
+    AnikumoDialog.showToast(message: S.t('书架已复制，去粘贴保存吧'));
   }
 
   Future<void> _import() async {
@@ -532,23 +545,23 @@ class _DataSettingsPageState extends State<_DataSettingsPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('导入书架'),
+        title: Text(S.t('导入书架')),
         content: TextField(
           controller: controller,
           maxLines: 6,
-          decoration: const InputDecoration(
-            hintText: '把导出的书架文本粘贴到这里',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            hintText: S.t('把导出的书架文本粘贴到这里'),
+            border: const OutlineInputBorder(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('导入'),
+            child: Text(S.t('导入')),
           ),
         ],
       ),
@@ -557,8 +570,9 @@ class _DataSettingsPageState extends State<_DataSettingsPage> {
     final result = await MangaLibraryStore.importLibrary(controller.text);
     AnikumoDialog.showToast(
       message: result == null
-          ? '导入失败：文本不是有效的书架导出'
-          : '已导入 ${result.favorites} 本收藏、${result.progress} 条进度',
+          ? S.t('导入失败：文本不是有效的书架导出')
+          : S.f('已导入 {} 本收藏、{} 条进度',
+              [result.favorites, result.progress]),
     );
   }
 
@@ -570,23 +584,23 @@ class _DataSettingsPageState extends State<_DataSettingsPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(title),
-        content: const Text('这个操作不能撤销。'),
+        title: Text(S.t(title)),
+        content: Text(S.t('这个操作不能撤销。')),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('清除'),
+            child: Text(S.t('清除')),
           ),
         ],
       ),
     );
     if (confirmed != true) return;
     await action();
-    AnikumoDialog.showToast(message: doneMessage);
+    AnikumoDialog.showToast(message: S.t(doneMessage));
   }
 
   @override
@@ -596,19 +610,19 @@ class _DataSettingsPageState extends State<_DataSettingsPage> {
       children: [
         ListTile(
           leading: const Icon(AnikumoIcons.upload_outlined),
-          title: const Text('导出书架'),
-          subtitle: const Text('收藏与阅读进度导出为一段文本'),
+          title: Text(S.t('导出书架')),
+          subtitle: Text(S.t('收藏与阅读进度导出为一段文本')),
           onTap: _export,
         ),
         ListTile(
           leading: const Icon(AnikumoIcons.download_outlined),
-          title: const Text('导入书架'),
-          subtitle: const Text('粘贴导出的文本合并进当前书架'),
+          title: Text(S.t('导入书架')),
+          subtitle: Text(S.t('粘贴导出的文本合并进当前书架')),
           onTap: _import,
         ),
         ListTile(
           leading: const Icon(AnikumoIcons.history_rounded),
-          title: const Text('清除阅读历史'),
+          title: Text(S.t('清除阅读历史')),
           onTap: () => _confirmClear(
             title: '清除全部阅读历史？',
             action: MangaLibraryStore.clearProgress,
@@ -617,7 +631,7 @@ class _DataSettingsPageState extends State<_DataSettingsPage> {
         ),
         ListTile(
           leading: const Icon(AnikumoIcons.favorite_border_rounded),
-          title: const Text('清除全部收藏'),
+          title: Text(S.t('清除全部收藏')),
           onTap: () => _confirmClear(
             title: '清除全部收藏？',
             action: MangaLibraryStore.clearFavorites,
@@ -656,8 +670,8 @@ class _NetworkSettingsPageState extends State<_NetworkSettingsPage> {
         ),
         ListTile(
           leading: const Icon(AnikumoIcons.cleaning_services_outlined),
-          title: const Text('清除图片缓存'),
-          subtitle: const Text('封面与章节图片的本地缓存'),
+          title: Text(S.t('清除图片缓存')),
+          subtitle: Text(S.t('封面与章节图片的本地缓存')),
           onTap: () async {
             await DefaultCacheManager().emptyCache();
             // Batch 51: the reader's dedicated page cache
@@ -665,7 +679,7 @@ class _NetworkSettingsPageState extends State<_NetworkSettingsPage> {
             await mangaPageCacheManager.emptyCache();
             // Batch 102: and the covers' own gated store.
             await mangaCoverCacheManager.emptyCache();
-            AnikumoDialog.showToast(message: '图片缓存已清除');
+            AnikumoDialog.showToast(message: S.t('图片缓存已清除'));
           },
         ),
       ],
@@ -680,22 +694,22 @@ class _AboutSettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const _SettingsScaffold(
+    return _SettingsScaffold(
       title: '关于',
       children: [
-        ListTile(title: Text('漫画源'), subtitle: Text('免费公共 API')),
+        ListTile(title: Text(S.t('漫画源')), subtitle: Text(S.t('免费公共 API'))),
         ListTile(
-          title: Text('界面与设置结构'),
+          title: Text(S.t('界面与设置结构')),
           subtitle: Text(
-            '参考开源项目（GPL-3.0）的四页签导航、首页卡片流与'
-            '分类设置结构；本实现为独立编写，未使用其代码。',
+            S.t('参考开源项目（GPL-3.0）的四页签导航、首页卡片流与'
+                '分类设置结构；本实现为独立编写，未使用其代码。'),
           ),
         ),
         ListTile(
-          title: Text('内容说明'),
+          title: Text(S.t('内容说明')),
           subtitle: Text(
-            '章节来自各汉化组与上传者，版权归原作者与出版社所有；'
-            '官方授权作品在源站多为外链，可能无法在应用内阅读。',
+            S.t('章节来自各汉化组与上传者，版权归原作者与出版社所有；'
+                '官方授权作品在源站多为外链，可能无法在应用内阅读。'),
           ),
         ),
       ],

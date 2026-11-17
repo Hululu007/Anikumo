@@ -6,6 +6,7 @@ import 'package:anikumo/bean/widget/tonal_card.dart';
 import 'package:anikumo/pages/onboarding/onboarding_step_layout.dart';
 import 'package:anikumo/services/logging/logger.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// First-launch disclaimer (batch 55 polish). The legal
 /// text itself is unchanged and still comes verbatim from
@@ -42,7 +43,7 @@ class _DisclaimerStepState extends State<DisclaimerStep> {
         error: error,
         stackTrace: stackTrace,
       );
-      text = '免责声明加载失败，请退出后重试。';
+      text = S.t('免责声明加载失败，请退出后重试。');
     }
     if (!mounted) {
       return;
@@ -57,7 +58,7 @@ class _DisclaimerStepState extends State<DisclaimerStep> {
     final textTheme = Theme.of(context).textTheme;
     return OnboardingStepLayout(
       leading: const OnboardingStepIcon(icon: AnikumoIcons.waving_hand_rounded),
-      title: '欢迎来到 Anikumo',
+      title: S.t('欢迎来到 Anikumo'),
       child: TonalCard(
         padding: const EdgeInsets.all(24),
         child: _statementsText == null
@@ -80,14 +81,14 @@ class _DisclaimerStepState extends State<DisclaimerStep> {
           Icon(AnikumoIcons.description_outlined, color: colors.primary),
           const SizedBox(width: 12),
           Expanded(
-            child: Text('免责声明',
+            child: Text(S.t('免责声明'),
                 style:
                     textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600)),
           ),
         ]),
         const SizedBox(height: 6),
         Text(
-          '开始使用前，请花一分钟读完。',
+          S.t('开始使用前，请花一分钟读完。'),
           style:
               textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
         ),
@@ -96,7 +97,7 @@ class _DisclaimerStepState extends State<DisclaimerStep> {
           _summary(context),
           const SizedBox(height: 24),
           Text(
-            '条款全文',
+            S.t('条款全文'),
             style: textTheme.labelLarge?.copyWith(
               color: colors.primary,
               fontWeight: FontWeight.w700,
@@ -238,13 +239,13 @@ class _DisclaimerStepState extends State<DisclaimerStep> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          points[i].$2,
+                          S.t(points[i].$2),
                           style: textTheme.titleSmall
                               ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          points[i].$3,
+                          S.t(points[i].$3),
                           style: textTheme.bodySmall?.copyWith(
                             height: 1.5,
                             color: colors.onSurfaceVariant,

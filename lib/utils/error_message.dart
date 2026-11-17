@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 /// Batch 41: turns raw exception dumps into the short,
 /// human messages the home sections show. Device reports
 /// had full `DioException [connection error]: The connection
@@ -9,28 +10,28 @@
 String friendlyError(Object error) {
   final raw = error.toString();
   if (raw.contains('Failed host lookup')) {
-    return '站点无法访问（域名解析失败，站点可能已停运或改域名）';
+    return S.t('站点无法访问（域名解析失败，站点可能已停运或改域名）');
   }
   if (raw.contains('HandshakeException') ||
       raw.contains('CERTIFICATE') ||
       raw.contains('certificate')) {
-    return '站点连接失败（安全握手错误）';
+    return S.t('站点连接失败（安全握手错误）');
   }
-  if (raw.contains('Connection refused')) return '站点拒绝连接';
+  if (raw.contains('Connection refused')) return S.t('站点拒绝连接');
   if (raw.contains('Connection reset') ||
       raw.contains('Connection closed') ||
       raw.contains('Broken pipe')) {
-    return '连接被站点中断，请重试';
+    return S.t('连接被站点中断，请重试');
   }
   if (raw.contains('TimeoutException') ||
       raw.contains('timed out') ||
       raw.contains('receiveTimeout') || raw.contains('receive timeout') || raw.contains('connection timeout') || raw.contains('send timeout') ||
       raw.contains('connectionTimeout') ||
       raw.contains('sendTimeout')) {
-    return '加载超时，请重试';
+    return S.t('加载超时，请重试');
   }
   if (raw.contains('SocketException') || raw.contains('DioException')) {
-    return '网络连接失败，请检查网络后重试';
+    return S.t('网络连接失败，请检查网络后重试');
   }
   var s = raw;
   // Strip chained prefixes the layers add: "Bad state: " from
@@ -57,7 +58,7 @@ String friendlyError(Object error) {
   if (RegExp(
     r'(TypeError|ReferenceError|SyntaxError|RangeError|EvalError|URIError|AggregateError)',
   ).hasMatch(s)) {
-    return '源脚本运行出错，请重试或换一个源';
+    return S.t('源脚本运行出错，请重试或换一个源');
   }
   if (s.length > 120) s = '${s.substring(0, 120)}…';
   return s;

@@ -8,6 +8,7 @@ import 'package:anikumo/bean/widget/empty_state_widget.dart';
 import 'package:anikumo/modules/download/download_module.dart';
 import 'package:anikumo/modules/roads/road_module.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class EpisodeSelectionPanel extends StatefulWidget {
   const EpisodeSelectionPanel({
@@ -124,7 +125,7 @@ class EpisodeSelectionPanelState extends State<EpisodeSelectionPanel> {
                       Semantics(
                         header: true,
                         child: Text(
-                          widget.title.isEmpty ? '剧集列表' : widget.title,
+                          widget.title.isEmpty ? S.t('剧集列表') : widget.title,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.titleLarge?.copyWith(
@@ -158,10 +159,10 @@ class EpisodeSelectionPanelState extends State<EpisodeSelectionPanel> {
                           child: Text(
                             textScaler.scale(14) > 21 ||
                                     constraints.maxWidth < 320
-                                ? '$count 集'
+                                ? S.f('{} 集', [count])
                                 : widget.isOffline
-                                    ? '已缓存 · $count 集'
-                                    : '全部剧集 · $count 集',
+                                    ? S.f('已缓存 · {} 集', [count])
+                                    : S.f('全部剧集 · {} 集', [count]),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.labelLarge?.copyWith(
@@ -170,13 +171,13 @@ class EpisodeSelectionPanelState extends State<EpisodeSelectionPanel> {
                           ),
                         ),
                         IconButton(
-                          tooltip: '定位当前集',
+                          tooltip: S.t('定位当前集'),
                           onPressed: _canLocate ? revealCurrentEpisode : null,
                           icon: const Icon(AnikumoIcons.my_location_rounded, size: 20),
                         ),
                         if (!widget.isOffline)
                           IconButton.filledTonal(
-                            tooltip: '缓存剧集',
+                            tooltip: S.t('缓存剧集'),
                             onPressed: count > 0 && widget.onDownload != null
                                 ? () => widget.onDownload!(_visibleRoad)
                                 : null,
@@ -188,11 +189,11 @@ class EpisodeSelectionPanelState extends State<EpisodeSelectionPanel> {
                 ),
               ),
               if (count == 0)
-                const SliverFillRemaining(
+                SliverFillRemaining(
                   hasScrollBody: false,
                   child: GeneralEmptyState(
                     icon: AnikumoIcons.video_library_outlined,
-                    title: '这条线路暂无剧集',
+                    title: S.t('这条线路暂无剧集'),
                   ),
                 )
               else
@@ -210,7 +211,7 @@ class EpisodeSelectionPanelState extends State<EpisodeSelectionPanel> {
                       final name = index < road!.identifier.length &&
                               road.identifier[index].trim().isNotEmpty
                           ? road.identifier[index]
-                          : '第$episode集';
+                          : S.f('第{}集', [episode]);
                       return _EpisodeRow(
                         key: ValueKey('$_visibleRoad:$episode'),
                         name: name,
@@ -292,9 +293,9 @@ class _RoadSelectorState extends State<_RoadSelector> {
 
   String _name(int index) => index >= 0 && index < widget.roads.length
       ? (widget.roads[index].name.trim().isEmpty
-          ? '播放线路 ${index + 1}'
+          ? S.f('播放线路 {}', [index + 1])
           : widget.roads[index].name)
-      : '暂无线路';
+      : S.t('暂无线路');
 
   void _toggleMenu(MenuController controller) {
     final pointerActivation = _pointerActivation;
@@ -381,7 +382,7 @@ class _RoadSelectorState extends State<_RoadSelector> {
               Text(_name(index), maxLines: 2, overflow: TextOverflow.ellipsis),
               const SizedBox(height: 4),
               Text(
-                '${road.data.length} 集',
+                S.f('{} 集', [road.data.length]),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: selected
                       ? colors.onSecondaryContainer
@@ -433,7 +434,7 @@ class _RoadSelectorState extends State<_RoadSelector> {
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
             child: Text(
-              '选择播放线路',
+              S.t('选择播放线路'),
               style: theme.textTheme.labelLarge?.copyWith(
                 color: colors.onSurfaceVariant,
               ),
@@ -449,7 +450,7 @@ class _RoadSelectorState extends State<_RoadSelector> {
           return Semantics(
             button: canSwitch,
             expanded: canSwitch ? open : null,
-            label: canSwitch ? '切换播放线路' : null,
+            label: canSwitch ? S.t('切换播放线路') : null,
             child: Material(
               animationDuration: duration,
               color:
@@ -470,7 +471,7 @@ class _RoadSelectorState extends State<_RoadSelector> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              widget.isOffline ? '离线观看' : '播放线路',
+                              widget.isOffline ? S.t('离线观看') : S.t('播放线路'),
                               style: theme.textTheme.labelMedium
                                   ?.copyWith(color: foreground),
                             ),
@@ -576,22 +577,22 @@ class _EpisodeRowState extends State<_EpisodeRow>
     final status =
         widget.isOffline ? DownloadStatus.completed : widget.download?.status;
     final downloadLabel = switch (status) {
-      DownloadStatus.completed => '已缓存',
-      DownloadStatus.downloading => '正在缓存',
-      DownloadStatus.failed => '缓存失败',
-      DownloadStatus.paused => '缓存已暂停',
-      DownloadStatus.pending => '等待缓存',
-      DownloadStatus.resolving => '正在解析',
+      DownloadStatus.completed => S.t('已缓存'),
+      DownloadStatus.downloading => S.t('正在缓存'),
+      DownloadStatus.failed => S.t('缓存失败'),
+      DownloadStatus.paused => S.t('缓存已暂停'),
+      DownloadStatus.pending => S.t('等待缓存'),
+      DownloadStatus.resolving => S.t('正在解析'),
       _ => null,
     };
     final playbackLabel =
-        widget.selected ? (widget.isPlaying ? '正在播放' : '当前选集') : '播放';
+        widget.selected ? (widget.isPlaying ? S.t('正在播放') : S.t('当前选集')) : S.t('播放');
 
     final supportingText = [
       if (widget.selected) playbackLabel,
       if (!widget.isOffline && downloadLabel != null)
         status == DownloadStatus.downloading
-            ? '缓存 ${(widget.download!.progressPercent.clamp(0, 1) * 100).round()}%'
+            ? S.f('缓存 {}%', [(widget.download!.progressPercent.clamp(0, 1) * 100).round()])
             : downloadLabel,
     ].join(' · ');
 

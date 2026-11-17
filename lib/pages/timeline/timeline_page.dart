@@ -16,6 +16,7 @@ import 'package:anikumo/pages/timeline/timeline_controller.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/utils/anime_season.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 part 'timeline_options.dart';
 part 'timeline_week_selector.dart';
@@ -46,7 +47,7 @@ class _TimelinePageState extends State<TimelinePage> {
   }
 
   String _seasonLabel(DateTime date) {
-    return '${date.year}年${getSeasonStringByMonth(date.month)}季';
+    return S.f('{}年{}季', [date.year, getSeasonStringByMonth(date.month)]);
   }
 
   void _showSeasonBottomSheet(BuildContext context) {
@@ -59,8 +60,8 @@ class _TimelinePageState extends State<TimelinePage> {
       builder: (context) => Column(
         children: [
           MaterialBottomSheetHeader(
-            title: '放送季度',
-            description: '正在查看 ${_seasonLabel(_controller.selectedDate)}',
+            title: S.t('放送季度'),
+            description: S.f('正在查看 {}', [_seasonLabel(_controller.selectedDate)]),
             onClose: () => Navigator.of(context).pop(),
           ),
           Expanded(
@@ -117,7 +118,7 @@ class _TimelinePageState extends State<TimelinePage> {
               _controller.loadSeason(date);
             }
           : null,
-      child: Text('${getSeasonStringByMonth(date.month)}季'),
+      child: Text(S.f('{}季', [getSeasonStringByMonth(date.month)])),
     );
   }
 
@@ -188,7 +189,7 @@ class _TimelinePageState extends State<TimelinePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'TIMELINE · 放送时间表',
+                S.t('TIMELINE · 放送时间表'),
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.outline,
                   fontWeight: FontWeight.w700,
@@ -317,13 +318,13 @@ class _TimelinePageState extends State<TimelinePage> {
             ? theme.textTheme.titleLarge
             : theme.textTheme.headlineMedium;
     return Semantics(
-      label: '切换放送季度，$label',
+      label: S.f('切换放送季度，{}', [label]),
       button: true,
       enabled: !loading,
       onTap: loading ? null : () => _showSeasonBottomSheet(context),
       excludeSemantics: true,
       child: Tooltip(
-        message: '切换放送季度',
+        message: S.t('切换放送季度'),
         child: InkWell(
           onTap: loading ? null : () => _showSeasonBottomSheet(context),
           borderRadius: BorderRadius.circular(20),
@@ -370,7 +371,7 @@ class _TimelinePageState extends State<TimelinePage> {
         _buildSeasonPicker(context, loading: loading, compact: compact),
         if (!compact)
           Text(
-            loading ? '正在加载放送时间表…' : '$startMonth — ${startMonth + 2} 月 · 每周放送',
+            loading ? S.t('正在加载放送时间表…') : S.f('{} — {} 月 · 每周放送', [startMonth, startMonth + 2]),
             style: theme.textTheme.bodyMedium
                 ?.copyWith(color: colors.onSurfaceVariant),
           ),
@@ -404,12 +405,12 @@ class _TimelinePageState extends State<TimelinePage> {
                 icon: filteredOut
                     ? AnikumoIcons.filter_alt_off_rounded
                     : AnikumoIcons.event_available_rounded,
-                title: filteredOut ? '没有符合筛选的番剧' : '这一天暂无放送',
+                title: filteredOut ? S.t('没有符合筛选的番剧') : S.t('这一天暂无放送'),
                 actions: [
                   if (filteredOut)
                     StateActionButton.tonal(
                       onPressed: _controller.clearFilters,
-                      text: '清除筛选',
+                      text: S.t('清除筛选'),
                     ),
                 ],
               ),

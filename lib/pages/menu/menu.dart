@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:flutter/services.dart';
 import 'package:anikumo/bean/dialog/dialog_helper.dart';
@@ -179,7 +180,7 @@ class _ScaffoldMenu extends State<ScaffoldMenu> with RouteAware {
     if (lastPromptAt == null ||
         now.difference(lastPromptAt) > const Duration(seconds: 2)) {
       _lastExitPromptAt = now;
-      AnikumoDialog.showToast(message: '再按一次退出应用', context: context);
+      AnikumoDialog.showToast(message: S.t('再按一次退出应用'), context: context);
       return;
     }
 
@@ -298,12 +299,12 @@ class _ScaffoldMenu extends State<ScaffoldMenu> with RouteAware {
                         ),
                         const Spacer(),
                         IconButton(
-                          tooltip: '搜索',
+                          tooltip: S.t('搜索'),
                           onPressed: () => context.pushNamed('/search/'),
                           icon: const Icon(AnikumoIcons.search),
                         ),
                         IconButton(
-                          tooltip: '历史记录',
+                          tooltip: S.t('历史记录'),
                           onPressed: () =>
                               context.pushNamed('/settings/history/'),
                           icon: const Icon(AnikumoIcons.history),
@@ -314,7 +315,7 @@ class _ScaffoldMenu extends State<ScaffoldMenu> with RouteAware {
                         if (isDesktop() &&
                             !DesktopWindowConfig.showWindowButton)
                           IconButton(
-                            tooltip: '退出',
+                            tooltip: S.t('退出'),
                             onPressed: () => windowManager.close(),
                             icon: const Icon(AnikumoIcons.close),
                           ),
@@ -379,7 +380,7 @@ class _ScaffoldMenu extends State<ScaffoldMenu> with RouteAware {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    label,
+                    S.t(label),
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
                       color: selected
@@ -483,7 +484,7 @@ class _ScaffoldMenu extends State<ScaffoldMenu> with RouteAware {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    label,
+                                    S.t(label),
                                     style: theme.textTheme.labelMedium
                                         ?.copyWith(
                                           fontWeight: selected

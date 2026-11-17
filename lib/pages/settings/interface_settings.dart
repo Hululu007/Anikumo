@@ -4,6 +4,8 @@ import 'package:anikumo/bean/settings/settings_detail_scaffold.dart';
 import 'package:anikumo/bean/settings/settings_dropdown_tile.dart';
 import 'package:anikumo/bean/settings/settings_list.dart';
 import 'package:anikumo/modules/collect/collect_layout.dart';
+import 'package:anikumo/pages/settings/language_setting_tile.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/utils/device.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
@@ -57,7 +59,9 @@ class _InterfaceSettingsPageState extends State<InterfaceSettingsPage> {
       await GStorage.putSetting(SettingsKeys.defaultCollectLayout, layout.name);
       if (mounted) setState(() => _defaultCollectLayout = layout);
     } catch (_) {
-      if (mounted) AnikumoDialog.showToast(message: '追番默认布局保存失败，请重试');
+      if (mounted) {
+        AnikumoDialog.showToast(message: S.t('追番默认布局保存失败，请重试'));
+      }
     } finally {
       if (mounted) setState(() => _savingCollectLayout = false);
     }
@@ -66,25 +70,31 @@ class _InterfaceSettingsPageState extends State<InterfaceSettingsPage> {
   @override
   Widget build(BuildContext context) {
     return SettingsDetailScaffold(
-      title: Text('界面设置'),
+      title: Text(S.t('界面设置')),
       body: SettingsList(
         sections: [
-          SettingsSection(title: Text('启动'), tiles: [
+          SettingsSection(title: Text(S.t('语言')), tiles: [
+            const LanguageSettingTile(),
+          ]),
+          SettingsSection(title: Text(S.t('启动')), tiles: [
             SettingsDropdownTile<String>(
               leading: AnikumoIcons.home_rounded,
-              title: const Text('启动界面设置'),
-              description: const Text('设置应用开启时的默认页面'),
+              title: Text(S.t('启动界面设置')),
+              description: Text(S.t('设置应用开启时的默认页面')),
               value: defaultPage,
-              options: defaultPageMap,
-              fallbackLabel: '推荐',
+              options: {
+                for (final entry in defaultPageMap.entries)
+                  entry.key: S.t(entry.value),
+              },
+              fallbackLabel: S.t('推荐'),
               onChanged: updateDefaultPage,
             ),
           ]),
-          SettingsSection(title: Text('展示信息'), tiles: [
+          SettingsSection(title: Text(S.t('展示信息')), tiles: [
             SettingsDropdownTile<CollectLayout>(
               leading: AnikumoIcons.view_agenda_rounded,
-              title: const Text('追番默认布局'),
-              description: const Text('下次打开追番页时使用，页面内切换不会改变此设置'),
+              title: Text(S.t('追番默认布局')),
+              description: Text(S.t('下次打开追番页时使用，页面内切换不会改变此设置')),
               enabled: !_savingCollectLayout,
               value: _defaultCollectLayout,
               options: {
@@ -99,23 +109,23 @@ class _InterfaceSettingsPageState extends State<InterfaceSettingsPage> {
                 await GStorage.putSetting(SettingsKeys.showRating, showRating);
                 setState(() {});
               },
-              title: Text('显示评分'),
-              description: Text('关闭后隐藏概览和番剧列表中的评分信息'),
+              title: Text(S.t('显示评分')),
+              description: Text(S.t('关闭后隐藏概览和番剧列表中的评分信息')),
               initialValue: showRating,
             ),
           ]),
           if (isDesktop())
             SettingsSection(
-              title: const Text('窗口行为'),
+              title: Text(S.t('窗口行为')),
               tiles: [
                 SettingsDropdownTile<int>(
                   leading: AnikumoIcons.exit_to_app_rounded,
-                  title: const Text('关闭窗口时'),
-                  description: const Text('设置点击窗口关闭按钮后的行为'),
+                  title: Text(S.t('关闭窗口时')),
+                  description: Text(S.t('设置点击窗口关闭按钮后的行为')),
                   value: _exitBehavior,
                   options: {
                     for (var i = 0; i < _exitBehaviorTitles.length; i++)
-                      i: _exitBehaviorTitles[i],
+                      i: S.t(_exitBehaviorTitles[i]),
                   },
                   onChanged: (value) {
                     setState(() => _exitBehavior = value);

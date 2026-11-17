@@ -10,6 +10,7 @@ import 'package:anikumo/services/player/syncplay_client.dart';
 import 'package:anikumo/services/player/syncplay_endpoint.dart';
 import 'package:anikumo/utils/async_session.dart';
 import 'package:mobx/mobx.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 part 'player_syncplay_controller.g.dart';
 
@@ -97,7 +98,7 @@ abstract class _PlayerSyncPlayController with Store {
     final parsed = parseSyncPlayEndPoint(syncPlayEndPoint);
     if (parsed == null) {
       AnikumoDialog.showToast(
-        message: 'SyncPlay: 服务器地址不合法 $syncPlayEndPoint',
+        message: S.f('SyncPlay: 服务器地址不合法 {}', [syncPlayEndPoint]),
       );
       AnikumoLogger().e('SyncPlay: invalid server address $syncPlayEndPoint');
       return;
@@ -124,10 +125,10 @@ abstract class _PlayerSyncPlayController with Store {
           if (error is SyncplayConnectionException) {
             exitRoom();
             AnikumoDialog.showToast(
-              message: 'SyncPlay: 同步中断 $message',
+              message: S.f('SyncPlay: 同步中断 {}', [message]),
               duration: const Duration(seconds: 5),
               showActionButton: true,
-              actionLabel: '重新连接',
+              actionLabel: S.t('重新连接'),
               onActionPressed: () => createRoom(room, username, changeEpisode),
             );
           }
@@ -141,23 +142,24 @@ abstract class _PlayerSyncPlayController with Store {
           if (message['type'] == 'init') {
             if (message['username'] == '') {
               AnikumoDialog.showToast(
-                  message: 'SyncPlay: 您是当前房间中的唯一用户',
+                  message: S.t('SyncPlay: 您是当前房间中的唯一用户'),
                   duration: const Duration(seconds: 5));
               setPlayingBangumi();
             } else {
               AnikumoDialog.showToast(
-                  message:
-                      'SyncPlay: 您不是当前房间中的唯一用户, 当前以用户 ${message['username']} 进度为准');
+                  message: S.f(
+                      'SyncPlay: 您不是当前房间中的唯一用户, 当前以用户 {} 进度为准',
+                      [message['username']]));
             }
           }
           if (message['type'] == 'left') {
             AnikumoDialog.showToast(
-                message: 'SyncPlay: ${message['username']} 离开了房间',
+                message: S.f('SyncPlay: {} 离开了房间', [message['username']]),
                 duration: const Duration(seconds: 5));
           }
           if (message['type'] == 'joined') {
             AnikumoDialog.showToast(
-                message: 'SyncPlay: ${message['username']} 加入了房间',
+                message: S.f('SyncPlay: {} 加入了房间', [message['username']]),
                 duration: const Duration(seconds: 5));
           }
         },
@@ -176,8 +178,8 @@ abstract class _PlayerSyncPlayController with Store {
             int episode = int.tryParse(match.group(2) ?? '0') ?? 0;
             if (bangumiID != 0 && episode != 0 && episode != currentEpisode()) {
               AnikumoDialog.showToast(
-                  message:
-                      'SyncPlay: ${message['setBy'] ?? 'unknown'} 切换到第 $episode 话',
+                  message: S.f('SyncPlay: {} 切换到第 {} 话',
+                      [message['setBy'] ?? 'unknown', episode]),
                   duration: const Duration(seconds: 3));
               changeEpisode(episode, currentRoad: currentRoad());
             }
@@ -220,14 +222,14 @@ abstract class _PlayerSyncPlayController with Store {
             if (message['paused']) {
               if (message['position'] != 0) {
                 AnikumoDialog.showToast(
-                    message: 'SyncPlay: ${message['setBy'] ?? 'unknown'} 暂停了播放',
+                    message: S.f('SyncPlay: {} 暂停了播放', [message['setBy'] ?? 'unknown']),
                     duration: const Duration(seconds: 3));
                 pause(enableSync: false);
               }
             } else {
               if (message['position'] != 0) {
                 AnikumoDialog.showToast(
-                    message: 'SyncPlay: ${message['setBy'] ?? 'unknown'} 开始了播放',
+                    message: S.f('SyncPlay: {} 开始了播放', [message['setBy'] ?? 'unknown']),
                     duration: const Duration(seconds: 3));
                 play(enableSync: false);
               }
@@ -267,7 +269,7 @@ abstract class _PlayerSyncPlayController with Store {
       await client.disconnect();
       final message = e is SyncplayException ? e.message : e.toString();
       AnikumoDialog.showToast(
-        message: 'SyncPlay: 连接失败 $message',
+        message: S.f('SyncPlay: 连接失败 {}', [message]),
         duration: const Duration(seconds: 5),
       );
     }

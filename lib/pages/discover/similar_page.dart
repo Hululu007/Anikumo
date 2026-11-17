@@ -8,6 +8,7 @@ import 'package:anikumo/services/browse/similarity.dart';
 import 'package:anikumo/services/library/user_library.dart';
 import 'package:anikumo/utils/constants.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// 相似推荐： pick a show you like; candidates come from the trend
 /// list plus your own library, ranked by shared Bangumi tags.
@@ -58,7 +59,7 @@ class _SimilarPageState extends State<SimilarPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('相似推荐')),
+      appBar: AppBar(title: Text(S.t('相似推荐'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(
           StyleString.pagePadding,
@@ -72,13 +73,13 @@ class _SimilarPageState extends State<SimilarPage> {
             icon: const Icon(AnikumoIcons.movie_filter_rounded),
             label: Text(
               _source == null
-                  ? '选择一部你喜欢的番'
-                  : '基于「${bangumiDisplayTitle(_source!)}」找相似',
+                  ? S.t('选择一部你喜欢的番')
+                  : S.f('基于「{}」找相似', [bangumiDisplayTitle(_source!)]),
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            '按 Bangumi 标签的重合度排序：共享标签越多越靠前。',
+            S.t('按 Bangumi 标签的重合度排序：共享标签越多越靠前。'),
             style: theme.textTheme.bodySmall
                 ?.copyWith(color: theme.colorScheme.outline),
           ),
@@ -91,10 +92,10 @@ class _SimilarPageState extends State<SimilarPage> {
               ),
             )
           else if (_source != null && _results.isEmpty)
-            const Center(
+            Center(
               child: Padding(
-                padding: EdgeInsets.all(32),
-                child: Text('没有找到标签相近的番，换一部试试'),
+                padding: const EdgeInsets.all(32),
+                child: Text(S.t('没有找到标签相近的番，换一部试试')),
               ),
             )
           else if (_results.isNotEmpty)

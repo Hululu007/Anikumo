@@ -95,7 +95,7 @@ class _SourceCaptchaFlow {
         service.dispose();
       }
       onVerified(plugin, pageHtml);
-    }, onCancelled: () => onCancelled(plugin), errorMessage: '验证失败，请稍后重试'));
+    }, onCancelled: () => onCancelled(plugin), errorMessage: S.t('验证失败，请稍后重试')));
   }
 }
 
@@ -227,7 +227,7 @@ class _CaptchaDialogState extends State<_CaptchaDialog> {
     _loadTimer?.cancel();
     setState(() {
       _imageBytes = bytes;
-      _imageError = bytes == null ? '验证码图片无法显示' : null;
+      _imageError = bytes == null ? S.t('验证码图片无法显示') : null;
     });
   }
 
@@ -243,14 +243,14 @@ class _CaptchaDialogState extends State<_CaptchaDialog> {
     });
     _loadTimer = Timer(const Duration(seconds: 15), () {
       if (!mounted || _imageBytes != null) return;
-      setState(() => _imageError = '暂时没有获取到验证码');
+      setState(() => _imageError = S.t('暂时没有获取到验证码'));
     });
     try {
       await widget.onReload();
     } catch (_) {
       if (!mounted || revision != _imageRevision) return;
       _loadTimer?.cancel();
-      setState(() => _imageError = '验证码加载失败');
+      setState(() => _imageError = S.t('验证码加载失败'));
     }
   }
 
@@ -258,7 +258,7 @@ class _CaptchaDialogState extends State<_CaptchaDialog> {
     if (_submitting || _imageBytes == null) return;
     final code = _inputController.text.trim();
     if (code.isEmpty) {
-      setState(() => _inputError = '请输入图片中的字符');
+      setState(() => _inputError = S.t('请输入图片中的字符'));
       _inputFocus.requestFocus();
       return;
     }
@@ -270,7 +270,7 @@ class _CaptchaDialogState extends State<_CaptchaDialog> {
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _inputError = '未能提交，请重试';
+        _inputError = S.t('未能提交，请重试');
       });
     }
   }
@@ -281,18 +281,18 @@ class _CaptchaDialogState extends State<_CaptchaDialog> {
     final colors = theme.colorScheme;
     return _VerifyDialogFrame(
       pluginName: widget.pluginName,
-      title: '输入验证码',
-      description: '输入下图中的字符，继续检索此来源。',
+      title: S.t('输入验证码'),
+      description: S.t('输入下图中的字符，继续检索此来源。'),
       actions: [
         TextButton(
           style: TextButton.styleFrom(minimumSize: const Size(72, 48)),
           onPressed: () => AnikumoDialog.dismiss(context: context),
-          child: const Text('返回来源'),
+          child: Text(S.t('返回来源')),
         ),
         FilledButton(
           style: FilledButton.styleFrom(minimumSize: const Size(88, 48)),
           onPressed: _imageBytes == null || _submitting ? null : _submit,
-          child: Text(_submitting ? '验证中…' : '验证'),
+          child: Text(_submitting ? S.t('验证中…') : S.t('验证')),
         ),
       ],
       child: Column(
@@ -314,7 +314,7 @@ class _CaptchaDialogState extends State<_CaptchaDialog> {
                 style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
                 onPressed: _submitting ? null : _reload,
                 icon: const Icon(AnikumoIcons.refresh_rounded, size: 18),
-                label: const Text('换一张'),
+                label: Text(S.t('换一张')),
               ),
             ),
             TextField(
@@ -329,7 +329,7 @@ class _CaptchaDialogState extends State<_CaptchaDialog> {
               },
               onSubmitted: (_) => _submit(),
               decoration: InputDecoration(
-                labelText: '验证码',
+                labelText: S.t('验证码'),
                 floatingLabelBehavior: FloatingLabelBehavior.always,
                 errorText: _inputError,
                 errorMaxLines: 2,
@@ -356,7 +356,7 @@ class _CaptchaDialogState extends State<_CaptchaDialog> {
             style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
             onPressed: _reload,
             icon: const Icon(AnikumoIcons.refresh_rounded, size: 18),
-            label: const Text('重新加载'),
+            label: Text(S.t('重新加载')),
           ),
         ],
       );
@@ -367,9 +367,9 @@ class _CaptchaDialogState extends State<_CaptchaDialog> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           LoadingIndicator(
-              size: 40, semanticsLabel: _submitting ? '正在验证' : '正在加载验证码'),
+              size: 40, semanticsLabel: _submitting ? S.t('正在验证') : S.t('正在加载验证码')),
           const SizedBox(height: 12),
-          Text(_submitting ? '正在等待验证结果…' : '正在加载验证码…',
+          Text(_submitting ? S.t('正在等待验证结果…') : S.t('正在加载验证码…'),
               textAlign: TextAlign.center),
         ],
       );
@@ -384,7 +384,7 @@ class _CaptchaDialogState extends State<_CaptchaDialog> {
             height: 88,
             fit: BoxFit.contain,
             filterQuality: FilterQuality.medium,
-            semanticLabel: '验证码图片',
+            semanticLabel: S.t('验证码图片'),
           ),
         ),
       ),
@@ -400,19 +400,19 @@ class _AutomatedVerifyDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) => _VerifyDialogFrame(
         pluginName: pluginName,
-        title: '正在验证',
-        description: '正在等待网站响应，通过后会自动继续检索。',
+        title: S.t('正在验证'),
+        description: S.t('正在等待网站响应，通过后会自动继续检索。'),
         actions: [
           TextButton(
             style: TextButton.styleFrom(minimumSize: const Size(72, 48)),
             onPressed: () => AnikumoDialog.dismiss(context: context),
-            child: const Text('返回来源'),
+            child: Text(S.t('返回来源')),
           ),
         ],
-        child: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
           child:
-              Center(child: LoadingIndicator(size: 72, semanticsLabel: '正在验证')),
+              Center(child: LoadingIndicator(size: 72, semanticsLabel: S.t('正在验证'))),
         ),
       );
 }
@@ -454,8 +454,8 @@ class _VerificationCompleteDialogState
       canPop: false,
       child: _VerifyDialogFrame(
         pluginName: widget.pluginName,
-        title: '验证通过',
-        description: '即将自动继续检索。',
+        title: S.t('验证通过'),
+        description: S.t('即将自动继续检索。'),
         child: Center(
           child: Container(
             width: 64,

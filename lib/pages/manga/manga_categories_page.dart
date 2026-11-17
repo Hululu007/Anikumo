@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:anikumo/bean/theme/violet_glass.dart';
 import 'package:flutter/rendering.dart' show ScrollCacheExtent;
@@ -80,7 +81,7 @@ class _MangaCategoriesTabState extends State<MangaCategoriesTab> {
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  '分类',
+                  S.t('分类'),
                   style: theme.textTheme.titleLarge
                       ?.copyWith(fontWeight: FontWeight.w800),
                 ),
@@ -113,7 +114,7 @@ class _MangaCategoriesTabState extends State<MangaCategoriesTab> {
                               const SizedBox(width: 8),
                               if (source.id == activeId)
                                 Chip(
-                                  label: const Text('当前源'),
+                                  label: Text(S.t('当前源')),
                                   visualDensity: VisualDensity.compact,
                                   side: BorderSide.none,
                                   backgroundColor:
@@ -123,7 +124,7 @@ class _MangaCategoriesTabState extends State<MangaCategoriesTab> {
                                 TextButton(
                                   onPressed: () =>
                                       MangaSources.setActive(source.id),
-                                  child: const Text('切换到此源'),
+                                  child: Text(S.t('切换到此源')),
                                 ),
                             ],
                           ),
@@ -146,7 +147,7 @@ class _MangaCategoriesTabState extends State<MangaCategoriesTab> {
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Text(
-            '该源没有分类列表',
+            S.t('该源没有分类列表'),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -346,13 +347,13 @@ class _MangaCategoryPageState extends State<MangaCategoryPage> {
                           });
                           _loadFirst();
                         },
-                        child: const Text('加载失败，点这里重试'),
+                        child: Text(S.t('加载失败，点这里重试')),
                       ),
                     ],
                   ),
                 )
               : _items.isEmpty
-              ? const Center(child: Text('这个分类下暂时没有漫画'))
+              ? Center(child: Text(S.t('这个分类下暂时没有漫画')))
               : NotificationListener<ScrollNotification>(
                   onNotification: (notification) {
                     // Batch 16: prefetch the next page before the
@@ -397,13 +398,13 @@ class _MangaCategoryPageState extends State<MangaCategoryPage> {
                         return Center(
                           child: OutlinedButton(
                             onPressed: _loadMore,
-                            child: const Text('加载失败，点按重试'),
+                            child: Text(S.t('加载失败，点按重试')),
                           ),
                         );
                       }
                       return Center(
                         child: Text(
-                          _hasMore ? '继续下滑自动加载' : '没有更多了',
+                          _hasMore ? S.t('继续下滑自动加载') : S.t('没有更多了'),
                           style: Theme.of(context)
                               .textTheme
                               .bodySmall

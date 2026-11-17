@@ -192,6 +192,7 @@ abstract final class FilmSourceSpeeds {
       }),
     );
     revision.value++;
+    await FilmSourceHistory.append(id, ok: ms != null, ms: ms ?? -1);
   }
 
   /// Orders [items] for "fastest first" consumption:
@@ -235,5 +236,80 @@ abstract final class FilmSourceSpeeds {
       if (r != null && r.ms >= 0 && isFresh(r, now)) return true;
     }
     return false;
+  }
+}
+
+/// Batch 272 (#35): 片源可用性历史 — a rolling record of
+/// the last [maxRecords] availability outcomes per film
+/// source, fed by both the health check (video_engine)
+/// and the speed probe (FilmSourceSpeeds.record). The
+/// sources tab reads it for a 最近可用率 line, so a
+/// source that flaps is visible at a glance instead of
+/// only its latest result.
+abstract final class FilmSourceHistory {
+  static const int maxRecords = 30;
+
+  /// One availability outcome; [ms] < 0 when it failed.
+  static List<({int at, bool ok, int ms})> decodeList(dynamic raw) {
+    if (raw is! List) return const [];
+    return [
+      for (final e in raw)
+        if (e is Map && e['at'] is num)
+          (
+            at: (e['at'] as num).toInt(),
+            ok: e['ok'] == true,
+            ms: e['ms'] is num ? (e['ms'] as num).toInt() : -1,
+          ),
+    ];
+  }
+
+  static Map<String, List<({int at, bool ok, int ms})>> _all() {
+    try {
+      final raw = GStorage.getSetting(SettingsKeys.filmSourceHistoryJson);
+      if (raw.isEmpty) return {};
+      final decoded = jsonDecode(raw);
+      if (decoded is Map) {
+        return {
+          for (final e in decoded.entries)
+            e.key.toString(): decodeList(e.value),
+        };
+      }
+    } catch (_) {}
+    return {};
+  }
+
+  /// Records for [id], newest first.
+  static List<({int at, bool ok, int ms})> of(String id) =>
+      _all()[id] ?? const [];
+
+  /// Share of successful outcomes over the records on
+  /// file (null when never checked).
+  static double? successRate(String id) {
+    final records = of(id);
+    if (records.isEmpty) return null;
+    final ok = records.where((r) => r.ok).length;
+    return ok / records.length;
+  }
+
+  static Future<void> append(
+    String id, {
+    required bool ok,
+    required int ms,
+  }) async {
+    final all = _all();
+    final records = [
+      (at: DateTime.now().millisecondsSinceEpoch, ok: ok, ms: ms),
+      ...?all[id],
+    ];
+    all[id] = records.take(maxRecords).toList();
+    await GStorage.putSetting(
+      SettingsKeys.filmSourceHistoryJson,
+      jsonEncode({
+        for (final e in all.entries)
+          e.key: [
+            for (final r in e.value) {'at': r.at, 'ok': r.ok, 'ms': r.ms},
+          ],
+      }),
+    );
   }
 }

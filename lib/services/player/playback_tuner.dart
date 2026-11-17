@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'dart:async';
 
 import 'package:anikumo/services/logging/logger.dart';
@@ -123,10 +124,10 @@ class PlaybackTuner {
 
   static String dropStepNotice(int step) {
     return switch (step) {
-      1 => '检测到持续掉帧，已关闭运动插帧',
-      2 => '持续掉帧，已降低超分辨率',
-      3 => '持续掉帧，已关闭降噪/锐化滤镜',
-      4 => '持续掉帧，已切换快速解码',
+      1 => S.t('检测到持续掉帧，已关闭运动插帧'),
+      2 => S.t('持续掉帧，已降低超分辨率'),
+      3 => S.t('持续掉帧，已关闭降噪/锐化滤镜'),
+      4 => S.t('持续掉帧，已切换快速解码'),
       _ => '',
     };
   }

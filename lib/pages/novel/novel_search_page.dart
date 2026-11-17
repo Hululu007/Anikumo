@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:anikumo/bean/widget/empty_state_widget.dart';
@@ -5,7 +7,9 @@ import 'package:anikumo/bean/widget/violet_components.dart';
 import 'package:anikumo/bean/widget/search_stage.dart';
 
 import '../../models/novel_item.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import '../../services/novel/novel_api.dart';
+import '../../services/novel/novel_search_history.dart';
 import '../../services/novel/novel_sources.dart';
 import 'novel_widgets.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
@@ -38,9 +42,13 @@ class _NovelSearchPageState extends State<NovelSearchPage> {
   String? _errorText;
   List<NovelItem> _results = const [];
 
+  /// Batch 270: recent searches, most recent first.
+  List<String> _history = const [];
+
   @override
   void initState() {
     super.initState();
+    _history = NovelSearchHistory.load();
     if (widget.initialQuery.isNotEmpty) {
       _controller.text = widget.initialQuery;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -56,6 +64,58 @@ class _NovelSearchPageState extends State<NovelSearchPage> {
     super.dispose();
   }
 
+  /// Batch 270: the pre-search state — history chips (tap
+  /// to search again) above the usual hint.
+  Widget _buildIdleState() {
+    if (_history.isEmpty || _mode != CrossSearchMode.novel) {
+      return GeneralEmptyState(
+        icon: AnikumoIcons.menu_book_outlined,
+        title: S.t('输入关键词开始搜索'),
+      );
+    }
+    final theme = Theme.of(context);
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      children: [
+        Row(
+          children: [
+            Text(
+              S.t('搜索历史'),
+              style: theme.textTheme.titleSmall,
+            ),
+            const Spacer(),
+            TextButton(
+              onPressed: () async {
+                await NovelSearchHistory.clear();
+                if (mounted) setState(() => _history = const []);
+              },
+              child: Text(S.t('清空')),
+            ),
+          ],
+        ),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final entry in _history)
+              ActionChip(
+                label: Text(entry),
+                onPressed: () {
+                  _controller.text = entry;
+                  _search();
+                },
+              ),
+          ],
+        ),
+        const SizedBox(height: 48),
+        GeneralEmptyState(
+          icon: AnikumoIcons.menu_book_outlined,
+          title: S.t('输入关键词开始搜索'),
+        ),
+      ],
+    );
+  }
+
   Future<void> _search() async {
     final query = _controller.text.trim();
     if (query.isEmpty || _loading) return;
@@ -66,10 +126,13 @@ class _NovelSearchPageState extends State<NovelSearchPage> {
       return;
     }
     FocusScope.of(context).unfocus();
+    // Batch 270: record the query in the search history.
+    unawaited(NovelSearchHistory.add(query));
     setState(() {
       _loading = true;
       _errorText = null;
       _lastQuery = query;
+      _history = NovelSearchHistory.record(_history, query);
     });
     try {
       final results = _allSources
@@ -106,7 +169,7 @@ class _NovelSearchPageState extends State<NovelSearchPage> {
               child: Row(
                 children: [
                   IconButton(
-                    tooltip: '返回',
+                    tooltip: S.t('返回'),
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(AnikumoIcons.arrow_back_rounded),
                   ),
@@ -127,8 +190,8 @@ class _NovelSearchPageState extends State<NovelSearchPage> {
                               focusNode: _focusNode,
                               autofocus: true,
                               textInputAction: TextInputAction.search,
-                              decoration: const InputDecoration(
-                                hintText: '搜索书名或作者',
+                              decoration: InputDecoration(
+                                hintText: S.t('搜索书名或作者'),
                                 border: InputBorder.none,
                               ),
                               onSubmitted: (_) => _search(),
@@ -140,7 +203,7 @@ class _NovelSearchPageState extends State<NovelSearchPage> {
                   ),
                   const SizedBox(width: 4),
                   IconButton(
-                    tooltip: '搜索',
+                    tooltip: S.t('搜索'),
                     icon: const Icon(AnikumoIcons.search),
                     onPressed: _search,
                   ),
@@ -165,15 +228,15 @@ class _NovelSearchPageState extends State<NovelSearchPage> {
               child: Row(
                 children: [
                   PillSwitch<bool>(
-                    options: const [
+                    options: [
                       PillSwitchOption(
                         value: false,
-                        label: '当前源',
+                        label: S.t('当前源'),
                         icon: AnikumoIcons.book_rounded,
                       ),
                       PillSwitchOption(
                         value: true,
-                        label: '全部源',
+                        label: S.t('全部源'),
                         icon: AnikumoIcons.library_books_rounded,
                       ),
                     ],
@@ -187,8 +250,12 @@ class _NovelSearchPageState extends State<NovelSearchPage> {
                   Expanded(
                     child: Text(
                       _allSources
-                          ? '共 ${NovelSources.all().length} 个源'
-                          : '源：${NovelSources.all().isEmpty ? '—' : NovelSources.active().name}',
+                          ? S.f('共 {} 个源', [NovelSources.all().length])
+                          : S.f('源：{}', [
+                              NovelSources.all().isEmpty
+                                  ? '—'
+                                  : NovelSources.active().name
+                            ]),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.outline,
                       ),
@@ -232,16 +299,13 @@ class _NovelSearchPageState extends State<NovelSearchPage> {
                     ),
                   )
                 : !_searched
-                ? const GeneralEmptyState(
-                    icon: AnikumoIcons.menu_book_outlined,
-                    title: '输入关键词开始搜索',
-                  )
+                ? _buildIdleState()
                 : _errorText != null
                 ? NovelErrorState(message: _errorText!, onRetry: _search)
                 : _results.isEmpty
-                ? const GeneralEmptyState(
+                ? GeneralEmptyState(
                     icon: AnikumoIcons.search_off_rounded,
-                    title: '没有找到相关的书',
+                    title: S.t('没有找到相关的书'),
                   )
                 : ListView.builder(
                     scrollCacheExtent: const ScrollCacheExtent.pixels(700),

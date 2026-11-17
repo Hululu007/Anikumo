@@ -9,6 +9,7 @@ import 'package:anikumo/modules/bangumi/bangumi_item.dart';
 import 'package:anikumo/modules/bangumi/bangumi_review.dart';
 import 'package:anikumo/services/logging/logger.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class RatingReviewDialog extends StatefulWidget {
   const RatingReviewDialog({
@@ -123,7 +124,7 @@ class _RatingReviewDialogState extends State<RatingReviewDialog> {
       if (_selectedTags.remove(tag)) {
         _tagError = null;
       } else if (_selectedTags.length >= _maxTags) {
-        _tagError = '最多 $_maxTags 个标签';
+        _tagError = S.f('最多 {} 个标签', [_maxTags]);
       } else {
         _selectedTags.add(tag);
         _tagError = null;
@@ -136,13 +137,13 @@ class _RatingReviewDialogState extends State<RatingReviewDialog> {
     final tag = _tagController.text.trim();
     final String? error;
     if (tag.isEmpty) {
-      error = '请输入标签';
+      error = S.t('请输入标签');
     } else if (tag.characters.length > _maxTagLength) {
-      error = '标签最多 $_maxTagLength 字';
+      error = S.f('标签最多 {} 字', [_maxTagLength]);
     } else if (_selectedTags.contains(tag)) {
-      error = '标签已添加';
+      error = S.t('标签已添加');
     } else if (_selectedTags.length >= _maxTags) {
-      error = '最多 $_maxTags 个标签';
+      error = S.f('最多 {} 个标签', [_maxTags]);
     } else {
       error = null;
     }
@@ -168,16 +169,16 @@ class _RatingReviewDialogState extends State<RatingReviewDialog> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         icon: const Icon(AnikumoIcons.edit_note_rounded),
-        title: const Text('放弃编辑？'),
-        content: const Text('未保存的修改将丢失。'),
+        title: Text(S.t('放弃编辑？')),
+        content: Text(S.t('未保存的修改将丢失。')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('继续编辑'),
+            child: Text(S.t('继续编辑')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('放弃编辑'),
+            child: Text(S.t('放弃编辑')),
           ),
         ],
       ),
@@ -195,7 +196,7 @@ class _RatingReviewDialogState extends State<RatingReviewDialog> {
     if (_commentController.text.characters.length > _maxCommentLength ||
         _selectedTags.length > _maxTags) {
       setState(
-          () => _submitError = '吐槽最多 $_maxCommentLength 字，标签最多 $_maxTags 个');
+          () => _submitError = S.f('吐槽最多 {} 字，标签最多 {} 个', [_maxCommentLength, _maxTags]));
       _revealFeedback();
       return;
     }
@@ -223,7 +224,7 @@ class _RatingReviewDialogState extends State<RatingReviewDialog> {
     if (!_active) return;
     setState(() {
       _submitting = false;
-      _submitError = '发表失败，请检查网络或 Bangumi 授权';
+      _submitError = S.t('发表失败，请检查网络或 Bangumi 授权');
     });
     _revealFeedback();
   }
@@ -323,13 +324,13 @@ class _RatingReviewDialogState extends State<RatingReviewDialog> {
         padding: const EdgeInsets.fromLTRB(12, 12, 24, 12),
         child: Row(children: [
           IconButton(
-            tooltip: '关闭',
+            tooltip: S.t('关闭'),
             onPressed: _submitting ? null : _requestClose,
             icon: const Icon(AnikumoIcons.close_rounded),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(_editing ? '编辑吐槽' : '发表吐槽',
+            child: Text(_editing ? S.t('编辑吐槽') : S.t('发表吐槽'),
                 style: Theme.of(context).textTheme.titleLarge),
           ),
         ]),
@@ -349,7 +350,7 @@ class _RatingReviewDialogState extends State<RatingReviewDialog> {
       textInputAction: TextInputAction.newline,
       style: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.6),
       decoration: InputDecoration(
-        labelText: '吐槽',
+        labelText: S.t('吐槽'),
         alignLabelWithHint: true,
         floatingLabelBehavior: FloatingLabelBehavior.always,
         filled: true,
@@ -381,7 +382,7 @@ class _RatingReviewDialogState extends State<RatingReviewDialog> {
         Row(children: [
           Semantics(
             liveRegion: true,
-            label: _score == 0 ? '未评分' : '$_score 分，${_scoreLabels[_score]}',
+            label: _score == 0 ? S.t('未评分') : S.f('{} 分，{}', [_score, S.t(_scoreLabels[_score])]),
             child: ExcludeSemantics(
               child: AnimatedSwitcher(
                 duration: _duration,
@@ -402,17 +403,17 @@ class _RatingReviewDialogState extends State<RatingReviewDialog> {
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                Text('评分',
+                Text(S.t('评分'),
                     style: theme.textTheme.labelLarge
                         ?.copyWith(color: colors.onSecondaryContainer)),
                 const SizedBox(height: 4),
-                Text(_scoreLabels[_score],
+                Text(S.t(_scoreLabels[_score]),
                     style: theme.textTheme.titleMedium
                         ?.copyWith(color: colors.onSecondaryContainer)),
               ])),
           if (_score != 0)
             IconButton(
-              tooltip: '清除评分',
+              tooltip: S.t('清除评分'),
               onPressed: _submitting ? null : () => _setScore(0),
               icon: Icon(AnikumoIcons.restart_alt_rounded,
                   color: colors.onSecondaryContainer),
@@ -450,9 +451,9 @@ class _RatingReviewDialogState extends State<RatingReviewDialog> {
     final selected = _score == value;
     return Semantics(
       selected: selected,
-      label: '$value 分，${_scoreLabels[value]}',
+      label: S.f('{} 分，{}', [value, S.t(_scoreLabels[value])]),
       child: Tooltip(
-        message: _scoreLabels[value],
+        message: S.t(_scoreLabels[value]),
         excludeFromSemantics: true,
         child: FilledButton(
           key: ValueKey('review-score-$value'),
@@ -496,7 +497,7 @@ class _RatingReviewDialogState extends State<RatingReviewDialog> {
     final suggestions = _showAllTags ? _popularTags : _popularTags.take(6);
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Row(children: [
-        Expanded(child: Text('标签', style: theme.textTheme.titleMedium)),
+        Expanded(child: Text(S.t('标签'), style: theme.textTheme.titleMedium)),
         Text('${_selectedTags.length} / $_maxTags',
             style: theme.textTheme.labelLarge
                 ?.copyWith(color: colors.onSurfaceVariant)),
@@ -509,14 +510,14 @@ class _RatingReviewDialogState extends State<RatingReviewDialog> {
               label: Text(tag, overflow: TextOverflow.ellipsis),
               selected: true,
               showCheckmark: false,
-              deleteButtonTooltipMessage: '移除标签 $tag',
+              deleteButtonTooltipMessage: S.f('移除标签 {}', [tag]),
               onDeleted: _submitting ? null : () => _toggleTag(tag),
             ),
         ]),
         const SizedBox(height: 12),
       ],
       if (_popularTags.isNotEmpty) ...[
-        Text('热门标签',
+        Text(S.t('热门标签'),
             style: theme.textTheme.labelMedium
                 ?.copyWith(color: colors.onSurfaceVariant)),
         const SizedBox(height: 4),
@@ -536,7 +537,7 @@ class _RatingReviewDialogState extends State<RatingReviewDialog> {
                     ? AnikumoIcons.expand_less_rounded
                     : AnikumoIcons.expand_more_rounded,
                 size: 18),
-            label: Text(_showAllTags ? '收起' : '更多'),
+            label: Text(_showAllTags ? S.t('收起') : S.t('更多')),
             onPressed: _submitting
                 ? null
                 : () => setState(() => _showAllTags = !_showAllTags),
@@ -544,7 +545,7 @@ class _RatingReviewDialogState extends State<RatingReviewDialog> {
         if (!_showCustomTag)
           ActionChip(
             avatar: const Icon(AnikumoIcons.add_rounded, size: 18),
-            label: const Text('自定义标签'),
+            label: Text(S.t('自定义标签')),
             onPressed: _submitting
                 ? null
                 : () {
@@ -570,14 +571,14 @@ class _RatingReviewDialogState extends State<RatingReviewDialog> {
                   onSubmitted: (_) => _addCustomTag(),
                   onChanged: (_) => setState(() => _tagError = null),
                   decoration: InputDecoration(
-                    labelText: '自定义标签',
-                    hintText: '例如：治愈',
+                    labelText: S.t('自定义标签'),
+                    hintText: S.t('例如：治愈'),
                     filled: true,
                     fillColor: colors.surfaceContainerLowest,
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16)),
                     suffixIcon: IconButton(
-                      tooltip: '添加标签',
+                      tooltip: S.t('添加标签'),
                       onPressed: _submitting ? null : _addCustomTag,
                       icon: const Icon(AnikumoIcons.add_rounded),
                     ),
@@ -623,7 +624,7 @@ class _RatingReviewDialogState extends State<RatingReviewDialog> {
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
       child: Row(children: [
         Expanded(
-            child: Text('发布至 Bangumi',
+            child: Text(S.t('发布至 Bangumi'),
                 style: Theme.of(context)
                     .textTheme
                     .bodySmall
@@ -638,18 +639,18 @@ class _RatingReviewDialogState extends State<RatingReviewDialog> {
                     LoadingIndicator(
                         size: 24,
                         color: colors.primary,
-                        semanticsLabel: '正在发表'),
+                        semanticsLabel: S.t('正在发表')),
                     const SizedBox(width: 12),
-                    const Text('正在发表…'),
+                    Text(S.t('正在发表…')),
                   ])))
         else
           StateActionButton(
             onPressed: _canSubmit ? _submit : null,
             text: _submitError != null
-                ? '重试'
+                ? S.t('重试')
                 : _editing
-                    ? '保存修改'
-                    : '发表',
+                    ? S.t('保存修改')
+                    : S.t('发表'),
             icon: _submitError != null
                 ? AnikumoIcons.refresh_rounded
                 : AnikumoIcons.arrow_upward_rounded,

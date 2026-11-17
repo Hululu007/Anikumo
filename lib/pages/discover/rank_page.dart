@@ -11,6 +11,7 @@ import 'package:anikumo/services/browse/rank_order.dart';
 import 'package:anikumo/services/library/user_library.dart';
 import 'package:anikumo/services/network/bangumi_acceleration.dart';
 import 'package:anikumo/utils/constants.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// 排行榜 (hub 区一）: currently trending subjects re-ordered by their
 /// Bangumi rank, so the list reads as a leaderboard instead of a feed.
@@ -65,12 +66,12 @@ class _RankPageState extends State<RankPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const SysAppBar(title: Text('排行榜')),
+      appBar: SysAppBar(title: Text(S.t('排行榜'))),
       body: _loading
           ? const Center(child: LoadingIndicator())
           : _failed
               ? GeneralErrorWidget(
-                  errMsg: '排行榜暂时拉不到，请稍后重试。',
+                  errMsg: S.t('排行榜暂时拉不到，请稍后重试。'),
                   onRetry: _load,
                 )
               : ListView.separated(
@@ -148,8 +149,8 @@ class _RankRow extends StatelessWidget {
                 Text(
                   [
                     if (item.ratingScore > 0)
-                      '评分 ${item.ratingScore.toStringAsFixed(1)}',
-                    if (item.rank > 0) 'Bangumi 排名 #${item.rank}',
+                      S.f('评分 {}', [item.ratingScore.toStringAsFixed(1)]),
+                    if (item.rank > 0) S.f('Bangumi 排名 #{}', [item.rank]),
                     if (item.airDate.length >= 4) item.airDate.substring(0, 4),
                   ].join(' · '),
                   style: theme.textTheme.bodySmall?.copyWith(

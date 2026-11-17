@@ -6,6 +6,7 @@ import 'package:anikumo/services/network/bangumi_acceleration.dart';
 import 'package:anikumo/services/network/image_acceleration.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class NetworkMirrorSettings extends StatefulWidget {
   const NetworkMirrorSettings({super.key, this.margin});
@@ -19,7 +20,7 @@ class NetworkMirrorSettings extends StatefulWidget {
 class _NetworkMirrorSettingsState extends State<NetworkMirrorSettings> {
   @override
   Widget build(BuildContext context) => SettingsSection(
-    title: const Text('访问加速'),
+    title: Text(S.t('访问加速')),
     margin: widget.margin,
     tiles: [
       _tile(
@@ -50,15 +51,15 @@ class _NetworkMirrorSettingsState extends State<NetworkMirrorSettings> {
     required SettingKey<String> setting,
   }) => SettingsTile(
     leading: icon,
-    title: Text(title),
+    title: Text(S.t(title)),
     description: Text(
-      description,
+      S.t(description),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
     ),
     value: SizedBox(
       width: 72,
-      child: Text(current.label, textAlign: TextAlign.center),
+      child: Text(S.t(current.label), textAlign: TextAlign.center),
     ),
     onPressed: (context) async {
       final changed = await selectAccelerationMode(
@@ -84,7 +85,7 @@ Future<bool> selectAccelerationMode<T extends AccelerationMode>(
   final selected = await AnikumoDialog.show<T>(
     context: context,
     builder: (context) => SimpleDialog(
-      title: Text(title),
+      title: Text(S.t(title)),
       children: [
         RadioGroup<T>(
           groupValue: current,
@@ -95,9 +96,9 @@ Future<bool> selectAccelerationMode<T extends AccelerationMode>(
               for (final mode in modes)
                 RadioListTile<T>(
                   value: mode,
-                  title: Text(mode.label),
+                  title: Text(S.t(mode.label)),
                   subtitle: Text(
-                    mode.description,
+                    S.t(mode.description),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),

@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:anikumo/pages/plugin_editor/plugin_editor_page.dart';
 import 'package:anikumo/pages/plugin_editor/plugin_test_page.dart';
@@ -30,7 +31,7 @@ final pluginModule = createModule(
         child: (context, state) {
           final plugin = state.arguments;
           if (plugin is! Plugin) {
-            return const RouteErrorPage(message: '规则测试参数无效，请返回后重试。');
+            return RouteErrorPage(message: S.t('规则测试参数无效，请返回后重试。'));
           }
           return PluginTestPage(plugin: plugin);
         },
@@ -40,7 +41,7 @@ final pluginModule = createModule(
         child: (context, state) {
           final plugin = state.arguments;
           if (plugin is! Plugin) {
-            return const RouteErrorPage(message: '规则编辑参数无效，请返回后重试。');
+            return RouteErrorPage(message: S.t('规则编辑参数无效，请返回后重试。'));
           }
           return PluginEditorPage(
             plugin: plugin,

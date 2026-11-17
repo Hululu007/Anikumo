@@ -1,4 +1,5 @@
 
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/utils/tap_debouncer.dart';
 import 'package:flutter/material.dart';
 import 'package:anikumo/bean/widget/motion_kit.dart';
@@ -30,7 +31,7 @@ class BangumiCardV extends StatelessWidget {
   void _handleTap(BuildContext context) {
     if (!canTap) {
       AnikumoDialog.showToast(
-        message: '编辑模式',
+        message: S.t('编辑模式'),
       );
       return;
     }
@@ -269,7 +270,7 @@ class BangumiCardV extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
                   child: Text(
-                    '评分 ${bangumiItem.ratingScore.toStringAsFixed(1)}',
+                    S.f('评分 {}', [bangumiItem.ratingScore.toStringAsFixed(1)]),
                     style: theme.textTheme.bodySmall
                         ?.copyWith(color: theme.colorScheme.outline),
                   ),

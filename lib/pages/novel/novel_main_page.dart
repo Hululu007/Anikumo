@@ -8,6 +8,8 @@ import 'package:anikumo/utils/error_message.dart';
 import 'package:anikumo/bean/widget/floating_capsule_nav.dart';
 import 'package:anikumo/bean/widget/zone_switcher.dart';
 import 'package:anikumo/pages/profile/user_center.dart';
+import 'package:anikumo/pages/settings/language_setting_tile.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/bean/widget/empty_state_widget.dart';
 import 'package:anikumo/bean/widget/violet_components.dart';
 import 'package:flutter/services.dart';
@@ -121,36 +123,36 @@ class _NovelMainPageState extends State<NovelMainPage> {
             _visited.add(index);
           });
         },
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(AnikumoIcons.home_outlined),
-            selectedIcon: Icon(AnikumoIcons.home),
-            label: '首页',
+            icon: const Icon(AnikumoIcons.home_outlined),
+            selectedIcon: const Icon(AnikumoIcons.home),
+            label: S.t('首页'),
           ),
           NavigationDestination(
-            icon: Icon(AnikumoIcons.bookmark_outline),
-            selectedIcon: Icon(AnikumoIcons.bookmark),
-            label: '收藏',
+            icon: const Icon(AnikumoIcons.bookmark_outline),
+            selectedIcon: const Icon(AnikumoIcons.bookmark),
+            label: S.t('收藏'),
           ),
           NavigationDestination(
-            icon: Icon(AnikumoIcons.auto_stories_outlined),
-            selectedIcon: Icon(AnikumoIcons.auto_stories),
-            label: '书柜',
+            icon: const Icon(AnikumoIcons.auto_stories_outlined),
+            selectedIcon: const Icon(AnikumoIcons.auto_stories),
+            label: S.t('书柜'),
           ),
           NavigationDestination(
-            icon: Icon(AnikumoIcons.explore_outlined),
-            selectedIcon: Icon(AnikumoIcons.explore),
-            label: '探索',
+            icon: const Icon(AnikumoIcons.explore_outlined),
+            selectedIcon: const Icon(AnikumoIcons.explore),
+            label: S.t('探索'),
           ),
           NavigationDestination(
-            icon: Icon(AnikumoIcons.library_books_outlined),
-            selectedIcon: Icon(AnikumoIcons.library_books),
-            label: '书源',
+            icon: const Icon(AnikumoIcons.library_books_outlined),
+            selectedIcon: const Icon(AnikumoIcons.library_books),
+            label: S.t('书源'),
           ),
           NavigationDestination(
-            icon: Icon(AnikumoIcons.settings_outlined),
-            selectedIcon: Icon(AnikumoIcons.settings),
-            label: '设置',
+            icon: const Icon(AnikumoIcons.settings_outlined),
+            selectedIcon: const Icon(AnikumoIcons.settings),
+            label: S.t('设置'),
           ),
         ],
       ),
@@ -205,7 +207,7 @@ class _NovelHomeTabState extends State<NovelHomeTab> {
                 // asked for a visible exit, not just system
                 // back).
                 IconButton(
-                  tooltip: '返回动漫区',
+                  tooltip: S.t('返回动漫区'),
                   icon: const Icon(AnikumoIcons.arrow_back_rounded),
                   onPressed: () => context.pop(),
                 ),
@@ -222,7 +224,7 @@ class _NovelHomeTabState extends State<NovelHomeTab> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          '小说',
+                          S.t('小说'),
                           style: theme.textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.w900,
                           ),
@@ -238,7 +240,7 @@ class _NovelHomeTabState extends State<NovelHomeTab> {
                   ),
                 ),
                 IconButton(
-                  tooltip: '搜索小说',
+                  tooltip: S.t('搜索小说'),
                   icon: const Icon(AnikumoIcons.search),
                   onPressed: () => context.pushNamed('/novel/search'),
                 ),
@@ -248,14 +250,15 @@ class _NovelHomeTabState extends State<NovelHomeTab> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
             child: VioletSearchPill(
-              hint: '搜索小说',
+              hint: S.t('搜索小说'),
               onTap: () => context.pushNamed('/novel/search'),
             ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
-              '当前源 ${sources.isEmpty ? '—' : NovelSources.active().name}',
+              S.f('当前源 {}',
+                  [sources.isEmpty ? '—' : NovelSources.active().name]),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.outline,
               ),
@@ -267,7 +270,7 @@ class _NovelHomeTabState extends State<NovelHomeTab> {
           // source's first explore category.
           if (sources.isNotEmpty) const _NovelFeaturedBanner(),
           if (progress.isNotEmpty) ...[
-            const NovelSectionHeader(title: '继续阅读'),
+            NovelSectionHeader(title: S.t('继续阅读')),
             SizedBox(
               height: 218,
               child: ListView.separated(
@@ -282,7 +285,7 @@ class _NovelHomeTabState extends State<NovelHomeTab> {
             ),
           ],
           if (favorites.isNotEmpty) ...[
-            const NovelSectionHeader(title: '我的收藏'),
+            NovelSectionHeader(title: S.t('我的收藏')),
             SizedBox(
               height: 218,
               child: ListView.separated(
@@ -326,7 +329,7 @@ class _NovelHomeTabState extends State<NovelHomeTab> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '${source.name} · 该源没有发现分类，用搜索找书',
+                        S.f('{} · 该源没有发现分类，用搜索找书', [source.name]),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodyMedium,
@@ -337,7 +340,7 @@ class _NovelHomeTabState extends State<NovelHomeTab> {
                         '/novel/source',
                         arguments: source.id,
                       ),
-                      child: const Text('进入'),
+                      child: Text(S.t('进入')),
                     ),
                   ],
                 ),
@@ -346,8 +349,9 @@ class _NovelHomeTabState extends State<NovelHomeTab> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
               child: Text(
-                '已隐藏 ${sources.where((s) => NovelSources.isDead(s.id)).length} 个失效书源'
-                '（在「书源」页可清理或等待自动恢复）',
+                S.f('已隐藏 {} 个失效书源（在「书源」页可清理或等待自动恢复）', [
+                  sources.where((s) => NovelSources.isDead(s.id)).length
+                ]),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.outline,
                 ),
@@ -359,15 +363,15 @@ class _NovelHomeTabState extends State<NovelHomeTab> {
           // showed this page spinning forever). Show the import
           // prompt instead, same wording family as explore.
           if (sources.isEmpty)
-            const Padding(
-              padding: EdgeInsets.fromLTRB(24, 56, 24, 32),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 56, 24, 32),
               child: GeneralEmptyState(
                 icon: AnikumoIcons.menu_book_outlined,
-                title: '还没有书源',
+                title: S.t('还没有书源'),
                 actions: [
                   Text(
-                    '到下方「书源」页签，用你自己的 URL 链接导入后，'
-                    '这里就会有书看了',
+                    S.t('到下方「书源」页签，用你自己的 URL 链接导入后，'
+                        '这里就会有书看了'),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -655,9 +659,9 @@ class _SourceSectionState extends State<_SourceSection> {
                 ),
               ),
             ),
-            TextButton(onPressed: _retry, child: const Text('重试')),
+            TextButton(onPressed: _retry, child: Text(S.t('重试'))),
             IconButton(
-              tooltip: '展开',
+              tooltip: S.t('展开'),
               icon: const Icon(AnikumoIcons.expand_more),
               onPressed: () => setState(() => _userExpanded = true),
             ),
@@ -678,7 +682,7 @@ class _SourceSectionState extends State<_SourceSection> {
                   '/novel/source',
                   arguments: widget.source.id,
                 ),
-                child: const Text('更多'),
+                child: Text(S.t('更多')),
               ),
               TextButton(
                 onPressed: categories.isEmpty
@@ -694,7 +698,7 @@ class _SourceSectionState extends State<_SourceSection> {
                               )],
                         ),
                       ),
-                child: const Text('全部'),
+                child: Text(S.t('全部')),
               ),
             ],
           ),
@@ -735,7 +739,7 @@ class _SourceSectionState extends State<_SourceSection> {
                     ),
                   ),
                 ),
-                TextButton(onPressed: _retry, child: const Text('重试')),
+                TextButton(onPressed: _retry, child: Text(S.t('重试'))),
               ],
             ),
           )
@@ -745,9 +749,9 @@ class _SourceSectionState extends State<_SourceSection> {
             child: Center(child: CircularProgressIndicator()),
           )
         else if (_items.isEmpty)
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Text('这个分类暂时没有内容'),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: Text(S.t('这个分类暂时没有内容')),
           )
         else
           SizedBox(
@@ -777,7 +781,7 @@ class _SourceSectionState extends State<_SourceSection> {
                     ),
                   ),
                 ),
-                TextButton(onPressed: _retry, child: const Text('重试')),
+                TextButton(onPressed: _retry, child: Text(S.t('重试'))),
               ],
             ),
           ),
@@ -806,11 +810,11 @@ class _NovelFavoritesTabState extends State<NovelFavoritesTab> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('删除'),
+            child: Text(S.t('删除')),
           ),
         ],
       ),
@@ -819,23 +823,25 @@ class _NovelFavoritesTabState extends State<NovelFavoritesTab> {
   }
 
   Future<void> _deleteHistory(NovelProgress entry) async {
-    if (!await _confirm('删除这条记录？', '将移除《${entry.item.title}》的阅读进度，此操作无法撤销。')) {
+    if (!await _confirm(S.t('删除这条记录？'),
+        S.f('将移除《{}》的阅读进度，此操作无法撤销。', [entry.item.title]))) {
       return;
     }
     await NovelLibraryStore.removeProgress(entry.item.storageKey);
     if (!mounted) return;
     setState(() {});
-    AnikumoDialog.showToast(message: '已删除');
+    AnikumoDialog.showToast(message: S.t('已删除'));
   }
 
   Future<void> _clearHistory(int count) async {
-    if (!await _confirm('清空全部阅读历史？', '将删除全部 $count 条小说阅读记录，此操作无法撤销。')) {
+    if (!await _confirm(S.t('清空全部阅读历史？'),
+        S.f('将删除全部 {} 条小说阅读记录，此操作无法撤销。', [count]))) {
       return;
     }
     await NovelLibraryStore.clearProgress();
     if (!mounted) return;
     setState(() {});
-    AnikumoDialog.showToast(message: '阅读历史已清空');
+    AnikumoDialog.showToast(message: S.t('阅读历史已清空'));
   }
 
   @override
@@ -865,44 +871,44 @@ class _NovelFavoritesTabState extends State<NovelFavoritesTab> {
                         await NovelAutoUpdate.clearPending();
                         setLocal(() {});
                       },
-                      child: const Text('知道了'),
+                      child: Text(S.t('知道了')),
                     ),
                   ],
                 ),
               );
             },
           ),
-          const NovelSectionHeader(title: '我的收藏'),
+          NovelSectionHeader(title: S.t('我的收藏')),
           if (favorites.isEmpty)
-            const GeneralEmptyState(
+            GeneralEmptyState(
               icon: AnikumoIcons.collections_bookmark_outlined,
-              title: '还没有收藏，去探索里找本书吧',
+              title: S.t('还没有收藏，去探索里找本书吧'),
               compact: true,
             )
           else
             for (final item in favorites) NovelBookTile(item: item),
           NovelSectionHeader(
-            title: '阅读历史',
+            title: S.t('阅读历史'),
             trailing: progress.isEmpty
                 ? null
                 : TextButton(
                     onPressed: () => _clearHistory(progress.length),
-                    child: const Text('清空'),
+                    child: Text(S.t('清空')),
                   ),
           ),
           if (progress.isEmpty)
-            const GeneralEmptyState(
+            GeneralEmptyState(
               icon: AnikumoIcons.history_rounded,
-              title: '暂无阅读记录',
+              title: S.t('暂无阅读记录'),
               compact: true,
             )
           else
             for (final entry in progress)
               NovelBookTile(
                 item: entry.item,
-                subtitle: '读到 ${entry.chapterTitle}',
+                subtitle: S.f('读到 {}', [entry.chapterTitle]),
                 trailing: IconButton(
-                  tooltip: '删除记录',
+                  tooltip: S.t('删除记录'),
                   icon: const Icon(AnikumoIcons.delete_outline_rounded),
                   onPressed: () => _deleteHistory(entry),
                 ),
@@ -932,9 +938,10 @@ class _NovelSettingsTabState extends State<NovelSettingsTab> {
         scrollCacheExtent: const ScrollCacheExtent.pixels(700),
         padding: const EdgeInsets.only(bottom: 24),
         children: [
-          const NovelSectionHeader(title: '阅读设置'),
+          const LanguageSettingTile(),
+          NovelSectionHeader(title: S.t('阅读设置')),
           ListTile(
-            title: const Text('正文字号'),
+            title: Text(S.t('正文字号')),
             subtitle: Text('${fontSize.toStringAsFixed(0)} px'),
           ),
           Slider(
@@ -950,9 +957,10 @@ class _NovelSettingsTabState extends State<NovelSettingsTab> {
           // Batch 252: reader chrome auto-hide delay,
           // shared with the manga reader (0.5–5 s).
           ListTile(
-            title: const Text('界面自动隐藏'),
+            title: Text(S.t('界面自动隐藏')),
             subtitle: Text(
-              '${readerChromeHideSeconds().toStringAsFixed(1)} 秒无操作后隐藏（漫画 / 小说阅读器共用）',
+              S.f('{} 秒无操作后隐藏（漫画 / 小说阅读器共用）',
+                  [readerChromeHideSeconds().toStringAsFixed(1)]),
             ),
           ),
           Slider(
@@ -977,18 +985,18 @@ class _NovelSettingsTabState extends State<NovelSettingsTab> {
                   SettingsKeys.novelReaderTheme,
                 );
                 return ListTile(
-                  title: const Text('阅读主题'),
+                  title: Text(S.t('阅读主题')),
                   subtitle: Text(
                     current.isEmpty
-                        ? '跟随应用'
-                        : (NovelReaderTheme.byId(current)?.name ?? '跟随应用'),
+                        ? S.t('跟随应用')
+                        : S.t(NovelReaderTheme.byId(current)?.name ?? '跟随应用'),
                   ),
                   trailing: const Icon(AnikumoIcons.chevron_right, size: 18),
                   onTap: () async {
                     final picked = await showDialog<String>(
                       context: context,
                       builder: (ctx) => SimpleDialog(
-                        title: const Text('阅读主题'),
+                        title: Text(S.t('阅读主题')),
                         children: [
                           for (final (value, label) in [
                             ('', '跟随应用'),
@@ -997,7 +1005,7 @@ class _NovelSettingsTabState extends State<NovelSettingsTab> {
                           ])
                             SimpleDialogOption(
                               onPressed: () => Navigator.pop(ctx, value),
-                              child: Text(label),
+                              child: Text(S.t(label)),
                             ),
                         ],
                       ),
@@ -1012,19 +1020,19 @@ class _NovelSettingsTabState extends State<NovelSettingsTab> {
                 );
               },
             ),
-          const NovelSectionHeader(title: '下载'),
+          NovelSectionHeader(title: S.t('下载')),
           ListTile(
             leading: const Icon(AnikumoIcons.download_rounded),
-            title: const Text('下载管理'),
-            subtitle: const Text('已下载章节 · 离线阅读 · 占用空间'),
+            title: Text(S.t('下载管理')),
+            subtitle: Text(S.t('已下载章节 · 离线阅读 · 占用空间')),
             trailing: const Icon(AnikumoIcons.chevron_right, size: 18),
             onTap: () => context.pushNamed('/novel/downloads'),
           ),
-          const NovelSectionHeader(title: '扩展功能'),
+          NovelSectionHeader(title: S.t('扩展功能')),
           ListTile(
             leading: const Icon(AnikumoIcons.storefront_rounded),
-            title: const Text('功能仓库'),
-            subtitle: const Text('可选功能 · 按需安装或卸载'),
+            title: Text(S.t('功能仓库')),
+            subtitle: Text(S.t('可选功能 · 按需安装或卸载')),
             trailing: const Icon(AnikumoIcons.chevron_right, size: 18),
             onTap: () => context.pushNamed('/novel/features'),
           ),
@@ -1034,23 +1042,23 @@ class _NovelSettingsTabState extends State<NovelSettingsTab> {
                 NovelFeatures.isInstalled(NovelFeatures.localBooksId)
                 ? ListTile(
                     leading: const Icon(AnikumoIcons.library_books_rounded),
-                    title: const Text('本地书架'),
-                    subtitle: const Text('导入的 EPUB / TXT 书籍'),
+                    title: Text(S.t('本地书架')),
+                    subtitle: Text(S.t('导入的 EPUB / TXT 书籍')),
                     trailing: const Icon(AnikumoIcons.chevron_right, size: 18),
                     onTap: () => context.pushNamed('/novel/local'),
                   )
                 : const SizedBox.shrink(),
           ),
-          const NovelSectionHeader(title: '书源引擎'),
+          NovelSectionHeader(title: S.t('书源引擎')),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
-              '按书源规则运行：CSS 选择器、'
-              'JSONPath、##替换、<js> 脚本与 java 桥（getElements/ajax/post/'
-              'md5/base64 等）均已支持。标记为 webView 的图片章节会在阅读器里'
-              '以网页模式打开（站点自己的页面出图）。暂不支持：XPath 规则、'
-              '需要登录的源、GBK 编码页面。'
-              '这类源会明确报错，不会假装加载。',
+              S.t('按书源规则运行：CSS 选择器、'
+                  'JSONPath、##替换、<js> 脚本与 java 桥（getElements/ajax/post/'
+                  'md5/base64 等）均已支持。标记为 webView 的图片章节会在阅读器里'
+                  '以网页模式打开（站点自己的页面出图）。暂不支持：XPath 规则、'
+                  '需要登录的源、GBK 编码页面。'
+                  '这类源会明确报错，不会假装加载。'),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.outline,
                 height: 1.5,
@@ -1214,9 +1222,9 @@ class _NovelFeaturedBannerState extends State<_NovelFeaturedBanner> {
                                         gradient: VioletGlass.gradient,
                                         borderRadius: BorderRadius.circular(8),
                                       ),
-                                      child: const Text(
-                                        '精选推荐',
-                                        style: TextStyle(
+                                      child: Text(
+                                        S.t('精选推荐'),
+                                        style: const TextStyle(
                                           fontSize: 11,
                                           fontWeight: FontWeight.w700,
                                           color: Colors.white,
@@ -1247,7 +1255,7 @@ class _NovelFeaturedBannerState extends State<_NovelFeaturedBanner> {
                                     if (item.lastChapter.isNotEmpty) ...[
                                       const SizedBox(height: 4),
                                       Text(
-                                        '最新章节：${item.lastChapter}',
+                                        S.f('最新章节：{}', [item.lastChapter]),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: theme.textTheme.bodySmall
@@ -1262,7 +1270,7 @@ class _NovelFeaturedBannerState extends State<_NovelFeaturedBanner> {
                                         AnikumoIcons.menu_book_rounded,
                                         size: 18,
                                       ),
-                                      label: const Text('开始阅读'),
+                                      label: Text(S.t('开始阅读')),
                                       style: FilledButton.styleFrom(
                                         visualDensity: VisualDensity.compact,
                                       ),

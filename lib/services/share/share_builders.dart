@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/modules/bangumi/bangumi_item.dart';
 import 'package:anikumo/services/library/user_library.dart';
 
@@ -6,14 +7,14 @@ import 'package:anikumo/services/library/user_library.dart';
 /// anywhere — chat apps, notes, forums — without attachments.
 String buildListShareText(String listName, List<BangumiItem> items) {
   final buffer = StringBuffer()
-    ..writeln('片单「$listName」（共 ${items.length} 部）');
+    ..writeln(S.f('片单「{}」（共 {} 部）', [listName, items.length]));
   for (var i = 0; i < items.length; i++) {
     final item = items[i];
     final score =
-        item.ratingScore > 0 ? ' · 评分 ${item.ratingScore.toStringAsFixed(1)}' : '';
+        item.ratingScore > 0 ? S.f(' · 评分 {}', [item.ratingScore.toStringAsFixed(1)]) : '';
     buffer.writeln('${i + 1}. ${bangumiDisplayTitle(item)}$score');
   }
-  buffer.write('—— 来自 anikumo 我的榜单');
+  buffer.write(S.t('—— 来自 anikumo 我的榜单'));
   return buffer.toString();
 }
 

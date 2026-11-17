@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/utils/tap_debouncer.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -267,7 +268,7 @@ class NovelErrorState extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            TextButton(onPressed: onRetry, child: const Text('加载失败，点这里重试')),
+            TextButton(onPressed: onRetry, child: Text(S.t('加载失败，点这里重试'))),
           ],
         ),
       ),

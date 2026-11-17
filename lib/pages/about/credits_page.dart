@@ -5,17 +5,18 @@ import 'package:anikumo/bean/widget/content_section.dart';
 import 'package:anikumo/pages/about/about_widgets.dart';
 import 'package:anikumo/request/config/api_endpoints.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class CreditsPage extends StatelessWidget {
   const CreditsPage({super.key});
 
   @override
   Widget build(BuildContext context) => SettingsDetailScaffold(
-        title: const Text('致谢'),
+        title: Text(S.t('致谢')),
         body: AboutContent(
           children: [
             ContentSection.group(
-              title: '服务',
+              title: S.t('服务'),
               children: const [
                 AboutLinkTile(
                   icon: AnikumoIcons.menu_book_rounded,
@@ -39,7 +40,7 @@ class CreditsPage extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             ContentSection.group(
-              title: '开源项目',
+              title: S.t('开源项目'),
               children: const [
                 AboutLinkTile(
                   icon: AnikumoIcons.flutter_dash_rounded,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:anikumo/bean/settings/settings_detail_scaffold.dart';
 import 'package:anikumo/pages/player/controller/player_super_resolution.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/bean/settings/settings_list.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
@@ -31,11 +32,11 @@ class _SuperResolutionSettingsState extends State<SuperResolutionSettings> {
   @override
   Widget build(BuildContext context) {
     return SettingsDetailScaffold(
-      title: const Text('超分辨率'),
+      title: Text(S.t('超分辨率')),
       body: SettingsList(
         sections: [
           SettingsRadioSection<SuperResolutionMode>(
-            title: Text('超分辨率需要启用硬件解码, 若启用硬件解码后仍然不生效, 尝试切换视频渲染器为 gpu'),
+            title: Text(S.t('超分辨率需要启用硬件解码, 若启用硬件解码后仍然不生效, 尝试切换视频渲染器为 gpu')),
             groupValue: superResolutionMode,
             onChanged: (SuperResolutionMode? value) {
               if (value == null) return;
@@ -50,19 +51,19 @@ class _SuperResolutionSettingsState extends State<SuperResolutionSettings> {
             tiles: [
               for (final mode in SuperResolutionMode.values)
                 SettingsTile<SuperResolutionMode>.radioTile(
-                  title: Text(mode.label),
-                  description: Text(mode.description),
+                  title: Text(S.t(mode.label)),
+                  description: Text(S.t(mode.description)),
                   radioValue: mode,
                 ),
             ],
           ),
           SettingsSection(
-            title: Text('默认行为'),
+            title: Text(S.t('默认行为')),
             tiles: [
               SettingsTile.switchTile(
                 leading: AnikumoIcons.notifications_off_rounded,
-                title: Text('关闭提示'),
-                description: Text('关闭每次启用超分辨率时的提示'),
+                title: Text(S.t('关闭提示')),
+                description: Text(S.t('关闭每次启用超分辨率时的提示')),
                 initialValue: disableWarning,
                 onToggle: (value) async {
                   disableWarning = value ?? !disableWarning;

@@ -5,6 +5,7 @@ import 'package:anikumo/repositories/history_repository.dart';
 import 'package:anikumo/services/stats/achievements.dart';
 import 'package:anikumo/utils/constants.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// 观看成就： milestones over the local watch history — episodes,
 /// hours, distinct titles and active days. Unlocked first, then the
@@ -19,7 +20,7 @@ class AchievementsPage extends StatelessWidget {
         evaluateAchievements(inject<IHistoryRepository>().getAllHistories());
     final unlockedCount = achievements.where((a) => a.unlocked).length;
     return Scaffold(
-      appBar: AppBar(title: const Text('观看成就')),
+      appBar: AppBar(title: Text(S.t('观看成就'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(
           StyleString.pagePadding,
@@ -37,7 +38,7 @@ class AchievementsPage extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    '已解锁 $unlockedCount / ${achievements.length} 个成就',
+                    S.f('已解锁 {} / {} 个成就', [unlockedCount, achievements.length]),
                     style: theme.textTheme.bodyMedium,
                   ),
                 ),
@@ -67,14 +68,14 @@ class AchievementsPage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            achievement.title,
+                            S.t(achievement.title),
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            achievement.description,
+                            S.t(achievement.description),
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.outline,
                             ),

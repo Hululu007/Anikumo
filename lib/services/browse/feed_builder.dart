@@ -17,6 +17,7 @@
 /// so neither can starve the other.
 library;
 
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'dart:math';
 
 class FeedSection<T> {
@@ -76,8 +77,8 @@ FeaturedFeed<T> buildFeaturedFeed<T>({
   if (trendingItems.isNotEmpty) {
     sections.add(FeedSection(
       id: 'trending',
-      title: '趋势热播',
-      subtitle: '正在被大家追的番',
+      title: S.t('趋势热播'),
+      subtitle: S.t('正在被大家追的番'),
       items: trendingItems,
     ));
   }
@@ -97,8 +98,8 @@ FeaturedFeed<T> buildFeaturedFeed<T>({
   if (topRatedItems.isNotEmpty) {
     sections.add(FeedSection(
       id: 'top_rated',
-      title: '高分口碑',
-      subtitle: '评分与评价人数都靠前',
+      title: S.t('高分口碑'),
+      subtitle: S.t('评分与评价人数都靠前'),
       items: topRatedItems,
     ));
   }
@@ -122,8 +123,8 @@ FeaturedFeed<T> buildFeaturedFeed<T>({
   if (gemItems.isNotEmpty) {
     sections.add(FeedSection(
       id: 'hidden_gems',
-      title: '冷门佳作',
-      subtitle: '分数很高，看的人还不多',
+      title: S.t('冷门佳作'),
+      subtitle: S.t('分数很高，看的人还不多'),
       items: gemItems,
     ));
   }
@@ -167,8 +168,8 @@ FeedSection<T>? buildFeaturedSection<T>({
       if (items.isEmpty) return null;
       return FeedSection(
         id: 'trending',
-        title: '趋势热播',
-        subtitle: '正在被大家追的番',
+        title: S.t('趋势热播'),
+        subtitle: S.t('正在被大家追的番'),
         items: items,
       );
     case 'top_rated':
@@ -186,8 +187,8 @@ FeedSection<T>? buildFeaturedSection<T>({
       if (capped.isEmpty) return null;
       return FeedSection(
         id: 'top_rated',
-        title: '高分口碑',
-        subtitle: '评分与评价人数都靠前',
+        title: S.t('高分口碑'),
+        subtitle: S.t('评分与评价人数都靠前'),
         items: capped,
       );
     case 'hidden_gems':
@@ -207,8 +208,8 @@ FeedSection<T>? buildFeaturedSection<T>({
       if (capped.isEmpty) return null;
       return FeedSection(
         id: 'hidden_gems',
-        title: '冷门佳作',
-        subtitle: '分数很高，看的人还不多',
+        title: S.t('冷门佳作'),
+        subtitle: S.t('分数很高，看的人还不多'),
         items: capped,
       );
   }

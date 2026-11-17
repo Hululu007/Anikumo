@@ -14,6 +14,7 @@ import 'package:anikumo/plugins/plugins_controller.dart';
 import 'package:anikumo/request/config/api_endpoints.dart';
 import 'package:anikumo/services/plugin/api_rule_engine.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 abstract final class _RuleEditorText {
   static const pageTitle = '规则编辑器';
@@ -246,31 +247,31 @@ class _PluginEditorPageState extends State<PluginEditorPage> {
   int captchaType = CaptchaType.imageCaptcha;
   int captchaDetectType = CaptchaDetectType.xpath;
 
-  static const List<ButtonSegment<String>> _ruleModeSegments = [
+  static final List<ButtonSegment<String>> _ruleModeSegments = [
     ButtonSegment(
       value: RuleMode.xpath,
-      label: Text(_RuleEditorText.modeXPath),
+      label: Text(S.t(_RuleEditorText.modeXPath)),
     ),
-    ButtonSegment(value: RuleMode.api, label: Text(_RuleEditorText.modeApi)),
+    ButtonSegment(value: RuleMode.api, label: Text(S.t(_RuleEditorText.modeApi))),
   ];
 
-  static const List<ButtonSegment<String>> _methodSegments = [
-    ButtonSegment(value: 'GET', label: Text(_RuleEditorText.methodGet)),
-    ButtonSegment(value: 'POST', label: Text(_RuleEditorText.methodPost)),
+  static final List<ButtonSegment<String>> _methodSegments = [
+    ButtonSegment(value: 'GET', label: Text(S.t(_RuleEditorText.methodGet))),
+    ButtonSegment(value: 'POST', label: Text(S.t(_RuleEditorText.methodPost))),
   ];
 
-  static const List<ButtonSegment<String>> _bodyTypeSegments = [
+  static final List<ButtonSegment<String>> _bodyTypeSegments = [
     ButtonSegment(
       value: ApiBodyType.none,
-      label: Text(_RuleEditorText.bodyTypeNone),
+      label: Text(S.t(_RuleEditorText.bodyTypeNone)),
     ),
     ButtonSegment(
       value: ApiBodyType.json,
-      label: Text(_RuleEditorText.bodyTypeJson),
+      label: Text(S.t(_RuleEditorText.bodyTypeJson)),
     ),
     ButtonSegment(
       value: ApiBodyType.form,
-      label: Text(_RuleEditorText.bodyTypeForm),
+      label: Text(S.t(_RuleEditorText.bodyTypeForm)),
     ),
   ];
 
@@ -440,7 +441,7 @@ class _PluginEditorPageState extends State<PluginEditorPage> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return SettingsDetailScaffold(
-      title: const Text(_RuleEditorText.pageTitle),
+      title: Text(S.t(_RuleEditorText.pageTitle)),
       body: SafeArea(
         top: false,
         bottom: false,
@@ -455,9 +456,9 @@ class _PluginEditorPageState extends State<PluginEditorPage> {
                 children: [
                   RulePageIntro(
                     title: widget.plugin.name.isEmpty
-                        ? '编写新规则'
+                        ? S.t('编写新规则')
                         : widget.plugin.name,
-                    description: '从站点信息到搜索与选集，逐步配置你的番剧来源。',
+                    description: S.t('从站点信息到搜索与选集，逐步配置你的番剧来源。'),
                     icon: AnikumoIcons.edit_note_rounded,
                   ),
                   const SizedBox(height: 20),
@@ -477,11 +478,11 @@ class _PluginEditorPageState extends State<PluginEditorPage> {
                   ],
                   EditorChoiceGroup<int>(
                     value: _section,
-                    segments: const [
-                      ButtonSegment(value: 0, label: Text('基本')),
-                      ButtonSegment(value: 1, label: Text('搜索')),
-                      ButtonSegment(value: 2, label: Text('选集')),
-                      ButtonSegment(value: 3, label: Text('高级')),
+                    segments: [
+                      ButtonSegment(value: 0, label: Text(S.t('基本'))),
+                      ButtonSegment(value: 1, label: Text(S.t('搜索'))),
+                      ButtonSegment(value: 2, label: Text(S.t('选集'))),
+                      ButtonSegment(value: 3, label: Text(S.t('高级'))),
                     ],
                     onChanged: (value) => setState(() => _section = value),
                   ),
@@ -512,8 +513,8 @@ class _PluginEditorPageState extends State<PluginEditorPage> {
                           icon: const Icon(AnikumoIcons.science_outlined),
                           label: Text(
                               MediaQuery.textScalerOf(context).scale(14) > 20
-                                  ? '测试'
-                                  : _RuleEditorText.testRule))),
+                                  ? S.t('测试')
+                                  : S.t(_RuleEditorText.testRule)))),
                   const SizedBox(width: 12),
                   Expanded(
                       child: FilledButton.icon(
@@ -523,7 +524,7 @@ class _PluginEditorPageState extends State<PluginEditorPage> {
                           icon: _saving
                               ? const LoadingIndicator(size: 20)
                               : const Icon(AnikumoIcons.check_rounded),
-                          label: Text(_saving ? '保存中' : _RuleEditorText.save))),
+                          label: Text(_saving ? S.t('保存中') : S.t(_RuleEditorText.save)))),
                 ]),
               ),
             ),
@@ -539,14 +540,14 @@ class _PluginEditorPageState extends State<PluginEditorPage> {
     return RuleSection(
       key: ValueKey(_section),
       title: switch (_section) {
-        0 => _RuleEditorText.sectionBasic,
-        1 => _RuleEditorText.sectionSearch,
-        _ => _RuleEditorText.sectionChapter,
+        0 => S.t(_RuleEditorText.sectionBasic),
+        1 => S.t(_RuleEditorText.sectionSearch),
+        _ => S.t(_RuleEditorText.sectionChapter),
       },
       description: switch (_section) {
-        0 => _RuleEditorText.sectionBasicDesc,
-        1 => _RuleEditorText.sectionSearchDesc,
-        _ => _RuleEditorText.sectionChapterDesc,
+        0 => S.t(_RuleEditorText.sectionBasicDesc),
+        1 => S.t(_RuleEditorText.sectionSearchDesc),
+        _ => S.t(_RuleEditorText.sectionChapterDesc),
       },
       icon: switch (_section) {
         0 => AnikumoIcons.info_outline_rounded,
@@ -560,24 +561,24 @@ class _PluginEditorPageState extends State<PluginEditorPage> {
             ? [
                 EditorTextField(
                     controller: nameController,
-                    label: _RuleEditorText.ruleName),
+                    label: S.t(_RuleEditorText.ruleName)),
                 EditorTextField(
                     controller: versionController,
-                    label: _RuleEditorText.ruleVersion),
+                    label: S.t(_RuleEditorText.ruleVersion)),
                 EditorTextField(
                     controller: baseURLController,
-                    label: _RuleEditorText.baseUrl),
+                    label: S.t(_RuleEditorText.baseUrl)),
               ]
             : [
                 EditorSegmentedField<String>(
                   label: isSearch
-                      ? _RuleEditorText.searchRuleType
-                      : _RuleEditorText.chapterRuleType,
+                      ? S.t(_RuleEditorText.searchRuleType)
+                      : S.t(_RuleEditorText.chapterRuleType),
                   value: isSearch ? searchMode : chapterMode,
                   segments: _ruleModeSegments,
                   description: (mode) => mode == RuleMode.api
-                      ? '请求接口并从 JSON 响应中提取数据。'
-                      : '从网页 HTML 中定位并提取内容。',
+                      ? S.t('请求接口并从 JSON 响应中提取数据。')
+                      : S.t('从网页 HTML 中定位并提取内容。'),
                   onChanged: (value) => setState(() {
                     if (isSearch) {
                       searchMode = value;
@@ -607,45 +608,45 @@ class _PluginEditorPageState extends State<PluginEditorPage> {
 
   Widget _buildAdvancedOptionsCard() {
     return RuleSection(
-      title: _RuleEditorText.advancedOptions,
-      description: _RuleEditorText.advancedOptionsDesc,
+      title: S.t(_RuleEditorText.advancedOptions),
+      description: S.t(_RuleEditorText.advancedOptionsDesc),
       icon: AnikumoIcons.tune_rounded,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const EditorSubheader(label: _RuleEditorText.groupBehavior),
+          EditorSubheader(label: S.t(_RuleEditorText.groupBehavior)),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text(_RuleEditorText.legacyParser),
-            subtitle: const Text(_RuleEditorText.legacyParserDesc),
+            title: Text(S.t(_RuleEditorText.legacyParser)),
+            subtitle: Text(S.t(_RuleEditorText.legacyParserDesc)),
             value: useLegacyParser,
             onChanged: (value) => setState(() => useLegacyParser = value),
           ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text(_RuleEditorText.adBlocker),
-            subtitle: const Text(_RuleEditorText.adBlockerDesc),
+            title: Text(S.t(_RuleEditorText.adBlocker)),
+            subtitle: Text(S.t(_RuleEditorText.adBlockerDesc)),
             value: adBlocker,
             onChanged: (value) => setState(() => adBlocker = value),
           ),
-          const EditorSubheader(label: _RuleEditorText.groupNetwork),
+          EditorSubheader(label: S.t(_RuleEditorText.groupNetwork)),
           EditorTextField(
             controller: userAgentController,
-            label: _RuleEditorText.userAgent,
-            helper: _RuleEditorText.userAgentHelper,
+            label: S.t(_RuleEditorText.userAgent),
+            helper: S.t(_RuleEditorText.userAgentHelper),
           ),
           const SizedBox(height: 16),
           EditorTextField(
             controller: refererController,
-            label: _RuleEditorText.referer,
-            helper: _RuleEditorText.refererHelper,
+            label: S.t(_RuleEditorText.referer),
+            helper: S.t(_RuleEditorText.refererHelper),
           ),
           if (searchMode == RuleMode.xpath) ...[
-            const EditorSubheader(label: _RuleEditorText.groupAntiCrawler),
+            EditorSubheader(label: S.t(_RuleEditorText.groupAntiCrawler)),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text(_RuleEditorText.antiCrawlerEnable),
-              subtitle: const Text(_RuleEditorText.antiCrawlerEnableDesc),
+              title: Text(S.t(_RuleEditorText.antiCrawlerEnable)),
+              subtitle: Text(S.t(_RuleEditorText.antiCrawlerEnableDesc)),
               value: antiCrawlerEnabled,
               onChanged: (value) => setState(() => antiCrawlerEnabled = value),
             ),
@@ -670,61 +671,61 @@ class _PluginEditorPageState extends State<PluginEditorPage> {
 
   List<Widget> _buildAntiCrawlerFields() => [
         EditorSegmentedField<int>(
-          label: _RuleEditorText.captchaTypeLabel,
+          label: S.t(_RuleEditorText.captchaTypeLabel),
           value: captchaType,
-          segments: const [
+          segments: [
             ButtonSegment(
               value: CaptchaType.imageCaptcha,
-              label: Text(_RuleEditorText.captchaTypeImage),
+              label: Text(S.t(_RuleEditorText.captchaTypeImage)),
             ),
             ButtonSegment(
               value: CaptchaType.autoClickButton,
-              label: Text(_RuleEditorText.captchaTypeAutoClick),
+              label: Text(S.t(_RuleEditorText.captchaTypeAutoClick)),
             ),
             ButtonSegment(
               value: CaptchaType.customJavaScript,
-              label: Text(_RuleEditorText.captchaTypeScript),
+              label: Text(S.t(_RuleEditorText.captchaTypeScript)),
             ),
           ],
           onChanged: (value) => setState(() => captchaType = value),
           description: (value) => switch (value) {
-            CaptchaType.imageCaptcha => _RuleEditorText.captchaTypeImageDesc,
+            CaptchaType.imageCaptcha => S.t(_RuleEditorText.captchaTypeImageDesc),
             CaptchaType.autoClickButton =>
-              _RuleEditorText.captchaTypeAutoClickDesc,
+              S.t(_RuleEditorText.captchaTypeAutoClickDesc),
             CaptchaType.customJavaScript =>
-              _RuleEditorText.captchaTypeScriptDesc,
-            _ => _RuleEditorText.captchaTypeUnknownDesc,
+              S.t(_RuleEditorText.captchaTypeScriptDesc),
+            _ => S.t(_RuleEditorText.captchaTypeUnknownDesc),
           },
         ),
         EditorSegmentedField<int>(
-          label: _RuleEditorText.captchaDetectTypeLabel,
+          label: S.t(_RuleEditorText.captchaDetectTypeLabel),
           value: captchaDetectType,
-          segments: const [
+          segments: [
             ButtonSegment(
               value: CaptchaDetectType.xpath,
-              label: Text(_RuleEditorText.modeXPath),
+              label: Text(S.t(_RuleEditorText.modeXPath)),
             ),
             ButtonSegment(
               value: CaptchaDetectType.text,
-              label: Text(_RuleEditorText.captchaDetectText),
+              label: Text(S.t(_RuleEditorText.captchaDetectText)),
             ),
             ButtonSegment(
               value: CaptchaDetectType.regex,
-              label: Text(_RuleEditorText.captchaDetectRegex),
+              label: Text(S.t(_RuleEditorText.captchaDetectRegex)),
             ),
           ],
           onChanged: (value) => setState(() => captchaDetectType = value),
-          description: (_) => _RuleEditorText.captchaDetectTypeDesc,
+          description: (_) => S.t(_RuleEditorText.captchaDetectTypeDesc),
         ),
         EditorTextField(
           controller: captchaDetectValueController,
-          label: _RuleEditorText.captchaDetectValue,
+          label: S.t(_RuleEditorText.captchaDetectValue),
           hint: captchaDetectType == CaptchaDetectType.text
-              ? _RuleEditorText.captchaDetectValueHintText
+              ? S.t(_RuleEditorText.captchaDetectValueHintText)
               : captchaDetectType == CaptchaDetectType.regex
-                  ? _RuleEditorText.captchaDetectValueHintRegex
-                  : _RuleEditorText.captchaDetectValueHintXPath,
-          helper: _RuleEditorText.captchaDetectValueHelper,
+                  ? S.t(_RuleEditorText.captchaDetectValueHintRegex)
+                  : S.t(_RuleEditorText.captchaDetectValueHintXPath),
+          helper: S.t(_RuleEditorText.captchaDetectValueHelper),
         ),
         EditorAnimatedSection(
           activeKey: captchaType,
@@ -735,34 +736,34 @@ class _PluginEditorPageState extends State<PluginEditorPage> {
               if (captchaType == CaptchaType.imageCaptcha) ...[
                 EditorTextField(
                   controller: captchaImageController,
-                  label: _RuleEditorText.captchaImage,
-                  hint: _RuleEditorText.captchaImageHint,
-                  helper: _RuleEditorText.captchaImageHelper,
+                  label: S.t(_RuleEditorText.captchaImage),
+                  hint: S.t(_RuleEditorText.captchaImageHint),
+                  helper: S.t(_RuleEditorText.captchaImageHelper),
                 ),
                 EditorTextField(
                   controller: captchaInputController,
-                  label: _RuleEditorText.captchaInput,
-                  hint: _RuleEditorText.captchaInputHint,
-                  helper: _RuleEditorText.captchaInputHelper,
+                  label: S.t(_RuleEditorText.captchaInput),
+                  hint: S.t(_RuleEditorText.captchaInputHint),
+                  helper: S.t(_RuleEditorText.captchaInputHelper),
                 ),
               ],
               if (captchaType != CaptchaType.customJavaScript)
                 EditorTextField(
                   controller: captchaButtonController,
                   label: captchaType == CaptchaType.imageCaptcha
-                      ? _RuleEditorText.captchaSubmitButton
-                      : _RuleEditorText.verifyButton,
-                  hint: _RuleEditorText.captchaButtonHint,
+                      ? S.t(_RuleEditorText.captchaSubmitButton)
+                      : S.t(_RuleEditorText.verifyButton),
+                  hint: S.t(_RuleEditorText.captchaButtonHint),
                   helper: captchaType == CaptchaType.imageCaptcha
-                      ? _RuleEditorText.captchaSubmitButtonHelper
-                      : _RuleEditorText.verifyButtonHelper,
+                      ? S.t(_RuleEditorText.captchaSubmitButtonHelper)
+                      : S.t(_RuleEditorText.verifyButtonHelper),
                 ),
               if (captchaType == CaptchaType.customJavaScript)
                 EditorTextField(
                   controller: captchaScriptController,
-                  label: _RuleEditorText.captchaScript,
-                  hint: _RuleEditorText.captchaScriptHint,
-                  helper: _RuleEditorText.captchaScriptHelper,
+                  label: S.t(_RuleEditorText.captchaScript),
+                  hint: S.t(_RuleEditorText.captchaScriptHint),
+                  helper: S.t(_RuleEditorText.captchaScriptHelper),
                   maxLines: 8,
                 ),
             ],
@@ -772,63 +773,63 @@ class _PluginEditorPageState extends State<PluginEditorPage> {
 
   List<Widget> _buildXPathSearchFields() => [
         EditorSegmentedField<String>(
-          label: _RuleEditorText.searchMethod,
+          label: S.t(_RuleEditorText.searchMethod),
           value: usePost ? 'POST' : 'GET',
           segments: _methodSegments,
           onChanged: (value) => setState(() => usePost = value == 'POST'),
         ),
         EditorTextField(
           controller: searchURLController,
-          label: _RuleEditorText.searchUrl,
+          label: S.t(_RuleEditorText.searchUrl),
         ),
         EditorTextField(
           controller: searchListController,
-          label: _RuleEditorText.searchListXPath,
+          label: S.t(_RuleEditorText.searchListXPath),
         ),
         EditorTextField(
           controller: searchNameController,
-          label: _RuleEditorText.itemNameXPath,
+          label: S.t(_RuleEditorText.itemNameXPath),
         ),
         EditorTextField(
           controller: searchResultController,
-          label: _RuleEditorText.itemLinkXPath,
+          label: S.t(_RuleEditorText.itemLinkXPath),
         ),
       ];
 
   List<Widget> _buildXPathChapterFields() => [
         EditorTextField(
           controller: chapterRoadsController,
-          label: _RuleEditorText.roadListXPath,
+          label: S.t(_RuleEditorText.roadListXPath),
         ),
         EditorTextField(
           controller: chapterResultController,
-          label: _RuleEditorText.episodeListXPath,
+          label: S.t(_RuleEditorText.episodeListXPath),
         ),
       ];
 
   List<Widget> _buildApiSearchFields() => [
         EditorSegmentedField<String>(
-          label: _RuleEditorText.searchMethod,
+          label: S.t(_RuleEditorText.searchMethod),
           value: searchApiMethod,
           segments: _methodSegments,
           onChanged: (value) => setState(() => searchApiMethod = value),
         ),
         EditorTextField(
           controller: searchApiURLController,
-          label: _RuleEditorText.searchRequestUrl,
+          label: S.t(_RuleEditorText.searchRequestUrl),
         ),
         EditorTextField(
           controller: searchApiHeadersController,
-          label: _RuleEditorText.searchHeaders,
+          label: S.t(_RuleEditorText.searchHeaders),
           maxLines: 4,
         ),
         EditorTextField(
           controller: searchApiQueryController,
-          label: _RuleEditorText.searchQuery,
+          label: S.t(_RuleEditorText.searchQuery),
           maxLines: 4,
         ),
         EditorSegmentedField<String>(
-          label: _RuleEditorText.searchBodyType,
+          label: S.t(_RuleEditorText.searchBodyType),
           value: searchApiBodyType,
           segments: _bodyTypeSegments,
           onChanged: (value) => setState(() => searchApiBodyType = value),
@@ -836,51 +837,51 @@ class _PluginEditorPageState extends State<PluginEditorPage> {
         if (searchApiBodyType != ApiBodyType.none)
           EditorTextField(
             controller: searchApiBodyController,
-            label: _RuleEditorText.searchBody,
+            label: S.t(_RuleEditorText.searchBody),
             maxLines: 5,
           ),
         EditorTextField(
           controller: searchApiListPathController,
-          label: _RuleEditorText.searchListPath,
+          label: S.t(_RuleEditorText.searchListPath),
         ),
         EditorTextField(
           controller: searchApiNamePathController,
-          label: _RuleEditorText.itemNamePath,
+          label: S.t(_RuleEditorText.itemNamePath),
         ),
         EditorTextField(
           controller: searchApiSourcePathController,
-          label: _RuleEditorText.itemSourcePath,
+          label: S.t(_RuleEditorText.itemSourcePath),
         ),
         EditorTextField(
           controller: searchApiSourceTemplateController,
-          label: _RuleEditorText.detailPageUrl,
-          helper: _RuleEditorText.detailPageUrlHelper,
+          label: S.t(_RuleEditorText.detailPageUrl),
+          helper: S.t(_RuleEditorText.detailPageUrlHelper),
         ),
       ];
 
   List<Widget> _buildApiChapterFields() => [
         EditorSegmentedField<String>(
-          label: _RuleEditorText.chapterMethod,
+          label: S.t(_RuleEditorText.chapterMethod),
           value: chapterApiMethod,
           segments: _methodSegments,
           onChanged: (value) => setState(() => chapterApiMethod = value),
         ),
         EditorTextField(
           controller: chapterApiURLController,
-          label: _RuleEditorText.chapterRequestUrl,
+          label: S.t(_RuleEditorText.chapterRequestUrl),
         ),
         EditorTextField(
           controller: chapterApiHeadersController,
-          label: _RuleEditorText.chapterHeaders,
+          label: S.t(_RuleEditorText.chapterHeaders),
           maxLines: 4,
         ),
         EditorTextField(
           controller: chapterApiQueryController,
-          label: _RuleEditorText.chapterQuery,
+          label: S.t(_RuleEditorText.chapterQuery),
           maxLines: 4,
         ),
         EditorSegmentedField<String>(
-          label: _RuleEditorText.chapterBodyType,
+          label: S.t(_RuleEditorText.chapterBodyType),
           value: chapterApiBodyType,
           segments: _bodyTypeSegments,
           onChanged: (value) => setState(() => chapterApiBodyType = value),
@@ -888,20 +889,20 @@ class _PluginEditorPageState extends State<PluginEditorPage> {
         if (chapterApiBodyType != ApiBodyType.none)
           EditorTextField(
             controller: chapterApiBodyController,
-            label: _RuleEditorText.chapterBody,
+            label: S.t(_RuleEditorText.chapterBody),
             maxLines: 5,
           ),
         EditorSegmentedField<String>(
-          label: _RuleEditorText.chapterResponseFormat,
+          label: S.t(_RuleEditorText.chapterResponseFormat),
           value: chapterApiFormat,
-          segments: const [
+          segments: [
             ButtonSegment(
               value: ApiChapterFormat.nested,
-              label: Text(_RuleEditorText.formatNested),
+              label: Text(S.t(_RuleEditorText.formatNested)),
             ),
             ButtonSegment(
               value: ApiChapterFormat.delimited,
-              label: Text(_RuleEditorText.formatDelimited),
+              label: Text(S.t(_RuleEditorText.formatDelimited)),
             ),
           ],
           onChanged: (value) => setState(() => chapterApiFormat = value),
@@ -915,64 +916,64 @@ class _PluginEditorPageState extends State<PluginEditorPage> {
                 ? [
                     EditorTextField(
                       controller: chapterApiRoadsPathController,
-                      label: _RuleEditorText.roadListPath,
+                      label: S.t(_RuleEditorText.roadListPath),
                     ),
                     EditorTextField(
                       controller: chapterApiRoadNamePathController,
-                      label: _RuleEditorText.roadNamePath,
+                      label: S.t(_RuleEditorText.roadNamePath),
                     ),
                     EditorTextField(
                       controller: chapterApiEpisodesPathController,
-                      label: _RuleEditorText.episodeListPath,
+                      label: S.t(_RuleEditorText.episodeListPath),
                     ),
                     EditorTextField(
                       controller: chapterApiEpisodeNamePathController,
-                      label: _RuleEditorText.episodeNamePath,
+                      label: S.t(_RuleEditorText.episodeNamePath),
                     ),
                     EditorTextField(
                       controller: chapterApiEpisodeURLPathController,
-                      label: _RuleEditorText.playbackEntryPath,
-                      helper: _RuleEditorText.playbackEntryPathHelper,
+                      label: S.t(_RuleEditorText.playbackEntryPath),
+                      helper: S.t(_RuleEditorText.playbackEntryPathHelper),
                     ),
                   ]
                 : [
                     EditorTextField(
                       controller: chapterApiRoadNamesPathController,
-                      label: _RuleEditorText.roadNamesPath,
+                      label: S.t(_RuleEditorText.roadNamesPath),
                     ),
                     EditorTextField(
                       controller: chapterApiRoadEpisodesPathController,
-                      label: _RuleEditorText.roadEpisodesPath,
+                      label: S.t(_RuleEditorText.roadEpisodesPath),
                     ),
                     EditorTextField(
                       controller: chapterApiRoadSeparatorController,
-                      label: _RuleEditorText.roadSeparator,
+                      label: S.t(_RuleEditorText.roadSeparator),
                     ),
                     EditorTextField(
                       controller: chapterApiEpisodeSeparatorController,
-                      label: _RuleEditorText.episodeSeparator,
+                      label: S.t(_RuleEditorText.episodeSeparator),
                     ),
                     EditorTextField(
                       controller: chapterApiFieldSeparatorController,
-                      label: _RuleEditorText.fieldSeparator,
+                      label: S.t(_RuleEditorText.fieldSeparator),
                     ),
                   ],
           ),
         ),
         EditorTextField(
           controller: chapterApiVariablesController,
-          label: _RuleEditorText.responseVariables,
+          label: S.t(_RuleEditorText.responseVariables),
           maxLines: 5,
         ),
         EditorTextField(
           controller: chapterApiPageURLController,
-          label: _RuleEditorText.playPageUrl,
-          helper: _RuleEditorText.playPageUrlHelper,
+          label: S.t(_RuleEditorText.playPageUrl),
+          helper: S.t(_RuleEditorText.playPageUrlHelper),
         ),
         EditorTextField(
           controller: chapterApiPageQueryController,
-          label: _RuleEditorText.playPageQuery,
-          helper: _RuleEditorText.playPageQueryHelper,
+          label: S.t(_RuleEditorText.playPageQuery),
+          helper: S.t(_RuleEditorText.playPageQueryHelper),
           maxLines: 5,
         ),
       ];
@@ -1036,13 +1037,13 @@ class _PluginEditorPageState extends State<PluginEditorPage> {
       request: ApiRequestConfig(
         method: searchApiMethod,
         url: valueOf(searchApiURLController),
-        headers: _parseJsonMap(searchApiHeadersController, '搜索请求头'),
-        query: _parseJsonMap(searchApiQueryController, '搜索查询参数'),
+        headers: _parseJsonMap(searchApiHeadersController, S.t('搜索请求头')),
+        query: _parseJsonMap(searchApiQueryController, S.t('搜索查询参数')),
         bodyType: searchApiBodyType,
         body: _parseBody(
           searchApiBodyController,
           searchApiBodyType,
-          '搜索请求体',
+          S.t('搜索请求体'),
         ),
       ),
       listPath: valueOf(searchApiListPathController),
@@ -1052,7 +1053,7 @@ class _PluginEditorPageState extends State<PluginEditorPage> {
     );
     if (!shouldValidate) return config;
     if (config.request.url.isEmpty) {
-      throw const FormatException('搜索请求地址不能为空');
+      throw FormatException(S.t('搜索请求地址不能为空'));
     }
     const ApiRuleStrategy()
       ..prepareRequest(config.request, const {'keyword': 'test'})
@@ -1064,19 +1065,19 @@ class _PluginEditorPageState extends State<PluginEditorPage> {
     final pageUrl = chapterApiPageURLController.text.trim();
     final variablesRaw = _parseJsonMap(
       chapterApiVariablesController,
-      '选集响应变量',
+      S.t('选集响应变量'),
     );
     final config = ApiChapterConfig(
       request: ApiRequestConfig(
         method: chapterApiMethod,
         url: chapterApiURLController.text.trim(),
-        headers: _parseJsonMap(chapterApiHeadersController, '选集请求头'),
-        query: _parseJsonMap(chapterApiQueryController, '选集查询参数'),
+        headers: _parseJsonMap(chapterApiHeadersController, S.t('选集请求头')),
+        query: _parseJsonMap(chapterApiQueryController, S.t('选集查询参数')),
         bodyType: chapterApiBodyType,
         body: _parseBody(
           chapterApiBodyController,
           chapterApiBodyType,
-          '选集请求体',
+          S.t('选集请求体'),
         ),
       ),
       format: chapterApiFormat,
@@ -1099,13 +1100,13 @@ class _PluginEditorPageState extends State<PluginEditorPage> {
               url: pageUrl,
               query: _parseJsonMap(
                 chapterApiPageQueryController,
-                '播放页查询参数',
+                S.t('播放页查询参数'),
               ),
             ),
     );
     if (chapterMode != RuleMode.api) return config;
     if (config.request.url.isEmpty) {
-      throw const FormatException('选集请求地址不能为空');
+      throw FormatException(S.t('选集请求地址不能为空'));
     }
     const ApiRuleStrategy()
       ..prepareRequest(config.request, const {'source': 'test'})
@@ -1120,7 +1121,7 @@ class _PluginEditorPageState extends State<PluginEditorPage> {
     final text = controller.text.trim();
     if (text.isEmpty) return <String, dynamic>{};
     final value = jsonDecode(text);
-    if (value is! Map) throw FormatException('$label 必须是 JSON 对象');
+    if (value is! Map) throw FormatException(S.f('{} 必须是 JSON 对象', [label]));
     return value.map((key, value) => MapEntry(key.toString(), value));
   }
 
@@ -1136,10 +1137,10 @@ class _PluginEditorPageState extends State<PluginEditorPage> {
     try {
       value = jsonDecode(text);
     } on FormatException catch (error) {
-      throw FormatException('$label 不是有效 JSON：${error.message}');
+      throw FormatException(S.f('{} 不是有效 JSON：{}', [label, error.message]));
     }
     if (bodyType == ApiBodyType.form && value is! Map) {
-      throw FormatException('$label 在表单模式下必须是 JSON 对象');
+      throw FormatException(S.f('{} 在表单模式下必须是 JSON 对象', [label]));
     }
     return value;
   }

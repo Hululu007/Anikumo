@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:anikumo/bean/dialog/material_bottom_sheet.dart';
 import 'package:anikumo/bean/widget/tonal_card.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
 
@@ -18,9 +19,12 @@ double normalizeDanmakuTimeOffset(double value) {
 
 String formatDanmakuTimeOffset(double value) {
   if (value == 0) {
-    return '无偏移';
+    return S.t('无偏移');
   }
-  return '${value > 0 ? '延后' : '提前'} ${_formatDanmakuOffsetDuration(value)}';
+  return S.f('{} {}', [
+    value > 0 ? S.t('延后') : S.t('提前'),
+    _formatDanmakuOffsetDuration(value),
+  ]);
 }
 
 String _formatDanmakuOffsetDuration(double value) {
@@ -82,8 +86,8 @@ class _DanmakuTimeOffsetSheetState extends State<DanmakuTimeOffsetSheet> {
       mainAxisSize: MainAxisSize.min,
       children: [
         MaterialBottomSheetHeader(
-          title: '弹幕时间校准',
-          description: '弹幕出现太早就延后，太晚就提前。',
+          title: S.t('弹幕时间校准'),
+          description: S.t('弹幕出现太早就延后，太晚就提前。'),
           onClose: () => Navigator.of(context).pop(),
         ),
         Flexible(
@@ -94,13 +98,16 @@ class _DanmakuTimeOffsetSheetState extends State<DanmakuTimeOffsetSheet> {
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(children: [
-                  Text(_offset == 0 ? '与视频同步' : (_offset > 0 ? '延后' : '提前'),
+                  Text(
+                      _offset == 0
+                          ? S.t('与视频同步')
+                          : (_offset > 0 ? S.t('延后') : S.t('提前')),
                       style: theme.textTheme.labelLarge
                           ?.copyWith(color: colors.onSurfaceVariant)),
                   const SizedBox(height: 8),
                   Row(children: [
                     IconButton.filledTonal(
-                      tooltip: '提前 1 秒',
+                      tooltip: S.t('提前 1 秒'),
                       onPressed: _offset > _minDanmakuTimeOffset
                           ? () => _updateOffset(_offset - 1)
                           : null,
@@ -116,7 +123,7 @@ class _DanmakuTimeOffsetSheetState extends State<DanmakuTimeOffsetSheet> {
                           )),
                     )),
                     IconButton.filledTonal(
-                      tooltip: '延后 1 秒',
+                      tooltip: S.t('延后 1 秒'),
                       onPressed: _offset < _maxDanmakuTimeOffset
                           ? () => _updateOffset(_offset + 1)
                           : null,
@@ -135,8 +142,8 @@ class _DanmakuTimeOffsetSheetState extends State<DanmakuTimeOffsetSheet> {
                   Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('提前 3 分钟', style: theme.textTheme.labelSmall),
-                        Text('延后 3 分钟', style: theme.textTheme.labelSmall),
+                        Text(S.t('提前 3 分钟'), style: theme.textTheme.labelSmall),
+                        Text(S.t('延后 3 分钟'), style: theme.textTheme.labelSmall),
                       ]),
                 ]),
               ),
@@ -144,7 +151,7 @@ class _DanmakuTimeOffsetSheetState extends State<DanmakuTimeOffsetSheet> {
             const SizedBox(height: 12),
             TextButton(
               onPressed: _offset != 0 ? () => _updateOffset(0) : null,
-              child: const Text('恢复同步'),
+              child: Text(S.t('恢复同步')),
             ),
           ]),
         )),

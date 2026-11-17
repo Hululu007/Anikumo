@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/modules/history/history_module.dart';
 
 /// Batch 233 （观影报告 pack): watch statistics computed
@@ -86,8 +87,8 @@ class AnimeWatchStats {
 /// "12 小时 34 分钟" style formatting for the report.
 String formatWatchDuration(Duration d) {
   if (d.inHours >= 1) {
-    return '${d.inHours} 小时 ${d.inMinutes % 60} 分钟';
+    return S.f('{} 小时 {} 分钟', [d.inHours, d.inMinutes % 60]);
   }
-  if (d.inMinutes >= 1) return '${d.inMinutes} 分钟';
-  return '${d.inSeconds} 秒';
+  if (d.inMinutes >= 1) return S.f('{} 分钟', [d.inMinutes]);
+  return S.f('{} 秒', [d.inSeconds]);
 }

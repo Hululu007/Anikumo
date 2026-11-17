@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:anikumo/pages/onboarding/onboarding_step_layout.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class UpdateSourceStep extends StatelessWidget {
   const UpdateSourceStep({
@@ -18,8 +19,8 @@ class UpdateSourceStep extends StatelessWidget {
           icon: AnikumoIcons.system_update_rounded,
           shape: OnboardingIconShape.cookie,
         ),
-        title: '以你的方式更新',
-        subtitle: '选择适合你的更新来源，让 anikumo 保持最新。',
+        title: S.t('以你的方式更新'),
+        subtitle: S.t('选择适合你的更新来源，让 anikumo 保持最新。'),
         child: RadioGroup<bool>(
           groupValue: useGithubUpdate,
           onChanged: (value) {
@@ -31,7 +32,7 @@ class UpdateSourceStep extends StatelessWidget {
               _OptionCard(
                 icon: AnikumoIcons.rocket_launch_rounded,
                 title: 'GitHub',
-                description: '在应用内检查并获取新版本，适合大多数用户。',
+                description: S.t('在应用内检查并获取新版本，适合大多数用户。'),
                 value: true,
                 selected: useGithubUpdate,
                 recommended: true,
@@ -40,11 +41,11 @@ class UpdateSourceStep extends StatelessWidget {
               _OptionCard(
                 icon: AnikumoIcons.storefront_rounded,
                 title: 'F-Droid',
-                description: '由 F-Droid 商店管理更新，应用内不再自动检查。',
+                description: S.t('由 F-Droid 商店管理更新，应用内不再自动检查。'),
                 value: false,
                 selected: !useGithubUpdate,
               ),
-              const OnboardingHint(text: '之后也可以在 关于 → 自动检查更新 中修改。'),
+              OnboardingHint(text: S.t('之后也可以在 关于 → 自动检查更新 中修改。')),
             ],
           ),
         ),
@@ -112,7 +113,7 @@ class _OptionCard extends StatelessWidget {
                   decoration: ShapeDecoration(
                       color: colors.tertiaryContainer,
                       shape: const StadiumBorder()),
-                  child: Text('推荐',
+                  child: Text(S.t('推荐'),
                       style: theme.textTheme.labelMedium
                           ?.copyWith(color: colors.onTertiaryContainer)),
                 ),

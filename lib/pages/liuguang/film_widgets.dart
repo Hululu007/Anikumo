@@ -7,6 +7,8 @@ import 'package:flutter_modular/flutter_modular.dart';
 import 'package:liuguang_core/liuguang_core.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
 import 'package:anikumo/bean/widget/zone_switcher.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
+import 'package:anikumo/services/i18n/film_vocab_i18n.dart';
 import 'package:anikumo/services/liuguang/bangumi_film.dart';
 import 'package:anikumo/services/liuguang/cms_api_source.dart';
 import 'package:anikumo/services/liuguang/film_prefs.dart';
@@ -249,19 +251,21 @@ class FilmKindTag extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
-        isLive
-            ? '直播'
-            : isManju
-            ? '漫剧'
-            : isShortDrama
-            ? '短剧'
-            : isAnime
-            ? '动漫'
-            : isVariety
-            ? '综艺'
-            : isSeries
-            ? '电视剧'
-            : '电影',
+        filmKindLabel(
+          isLive
+              ? '直播'
+              : isManju
+              ? '漫剧'
+              : isShortDrama
+              ? '短剧'
+              : isAnime
+              ? '动漫'
+              : isVariety
+              ? '综艺'
+              : isSeries
+              ? '电视剧'
+              : '电影',
+        ),
         style: const TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w800,
@@ -868,7 +872,7 @@ class _FilmSourceSheetState extends State<FilmSourceSheet> {
   @override
   Widget build(BuildContext context) {
     final service = VideoEngineService.instance;
-    var currentName = '当前接口';
+    var currentName = S.t('当前接口');
     for (final s in service.sources) {
       if (s.id == widget.current.sourceId) currentName = s.name;
     }
@@ -881,14 +885,14 @@ class _FilmSourceSheetState extends State<FilmSourceSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '切换接口',
+              S.t('切换接口'),
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 4),
             Text(
-              '同一部作品在其他接口上的版本；收藏与进度按各自接口分别记录。',
+              S.t('同一部作品在其他接口上的版本；收藏与进度按各自接口分别记录。'),
               style: TextStyle(color: variant, fontSize: 12.5),
             ),
             const SizedBox(height: 12),
@@ -897,8 +901,8 @@ class _FilmSourceSheetState extends State<FilmSourceSheet> {
               leading: const Icon(AnikumoIcons.dns_rounded),
               title: Text(currentName),
               subtitle: Text(widget.current.title),
-              trailing: const Chip(
-                label: Text('当前'),
+              trailing: Chip(
+                label: Text(S.t('当前')),
                 visualDensity: VisualDensity.compact,
               ),
             ),
@@ -935,7 +939,9 @@ class _FilmSourceSheetState extends State<FilmSourceSheet> {
                     ),
                     const SizedBox(width: 9),
                     Text(
-                      _versions.isEmpty ? '正在搜索其他接口…' : '仍在搜索其他接口…',
+                      _versions.isEmpty
+                          ? S.t('正在搜索其他接口…')
+                          : S.t('仍在搜索其他接口…'),
                       style: TextStyle(color: variant, fontSize: 12.5),
                     ),
                   ],
@@ -944,7 +950,7 @@ class _FilmSourceSheetState extends State<FilmSourceSheet> {
             else if (_versions.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                child: Text('其他接口里没有找到同名作品。', style: TextStyle(color: variant)),
+                child: Text(S.t('其他接口里没有找到同名作品。'), style: TextStyle(color: variant)),
               ),
           ],
         ),

@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:anikumo/bbcode/bbcode_widget.dart';
 import 'package:anikumo/bean/widget/bangumi_avatar.dart';
@@ -60,7 +61,7 @@ class _UserCommentsCardState extends State<UserCommentsCard> {
                 children: [
                   Icon(AnikumoIcons.forum_outlined, size: 16, color: colors.primary),
                   const SizedBox(width: 8),
-                  Text('${replies.length} 条回复',
+                  Text(S.f('{} 条回复', [replies.length]),
                       style: type.labelLarge?.copyWith(color: colors.primary)),
                 ],
               ),
@@ -129,8 +130,8 @@ class _UserCommentsCardState extends State<UserCommentsCard> {
                       child: const Icon(AnikumoIcons.expand_more_rounded, size: 20),
                     ),
                     label: Text(_expanded
-                        ? '收起回复'
-                        : '展开其余 ${replies.length - _previewCount} 条回复'),
+                        ? S.t('收起回复')
+                        : S.f('展开其余 {} 条回复', [replies.length - _previewCount])),
                   ),
                 ),
               ),
@@ -204,7 +205,7 @@ class _CommentBody extends StatelessWidget {
         height: 1.65,
       ),
       child: content.isEmpty
-          ? Text('该评论已被删除',
+          ? Text(S.t('该评论已被删除'),
               style: TextStyle(color: theme.colorScheme.onSurfaceVariant))
           : BBCodeWidget(
               bbcode: content,

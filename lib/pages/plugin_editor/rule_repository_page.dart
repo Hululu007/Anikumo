@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:anikumo/bean/dialog/dialog_helper.dart';
 import 'package:anikumo/plugins/plugins.dart';
@@ -63,9 +64,7 @@ class _RuleRepositoryPageState extends State<RuleRepositoryPage> {
   Future<void> _load() async {
     final base = RuleRepository.normalizeBase(_address.text);
     if (base == null) {
-      setState(() => _error =
-          '这不像仓库地址。支持 raw 目录地址（内含 index.json），'
-          '或 GitHub 仓库地址，如 github.com/用户/仓库。');
+      setState(() => _error = S.t('这不像仓库地址。支持 raw 目录地址（内含 index.json），或 GitHub 仓库地址，如 github.com/用户/仓库。'));
       return;
     }
     setState(() {
@@ -83,13 +82,13 @@ class _RuleRepositoryPageState extends State<RuleRepositoryPage> {
         _loading = false;
       });
       if (catalog.items.isEmpty) {
-        setState(() => _error = '仓库目录是空的，没有可导入的规则。');
+        setState(() => _error = S.t('仓库目录是空的，没有可导入的规则。'));
       }
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = '加载仓库失败：${friendlyError(e)}';
+        _error = S.f('加载仓库失败：{}', [friendlyError(e)]);
       });
     }
   }
@@ -137,7 +136,7 @@ class _RuleRepositoryPageState extends State<RuleRepositoryPage> {
       }
       done += chunk.length;
       if (!mounted) return;
-      setState(() => _progress = '已下载 $done/${names.length}');
+      setState(() => _progress = S.f('已下载 {}/{}', [done, names.length]));
     }
     if (plugins.isNotEmpty) {
       await widget.controller.updatePlugins(plugins);
@@ -150,9 +149,8 @@ class _RuleRepositoryPageState extends State<RuleRepositoryPage> {
     });
     AnikumoDialog.showToast(
       message: failures.isEmpty
-          ? '已导入 ${plugins.length} 条规则'
-          : '已导入 ${plugins.length} 条，失败 ${failures.length} 条'
-              '（${failures.take(3).join('、')}）',
+          ? S.f('已导入 {} 条规则', [plugins.length])
+          : S.f('已导入 {} 条，失败 {} 条（{}）', [plugins.length, failures.length, failures.take(3).join('、')]),
     );
   }
 
@@ -162,7 +160,7 @@ class _RuleRepositoryPageState extends State<RuleRepositoryPage> {
     final colors = theme.colorScheme;
     final installed = _installedKeys;
     return Scaffold(
-      appBar: AppBar(title: const Text('规则仓库')),
+      appBar: AppBar(title: Text(S.t('规则仓库'))),
       body: SafeArea(
         top: false,
         child: Align(
@@ -177,8 +175,7 @@ class _RuleRepositoryPageState extends State<RuleRepositoryPage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        '仓库是一个集中存放规则文件的地址。填入后这里会列出'
-                        '仓库里的全部规则，勾选即可批量导入，不必再一条条添加。',
+                        S.t('仓库是一个集中存放规则文件的地址。填入后这里会列出仓库里的全部规则，勾选即可批量导入，不必再一条条添加。'),
                         style: theme.textTheme.bodyMedium
                             ?.copyWith(color: colors.onSurfaceVariant),
                       ),
@@ -187,11 +184,11 @@ class _RuleRepositoryPageState extends State<RuleRepositoryPage> {
                         controller: _address,
                         keyboardType: TextInputType.url,
                         decoration: InputDecoration(
-                          labelText: '仓库地址',
-                          hintText: 'github.com/用户/仓库 或 raw 目录地址',
+                          labelText: S.t('仓库地址'),
+                          hintText: S.t('github.com/用户/仓库 或 raw 目录地址'),
                           border: const OutlineInputBorder(),
                           suffixIcon: IconButton(
-                            tooltip: '加载仓库',
+                            tooltip: S.t('加载仓库'),
                             onPressed: _loading ? null : _load,
                             icon: const Icon(AnikumoIcons.refresh_rounded),
                           ),
@@ -201,7 +198,7 @@ class _RuleRepositoryPageState extends State<RuleRepositoryPage> {
                       if (_loadedBase != null) ...[
                         const SizedBox(height: 6),
                         Text(
-                          '已加载：${_loadedBase}index.json（共 ${_items.length} 条）',
+                          S.f('已加载：{}index.json（共 {} 条）', [_loadedBase, _items.length]),
                           style: theme.textTheme.bodySmall
                               ?.copyWith(color: colors.outline),
                         ),
@@ -227,7 +224,7 @@ class _RuleRepositoryPageState extends State<RuleRepositoryPage> {
                                         strokeWidth: 2),
                                   )
                                 : const Icon(AnikumoIcons.cloud_download_outlined),
-                            label: Text(_loading ? '加载中…' : '加载仓库'),
+                            label: Text(_loading ? S.t('加载中…') : S.t('加载仓库')),
                           ),
                           const Spacer(),
                           if (_items.isNotEmpty) ...[
@@ -236,13 +233,13 @@ class _RuleRepositoryPageState extends State<RuleRepositoryPage> {
                                   ? null
                                   : () => setState(() => _selected
                                       .addAll(_items.map((e) => e.name))),
-                              child: const Text('全选'),
+                              child: Text(S.t('全选')),
                             ),
                             TextButton(
                               onPressed: _importing
                                   ? null
                                   : () => setState(_selected.clear),
-                              child: const Text('清空'),
+                              child: Text(S.t('清空')),
                             ),
                           ],
                         ],
@@ -258,8 +255,8 @@ class _RuleRepositoryPageState extends State<RuleRepositoryPage> {
                             padding: const EdgeInsets.all(32),
                             child: Text(
                               _loading
-                                  ? '正在读取仓库目录…'
-                                  : '填入仓库地址并点「加载仓库」，规则会列在这里。',
+                                  ? S.t('正在读取仓库目录…')
+                                  : S.t('填入仓库地址并点「加载仓库」，规则会列在这里。'),
                               textAlign: TextAlign.center,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                   color: colors.onSurfaceVariant),
@@ -297,7 +294,7 @@ class _RuleRepositoryPageState extends State<RuleRepositoryPage> {
                                             BorderRadius.circular(6),
                                       ),
                                       child: Text(
-                                        '已安装',
+                                        S.t('已安装'),
                                         style: theme.textTheme.labelSmall
                                             ?.copyWith(
                                           color: colors.onTertiaryContainer,
@@ -338,8 +335,8 @@ class _RuleRepositoryPageState extends State<RuleRepositoryPage> {
                               : _importSelected,
                           icon: const Icon(AnikumoIcons.download_rounded),
                           label: Text(_importing
-                              ? '导入中…'
-                              : '导入所选（${_selected.length} 条）'),
+                              ? S.t('导入中…')
+                              : S.f('导入所选（{} 条）', [_selected.length])),
                         ),
                       ],
                     ),

@@ -13,6 +13,7 @@ import 'package:anikumo/pages/novel/novel_reader_page.dart';
 import 'package:anikumo/pages/novel/novel_rss_page.dart';
 import 'package:anikumo/pages/novel/novel_search_page.dart';
 import 'package:anikumo/bean/theme/violet_glass.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/pages/route_error_page.dart';
 
 /// The 小说专区 module (same transition language as manga).
@@ -58,7 +59,7 @@ final novelModule = createModule(
         child: (context, state) {
           final args = state.arguments;
           if (args is! String) {
-            return const RouteErrorPage(message: '书源参数无效，请返回后重新打开。');
+            return RouteErrorPage(message: S.t('书源参数无效，请返回后重新打开。'));
           }
           return VioletZone(child: NovelSourcePage(sourceId: args));
         },
@@ -69,7 +70,7 @@ final novelModule = createModule(
         child: (context, state) {
           final args = state.arguments;
           if (args is! NovelCategoryArgs) {
-            return const RouteErrorPage(message: '分类参数无效，请返回后重新打开。');
+            return RouteErrorPage(message: S.t('分类参数无效，请返回后重新打开。'));
           }
           return VioletZone(child: NovelCategoryPage(args: args));
         },
@@ -80,7 +81,7 @@ final novelModule = createModule(
         child: (context, state) {
           final novel = state.arguments;
           if (novel is! NovelItem) {
-            return const RouteErrorPage(message: '小说详情参数无效，请返回后重新打开。');
+            return RouteErrorPage(message: S.t('小说详情参数无效，请返回后重新打开。'));
           }
           return VioletZone(child: NovelDetailPage(novel: novel));
         },
@@ -97,7 +98,7 @@ final novelModule = createModule(
         child: (context, state) {
           final args = state.arguments;
           if (args is! String) {
-            return const RouteErrorPage(message: '书源参数无效，请返回后重新打开。');
+            return RouteErrorPage(message: S.t('书源参数无效，请返回后重新打开。'));
           }
           return VioletZone(child: NovelLoginPage(sourceId: args));
         },
@@ -126,7 +127,7 @@ final novelModule = createModule(
         child: (context, state) {
           final args = state.arguments;
           if (args is! NovelReaderArgs) {
-            return const RouteErrorPage(message: '阅读参数无效，请返回后重新打开。');
+            return RouteErrorPage(message: S.t('阅读参数无效，请返回后重新打开。'));
           }
           return VioletZone(child: NovelReaderPage(args: args));
         },
@@ -137,7 +138,7 @@ final novelModule = createModule(
         child: (context, state) {
           final args = state.arguments;
           if (args is! String) {
-            return const RouteErrorPage(message: '订阅源参数无效，请返回后重新打开。');
+            return RouteErrorPage(message: S.t('订阅源参数无效，请返回后重新打开。'));
           }
           return VioletZone(child: RssArticlesPage(sourceId: args));
         },
@@ -148,7 +149,7 @@ final novelModule = createModule(
         child: (context, state) {
           final args = state.arguments;
           if (args is! RssReaderArgs) {
-            return const RouteErrorPage(message: '订阅文章参数无效，请返回后重新打开。');
+            return RouteErrorPage(message: S.t('订阅文章参数无效，请返回后重新打开。'));
           }
           return VioletZone(child: RssReaderPage(args: args));
         },

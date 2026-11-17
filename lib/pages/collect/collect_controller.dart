@@ -10,6 +10,7 @@ import 'package:anikumo/services/sync/webdav.dart';
 import 'package:anikumo/repositories/collect_crud_repository.dart';
 import 'package:mobx/mobx.dart';
 import 'package:anikumo/services/logging/logger.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 part 'collect_controller.g.dart';
 
@@ -113,28 +114,28 @@ abstract class _CollectController with Store {
     return AnikumoDialog.show<_BangumiDeleteSyncAction>(
       clickMaskDismiss: true,
       builder: (context) => AlertDialog(
-        title: const Text('Bangumi 不支持删除收藏'),
-        content: const Text(
-          '因为安全考虑，Bangumi 未提供删除接口，您可以选择把本地和远端标记为“抛弃”，或者选择仅删除本地收藏并打开网页后手动删除 Bangumi 数据。',
+        title: Text(S.t('Bangumi 不支持删除收藏')),
+        content: Text(
+          S.t('因为安全考虑，Bangumi 未提供删除接口，您可以选择把本地和远端标记为“抛弃”，或者选择仅删除本地收藏并打开网页后手动删除 Bangumi 数据。'),
         ),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.of(context).pop(_BangumiDeleteSyncAction.cancel);
             },
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop(_BangumiDeleteSyncAction.openWeb);
             },
-            child: const Text('打开网页'),
+            child: Text(S.t('打开网页')),
           ),
           FilledButton(
             onPressed: () {
               Navigator.of(context).pop(_BangumiDeleteSyncAction.markAbandoned);
             },
-            child: const Text('标记为抛弃'),
+            child: Text(S.t('标记为抛弃')),
           ),
         ],
       ),
@@ -147,7 +148,7 @@ abstract class _CollectController with Store {
       await launchUrl(url, mode: LaunchMode.externalApplication);
       return;
     }
-    AnikumoDialog.showToast(message: '无法打开 Bangumi 网页');
+    AnikumoDialog.showToast(message: S.t('无法打开 Bangumi 网页'));
   }
 
   Future<bool> _syncBangumiCollectIfEnabled(
@@ -163,15 +164,15 @@ abstract class _CollectController with Store {
     final bangumi = BangumiSyncService();
     try {
       if (showImmediateSyncToast) {
-        AnikumoDialog.showToast(message: '正在同步到 Bangumi...');
+        AnikumoDialog.showToast(message: S.t('正在同步到 Bangumi...'));
       }
       final bool synced =
           await bangumi.syncCollectibleWhenIdle(bangumiId, localType);
       if (synced && showImmediateSyncToast) {
-        AnikumoDialog.showToast(message: '已同步到 Bangumi');
+        AnikumoDialog.showToast(message: S.t('已同步到 Bangumi'));
         return true;
       } else if (!synced) {
-        AnikumoDialog.showToast(message: '同步到 Bangumi 失败，已取消本次状态修改');
+        AnikumoDialog.showToast(message: S.t('同步到 Bangumi 失败，已取消本次状态修改'));
         AnikumoLogger().w(
           'Bangumi: immediate collect sync did not complete. bangumiId=$bangumiId, type=$localType',
         );
@@ -180,8 +181,8 @@ abstract class _CollectController with Store {
       return true;
     } catch (e, stackTrace) {
       AnikumoDialog.showToast(
-          message:
-              '同步到 Bangumi 失败，已取消本次状态修改：${BangumiSyncService.describeError(e)}');
+          message: S.f('同步到 Bangumi 失败，已取消本次状态修改：{}',
+              [BangumiSyncService.describeError(e)]));
       AnikumoLogger().e(
         'Bangumi: immediate collect sync failed. bangumiId=$bangumiId, type=$localType',
         error: e,
@@ -208,17 +209,17 @@ abstract class _CollectController with Store {
     final bool webDavCollectEnable =
         GStorage.getSetting(SettingsKeys.webDavEnableCollect);
     if (!webDavCollectEnable) {
-      _reportSyncError('请开启 WebDAV 收藏同步', onError);
+      _reportSyncError(S.t('请开启 WebDAV 收藏同步'), onError);
       return false;
     }
     if (!WebDav().initialized) {
-      _reportSyncError('WebDAV 未连接，请检查配置', onError);
+      _reportSyncError(S.t('WebDAV 未连接，请检查配置'), onError);
       return false;
     }
     try {
       await WebDav().ping();
     } catch (e) {
-      _reportSyncError('WebDAV 连接失败，请检查网络或配置', onError, error: e);
+      _reportSyncError(S.t('WebDAV 连接失败，请检查网络或配置'), onError, error: e);
       return false;
     }
     return true;
@@ -231,7 +232,7 @@ abstract class _CollectController with Store {
     try {
       await WebDav().syncCollectibles();
     } catch (e) {
-      _reportSyncError('WebDAV 同步失败，请检查连接', onError, error: e);
+      _reportSyncError(S.t('WebDAV 同步失败，请检查连接'), onError, error: e);
       return false;
     }
     loadCollectibles();
@@ -246,7 +247,7 @@ abstract class _CollectController with Store {
     try {
       await WebDav().updateCollectibles();
     } catch (e) {
-      _reportSyncError('WebDAV 回传失败，请检查连接', onError, error: e);
+      _reportSyncError(S.t('WebDAV 回传失败，请检查连接'), onError, error: e);
       return false;
     }
     return true;
@@ -281,7 +282,7 @@ abstract class _CollectController with Store {
   }) async {
     final bool syncEnable = GStorage.getSetting(SettingsKeys.bangumiSyncEnable);
     if (!syncEnable) {
-      _reportSyncError('请开启 Bangumi 同步', onError);
+      _reportSyncError(S.t('请开启 Bangumi 同步'), onError);
       return false;
     }
 

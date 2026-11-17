@@ -4,6 +4,7 @@ import 'package:anikumo/bean/dialog/dialog_helper.dart';
 import 'package:anikumo/bean/settings/network_mirror_settings.dart';
 import 'package:anikumo/bean/settings/settings_detail_scaffold.dart';
 import 'package:anikumo/bean/settings/settings_list.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/network/proxy_manager.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
@@ -18,7 +19,7 @@ class ProxySettingsPage extends StatefulWidget {
 class _ProxySettingsPageState extends State<ProxySettingsPage> {
   Future<void> _setProxyEnabled(bool value) async {
     if (value && !GStorage.getSetting(SettingsKeys.proxyConfigured)) {
-      AnikumoDialog.showToast(message: '请先在代理配置中完成测试');
+      AnikumoDialog.showToast(message: S.t('请先在代理配置中完成测试'));
       return;
     }
     await GStorage.putSetting(SettingsKeys.proxyEnable, value);
@@ -34,18 +35,18 @@ class _ProxySettingsPageState extends State<ProxySettingsPage> {
   Widget build(BuildContext context) {
     final proxyEnabled = GStorage.getSetting(SettingsKeys.proxyEnable);
     return SettingsDetailScaffold(
-      title: const Text('网络设置'),
+      title: Text(S.t('网络设置')),
       body: SettingsList(
         sections: [
           const NetworkMirrorSettings(),
           SettingsSection(
-            title: const Text('代理'),
+            title: Text(S.t('代理')),
             tiles: [
               SettingsTile.switchTile(
                 leading: AnikumoIcons.vpn_key_rounded,
                 onToggle: (value) => _setProxyEnabled(value ?? !proxyEnabled),
-                title: const Text('启用代理'),
-                description: const Text('启用后网络请求将通过代理服务器'),
+                title: Text(S.t('启用代理')),
+                description: Text(S.t('启用后网络请求将通过代理服务器')),
                 initialValue: proxyEnabled,
               ),
               SettingsTile(
@@ -54,8 +55,8 @@ class _ProxySettingsPageState extends State<ProxySettingsPage> {
                   await context.pushNamed('/settings/proxy/editor');
                   if (mounted) setState(() {});
                 },
-                title: const Text('代理配置'),
-                description: const Text('配置代理服务器地址和认证信息'),
+                title: Text(S.t('代理配置')),
+                description: Text(S.t('配置代理服务器地址和认证信息')),
               ),
             ],
           ),

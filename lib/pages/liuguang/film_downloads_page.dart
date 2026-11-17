@@ -6,6 +6,7 @@ import 'package:flutter_modular/flutter_modular.dart';
 import 'package:liuguang_download/liuguang_download.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
 import 'package:anikumo/pages/liuguang/film_widgets.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/liuguang/film_downloads.dart';
 import 'package:anikumo/services/liuguang/film_playback_bridge.dart';
 import 'package:anikumo/services/liuguang/video_engine.dart';
@@ -75,18 +76,18 @@ class _FilmDownloadsPageState extends State<FilmDownloadsPage> {
     if (task.totalBytes > 0) {
       return '${fmt(task.downloadedBytes)} / ${fmt(task.totalBytes)}';
     }
-    return '已下载 ${fmt(task.downloadedBytes)}';
+    return S.f('已下载 {}', [fmt(task.downloadedBytes)]);
   }
 
   String _statusText(DownloadTask task) {
     return switch (task.status) {
-      DownloadStatus.queued => '排队中',
-      DownloadStatus.downloading => '下载中',
-      DownloadStatus.paused => '已暂停',
-      DownloadStatus.completed => '已完成',
+      DownloadStatus.queued => S.t('排队中'),
+      DownloadStatus.downloading => S.t('下载中'),
+      DownloadStatus.paused => S.t('已暂停'),
+      DownloadStatus.completed => S.t('已完成'),
       DownloadStatus.failed =>
-        '失败${task.error == null ? '' : '：${task.error}'}',
-      DownloadStatus.canceled => '已取消',
+        task.error == null ? S.t('失败') : S.f('失败：{}', [task.error]),
+      DownloadStatus.canceled => S.t('已取消'),
     };
   }
 
@@ -119,7 +120,7 @@ class _FilmDownloadsPageState extends State<FilmDownloadsPage> {
     }
     if (files.isEmpty) return;
     final service = VideoEngineService.instance;
-    var pluginName = '影视';
+    var pluginName = S.t('影视');
     for (final e in service.sources) {
       if (ref.mediaId.startsWith('${e.id}::')) {
         pluginName = e.name;
@@ -141,14 +142,14 @@ class _FilmDownloadsPageState extends State<FilmDownloadsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('下载')),
+      appBar: AppBar(title: Text(S.t('下载'))),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _tasks.isEmpty
-          ? const FilmEmptyState(
+          ? FilmEmptyState(
               icon: AnikumoIcons.download_rounded,
-              title: '还没有下载',
-              message: '在影片详情页选集下载后，任务会出现在这里。',
+              title: S.t('还没有下载'),
+              message: S.t('在影片详情页选集下载后，任务会出现在这里。'),
             )
           : ListView.separated(
               padding: const EdgeInsets.symmetric(vertical: 8),
@@ -196,25 +197,25 @@ class _FilmDownloadsPageState extends State<FilmDownloadsPage> {
           ),
           if (task.status == DownloadStatus.completed)
             IconButton(
-              tooltip: '离线播放',
+              tooltip: S.t('离线播放'),
               icon: const Icon(AnikumoIcons.play_circle_rounded),
               onPressed: () => _play(task),
             ),
           if (active)
             IconButton(
-              tooltip: '暂停',
+              tooltip: S.t('暂停'),
               icon: const Icon(AnikumoIcons.pause_rounded),
               onPressed: () => manager.pause(task.id),
             ),
           if (task.status == DownloadStatus.paused ||
               task.status == DownloadStatus.failed)
             IconButton(
-              tooltip: '继续下载',
+              tooltip: S.t('继续下载'),
               icon: const Icon(AnikumoIcons.play_arrow_rounded),
               onPressed: () => manager.resume(task.id),
             ),
           IconButton(
-            tooltip: '删除',
+            tooltip: S.t('删除'),
             icon: const Icon(AnikumoIcons.delete_outline_rounded),
             onPressed: () => _delete(task),
           ),

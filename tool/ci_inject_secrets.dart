@@ -25,6 +25,9 @@ const _danmuMask = [
 const _dandanMask = [
   0x41, 0x6e, 0x69, 0x6b, 0x75, 0x6d, 0x6f, 0x2d, 0x31, 0x39, 0x33,
 ];
+const _githubMask = [
+  0x41, 0x6e, 0x69, 0x6b, 0x75, 0x6d, 0x6f, 0x2d, 0x32, 0x35, 0x37,
+];
 
 String _encode(String raw, List<int> mask) {
   final bytes = utf8.encode(raw);
@@ -91,5 +94,16 @@ Future<void> main() async {
     file: 'lib/services/danmaku/dandan_key.dart',
     patternSource: r"const String kDandanEncodedKey = '[^']*';",
     declaration: 'const String kDandanEncodedKey',
+  );
+  // Release 1.1.0: the GitHub OAuth client id for the
+  // built-in GitHub sync login (same codec as the
+  // local packaging injector). Absent secret = the
+  // constant stays empty, exactly like the others.
+  await _inject(
+    envName: 'GITHUB_CLIENT_ID',
+    mask: _githubMask,
+    file: 'lib/services/profile/github_client_id.dart',
+    patternSource: r"const String kGithubEncodedClientId = '[^']*';",
+    declaration: 'const String kGithubEncodedClientId',
   );
 }

@@ -7,6 +7,7 @@ import 'package:flutter_inappwebview_platform_interface/flutter_inappwebview_pla
 import 'package:anikumo/bean/dialog/dialog.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
 import 'package:anikumo/services/profile/github_sync.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// Batch 258: GitHub sign-in lives on ONE in-app page —
 /// the device code sits in a banner over GitHub's own
@@ -95,16 +96,16 @@ class _GithubLoginPageState extends State<GithubLoginPage>
     switch (state) {
       case GithubPollState.authorized:
         _done = true;
-        AnikumoDialog.showToast(context: context, message: 'GitHub 已连接');
+        AnikumoDialog.showToast(context: context, message: S.t('GitHub 已连接'));
         Navigator.of(context).pop(true);
       case GithubPollState.pending:
         _schedule(code.intervalSeconds);
       case GithubPollState.slowDown:
         _schedule(code.intervalSeconds + 5);
       case GithubPollState.denied:
-        setState(() => _error = '已在 GitHub 上拒绝授权，关闭本页即可。');
+        setState(() => _error = S.t('已在 GitHub 上拒绝授权，关闭本页即可。'));
       case GithubPollState.expired:
-        setState(() => _error = '登录码已过期，点下方按钮重新获取。');
+        setState(() => _error = S.t('登录码已过期，点下方按钮重新获取。'));
       case GithubPollState.error:
         _schedule(code.intervalSeconds + 5);
     }
@@ -115,7 +116,7 @@ class _GithubLoginPageState extends State<GithubLoginPage>
     final theme = Theme.of(context);
     final code = _code;
     return Scaffold(
-      appBar: AppBar(title: const Text('GitHub 登录')),
+      appBar: AppBar(title: Text(S.t('GitHub 登录'))),
       body: Column(
         children: [
           if (_error != null)
@@ -125,7 +126,7 @@ class _GithubLoginPageState extends State<GithubLoginPage>
                 children: [
                   Text(_error!),
                   const SizedBox(height: 12),
-                  FilledButton(onPressed: _start, child: const Text('重新获取登录码')),
+                  FilledButton(onPressed: _start, child: Text(S.t('重新获取登录码'))),
                 ],
               ),
             )
@@ -143,7 +144,7 @@ class _GithubLoginPageState extends State<GithubLoginPage>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '在下方 GitHub 页面输入这串码并授权，完成后自动登录：',
+                          S.t('在下方 GitHub 页面输入这串码并授权，完成后自动登录：'),
                           style: theme.textTheme.bodySmall,
                         ),
                         SelectableText(
@@ -157,13 +158,13 @@ class _GithubLoginPageState extends State<GithubLoginPage>
                     ),
                   ),
                   IconButton(
-                    tooltip: '复制登录码',
+                    tooltip: S.t('复制登录码'),
                     icon: const Icon(AnikumoIcons.content_copy_rounded),
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: code.userCode));
                       AnikumoDialog.showToast(
                         context: context,
-                        message: '登录码已复制',
+                        message: S.t('登录码已复制'),
                       );
                     },
                   ),

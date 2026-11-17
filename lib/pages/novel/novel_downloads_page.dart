@@ -3,6 +3,7 @@ import 'package:flutter_modular/flutter_modular.dart';
 
 import '../../bean/dialog/dialog.dart';
 import '../../models/novel_item.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import '../../services/novel/novel_downloads.dart';
 import 'novel_widgets.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
@@ -70,17 +71,17 @@ class _NovelDownloadsPageState extends State<NovelDownloadsPage> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('下载管理'),
+        title: Text(S.t('下载管理')),
         actions: [
           if (_entries.isNotEmpty)
             IconButton(
               icon: const Icon(AnikumoIcons.delete_sweep_outlined),
-              tooltip: '清空全部下载',
+              tooltip: S.t('清空全部下载'),
               onPressed: () async {
                 await NovelDownloadStore.clearAll();
                 await _load();
                 if (context.mounted) {
-                  AnikumoDialog.showToast(message: '已清空全部下载');
+                  AnikumoDialog.showToast(message: S.t('已清空全部下载'));
                 }
               },
             ),
@@ -89,9 +90,9 @@ class _NovelDownloadsPageState extends State<NovelDownloadsPage> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _entries.isEmpty
-              ? const Center(
+              ? Center(
                   child: Text(
-                    '还没有下载的章节\n在小说详情页点章节旁的下载按钮',
+                    S.t('还没有下载的章节\n在小说详情页点章节旁的下载按钮'),
                     textAlign: TextAlign.center,
                   ),
                 )
@@ -100,7 +101,8 @@ class _NovelDownloadsPageState extends State<NovelDownloadsPage> {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                       child: Text(
-                        '共 ${_entries.length} 章 · 占用 $_sizeLabel',
+                        S.f('共 {} 章 · 占用 {}',
+                            [_entries.length, _sizeLabel]),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -119,10 +121,11 @@ class _NovelDownloadsPageState extends State<NovelDownloadsPage> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        subtitle: Text('${entry.blockCount} 段 · 离线可读'),
+                        subtitle:
+                            Text(S.f('{} 段 · 离线可读', [entry.blockCount])),
                         trailing: IconButton(
                           icon: const Icon(AnikumoIcons.delete_outline),
-                          tooltip: '删除这一章',
+                          tooltip: S.t('删除这一章'),
                           onPressed: () async {
                             await NovelDownloadStore.remove(entry);
                             await _load();

@@ -87,6 +87,97 @@ MonthlyReport computeMonthlyReport(
   );
 }
 
+/// One year of viewing, aggregated for the 观看年报
+/// (Batch 273, #9) — the yearly counterpart of
+/// [MonthlyReport], plus the distinct-title count and
+/// the busiest month that only make sense at year
+/// scale.
+class YearlyReport {
+  const YearlyReport({
+    required this.episodes,
+    required this.minutes,
+    required this.activeDays,
+    required this.titles,
+    required this.topTags,
+    required this.busiestMonth,
+  });
+
+  final int episodes;
+  final int minutes;
+  final int activeDays;
+
+  /// Distinct series with any activity that year.
+  final int titles;
+  final List<({String name, int count})> topTags;
+
+  /// Month (1–12) with the most activity, or 0.
+  final int busiestMonth;
+
+  static const YearlyReport empty = YearlyReport(
+    episodes: 0,
+    minutes: 0,
+    activeDays: 0,
+    titles: 0,
+    topTags: [],
+    busiestMonth: 0,
+  );
+}
+
+/// Pure aggregation over [histories] for one calendar
+/// year, mirroring [computeMonthlyReport]'s rules.
+YearlyReport computeYearlyReport(
+  List<History> histories, {
+  required int year,
+}) {
+  var episodes = 0;
+  var minutes = 0;
+  final days = <int>{};
+  final tagCounts = <String, int>{};
+  final monthCounts = List<int>.filled(13, 0);
+  final titleIds = <int>{};
+  for (final history in histories) {
+    var touchedThisYear = false;
+    for (final progress in history.progresses.values) {
+      final updatedMs = progress.effectiveUpdatedAtMs(history.lastWatchTime);
+      final updated = DateTime.fromMillisecondsSinceEpoch(updatedMs);
+      if (updated.year != year) continue;
+      touchedThisYear = true;
+      episodes += 1;
+      minutes += progress.progress.inMinutes;
+      days.add(updated.month * 100 + updated.day);
+      monthCounts[updated.month] += 1;
+    }
+    if (touchedThisYear) {
+      titleIds.add(history.bangumiItem.id);
+      for (final tag in history.bangumiItem.tags) {
+        if (tag.name.isEmpty) continue;
+        tagCounts[tag.name] = (tagCounts[tag.name] ?? 0) + 1;
+      }
+    }
+  }
+  if (episodes == 0) return YearlyReport.empty;
+  final topTags = tagCounts.entries
+      .map((entry) => (name: entry.key, count: entry.value))
+      .toList()
+    ..sort((a, b) => b.count.compareTo(a.count));
+  var busiestMonth = 0;
+  var best = 0;
+  for (var month = 1; month <= 12; month++) {
+    if (monthCounts[month] > best) {
+      best = monthCounts[month];
+      busiestMonth = month;
+    }
+  }
+  return YearlyReport(
+    episodes: episodes,
+    minutes: minutes,
+    activeDays: days.length,
+    titles: titleIds.length,
+    topTags: topTags.take(3).toList(),
+    busiestMonth: busiestMonth,
+  );
+}
+
 /// Episodes touched per calendar day for the last [days] days,
 /// keyed by date-only [DateTime], for the heatmap on the report page.
 /// Days without activity are present with a 0 count.

@@ -10,6 +10,7 @@ import 'package:anikumo/repositories/history_repository.dart';
 import 'package:anikumo/services/stats/watch_stats.dart';
 import 'package:anikumo/utils/constants.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// 观看统计 (hub 区二）: totals and a last-7-days chart computed from
 /// local playback history (see [computeWatchStats]).
@@ -21,11 +22,11 @@ class WatchStatsPage extends StatelessWidget {
     final histories = inject<IHistoryRepository>().getAllHistories();
     final stats = computeWatchStats(histories);
     return Scaffold(
-      appBar: const SysAppBar(title: Text('观看统计')),
+      appBar: SysAppBar(title: Text(S.t('观看统计'))),
       body: stats.totalEpisodes == 0
-          ? const GeneralEmptyState(
+          ? GeneralEmptyState(
               icon: AnikumoIcons.bar_chart_rounded,
-              title: '还没有观看记录',
+              title: S.t('还没有观看记录'),
             )
           : ListView(
               padding: const EdgeInsets.all(StyleString.pagePadding),
@@ -36,7 +37,7 @@ class WatchStatsPage extends StatelessWidget {
                       child: _StatTile(
                         icon: AnikumoIcons.play_circle_outline,
                         value: '${stats.totalEpisodes}',
-                        label: '看过的集数',
+                        label: S.t('看过的集数'),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -44,7 +45,7 @@ class WatchStatsPage extends StatelessWidget {
                       child: _StatTile(
                         icon: AnikumoIcons.schedule_outlined,
                         value: _formatMinutes(stats.totalMinutes),
-                        label: '观看时长',
+                        label: S.t('观看时长'),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -52,14 +53,14 @@ class WatchStatsPage extends StatelessWidget {
                       child: _StatTile(
                         icon: AnikumoIcons.movie_outlined,
                         value: '${stats.distinctAnime}',
-                        label: '看过的番剧',
+                        label: S.t('看过的番剧'),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: StyleString.sectionSpace),
                 Text(
-                  '最近 7 天',
+                  S.t('最近 7 天'),
                   style: Theme.of(context)
                       .textTheme
                       .titleMedium
@@ -83,7 +84,7 @@ class WatchStatsPage extends StatelessWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            '你最爱在星期${'一二三四五六日'[stats.mostWatchedWeekday - 1]}看番',
+                            S.f('你最爱在星期{}看番', [S.t('一二三四五六日'[stats.mostWatchedWeekday - 1])]),
                             style: Theme.of(context).textTheme.titleSmall,
                           ),
                         ),
@@ -97,10 +98,10 @@ class WatchStatsPage extends StatelessWidget {
   }
 
   static String _formatMinutes(int minutes) {
-    if (minutes < 60) return '$minutes 分钟';
+    if (minutes < 60) return S.f('{} 分钟', [minutes]);
     final hours = minutes ~/ 60;
     final rest = minutes % 60;
-    return rest == 0 ? '$hours 小时' : '$hours 小时 $rest 分';
+    return rest == 0 ? S.f('{} 小时', [hours]) : S.f('{} 小时 {} 分', [hours, rest]);
   }
 }
 
@@ -183,7 +184,7 @@ class _WeekChart extends StatelessWidget {
                 return Padding(
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
-                    dayLabel(index),
+                    S.t(dayLabel(index)),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 );

@@ -220,6 +220,11 @@ class MangaLibraryStore {
 
   static void _bump() => revision.value++;
 
+  /// Batch 274: a WebDAV zone sync replaced the
+  /// underlying settings strings wholesale; open pages
+  /// re-read through [revision].
+  static void bumpRevisionForSync() => _bump();
+
   MangaLibraryStore._();
 
   // Batch 16: parsed results are memoized against the raw JSON —

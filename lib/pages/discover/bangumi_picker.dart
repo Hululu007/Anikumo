@@ -7,6 +7,7 @@ import 'package:anikumo/repositories/history_repository.dart';
 import 'package:anikumo/services/library/user_library.dart';
 import 'package:anikumo/utils/constants.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// Candidates the user plausibly wants to file away: everything in
 /// their collections, plus everything in their watch history.
@@ -73,7 +74,7 @@ class _BangumiPickerSheetState extends State<_BangumiPickerSheet> {
               child: TextField(
                 autofocus: true,
                 decoration: InputDecoration(
-                  hintText: widget.title,
+                  hintText: S.t(widget.title),
                   prefixIcon: const Icon(AnikumoIcons.search),
                   border: const OutlineInputBorder(),
                   isDense: true,
@@ -83,7 +84,7 @@ class _BangumiPickerSheetState extends State<_BangumiPickerSheet> {
             ),
             Expanded(
               child: items.isEmpty
-                  ? const Center(child: Text('没有可选的番剧'))
+                  ? Center(child: Text(S.t('没有可选的番剧')))
                   : ListView.builder(
                       itemCount: items.length,
                       itemBuilder: (context, index) {
@@ -104,7 +105,7 @@ class _BangumiPickerSheetState extends State<_BangumiPickerSheet> {
                           ),
                           subtitle: item.ratingScore > 0
                               ? Text(
-                                  '评分 ${item.ratingScore.toStringAsFixed(1)}',
+                                  S.f('评分 {}', [item.ratingScore.toStringAsFixed(1)]),
                                 )
                               : null,
                           onTap: () => Navigator.of(context).pop(item),

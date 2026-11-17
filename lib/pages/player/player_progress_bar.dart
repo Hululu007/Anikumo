@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:anikumo/utils/format.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 // Metrics follow the defaults of the former audio_video_progress_bar.
 const double _thumbRadius = 8;
@@ -30,12 +31,18 @@ class PlayerProgressBar extends StatefulWidget {
     required this.onDragUpdate,
     required this.onDragEnd,
     required this.onSeek,
+    this.heatmap = const [],
   });
 
   final Duration progress;
   final Duration buffered;
   final Duration total;
   final bool sideLabels;
+
+  /// Batch 273 (#7): normalized danmaku density buckets
+  /// (0..1) drawn as a mini bar strip above the track;
+  /// empty hides the strip.
+  final List<double> heatmap;
   final VoidCallback onDragStart;
   final ValueChanged<Duration> onDragUpdate;
   final void Function(bool cancelled) onDragEnd;
@@ -154,7 +161,7 @@ class _PlayerProgressBarState extends State<PlayerProgressBar> {
             _buildPreview(context, info, track),
         child: Semantics(
           slider: true,
-          label: '播放进度',
+          label: S.t('播放进度'),
           value: _percent(current),
           increasedValue: _percent(current + _semanticStep),
           decreasedValue: _percent(current - _semanticStep),
@@ -193,6 +200,7 @@ class _PlayerProgressBarState extends State<PlayerProgressBar> {
                       buffered: _fractionOf(widget.buffered),
                       dragging: dragFraction != null,
                       color: color,
+                      heatmap: widget.heatmap,
                       textScaler: textScaler,
                       labels: labelSize == null
                           ? null
@@ -310,6 +318,7 @@ class _ProgressPainter extends CustomPainter {
     required this.color,
     required this.textScaler,
     required this.labels,
+    this.heatmap = const [],
   });
 
   final double inset;
@@ -319,11 +328,33 @@ class _ProgressPainter extends CustomPainter {
   final Color color;
   final TextScaler textScaler;
   final ({String position, String total})? labels;
+  final List<double> heatmap;
 
   @override
   void paint(Canvas canvas, Size size) {
     final track = _Track(width: size.width, inset: inset);
     final centerY = size.height / 2;
+    if (!track.isEmpty && heatmap.isNotEmpty) {
+      // Density strip: one mini bar per bucket along
+      // the top edge of the track area.
+      const stripHeight = 9.0;
+      final slot = (track.end - track.start) / heatmap.length;
+      final paint = Paint()..color = color.withValues(alpha: 0.55);
+      for (var i = 0; i < heatmap.length; i++) {
+        final value = heatmap[i].clamp(0.0, 1.0);
+        if (value <= 0) continue;
+        final barHeight = math.max(1.5, stripHeight * value);
+        canvas.drawRect(
+          Rect.fromLTWH(
+            track.start + slot * i + 0.5,
+            0,
+            math.max(1.0, slot - 1),
+            barHeight,
+          ),
+          paint,
+        );
+      }
+    }
     if (!track.isEmpty) {
       final bar = Paint()
         ..strokeCap = StrokeCap.round
@@ -366,5 +397,6 @@ class _ProgressPainter extends CustomPainter {
       oldDelegate.dragging != dragging ||
       oldDelegate.color != color ||
       oldDelegate.textScaler != textScaler ||
-      oldDelegate.labels != labels;
+      oldDelegate.labels != labels ||
+      oldDelegate.heatmap != heatmap;
 }

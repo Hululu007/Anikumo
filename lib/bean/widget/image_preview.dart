@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 
@@ -209,6 +210,7 @@ class _ImageViewerState extends State<ImageViewer> {
                 shape: BoxShape.circle,
               ),
               child: IconButton(
+                tooltip: S.t('关闭'),
                 onPressed: _closePreview,
                 icon: const Icon(AnikumoIcons.close, color: Colors.white),
               ),
@@ -265,9 +267,9 @@ class _ImageViewerState extends State<ImageViewer> {
     );
   }
 
-  Widget _buildErrorWidget() => const MediaErrorWidget(
-        title: '图片加载失败',
-        errMsg: '请检查网络连接，返回后重新打开图片。',
+  Widget _buildErrorWidget() => MediaErrorWidget(
+        title: S.t('图片加载失败'),
+        errMsg: S.t('请检查网络连接，返回后重新打开图片。'),
         icon: AnikumoIcons.broken_image_outlined,
       );
 

@@ -22,6 +22,7 @@ import 'package:anikumo/services/danmaku/builtin_danmu.dart';
 import 'package:anikumo/services/logging/logger.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 const _episodeToolThreshold = 25;
 const _episodeSegmentSize = 100;
@@ -136,7 +137,7 @@ class _DanmakuSourceSheetState extends State<_DanmakuSourceSheet> {
   Future<void> _searchAnime() async {
     final keyword = _keywordController.text.trim();
     if (keyword.isEmpty) {
-      setState(() => _error = '请输入番剧名称');
+      setState(() => _error = S.t('请输入番剧名称'));
       return;
     }
 
@@ -183,7 +184,7 @@ class _DanmakuSourceSheetState extends State<_DanmakuSourceSheet> {
         _loading = false;
         _animes = response.animes;
         _hasMore = response.hasMore;
-        if (response.animes.isEmpty) _error = '未找到番剧';
+        if (response.animes.isEmpty) _error = S.t('未找到番剧');
       });
     } catch (error) {
       AnikumoLogger().w('Danmaku source search failed', error: error);
@@ -196,8 +197,8 @@ class _DanmakuSourceSheetState extends State<_DanmakuSourceSheet> {
         var detail = error.toString();
         if (detail.length > 90) detail = '${detail.substring(0, 90)}…';
         _error = detail.contains('403')
-            ? '弹幕接口鉴权失败（403）'
-            : '搜索失败：$detail';
+            ? S.t('弹幕接口鉴权失败（403）')
+            : S.f('搜索失败：{}', [detail]);
       });
     }
   }
@@ -220,14 +221,14 @@ class _DanmakuSourceSheetState extends State<_DanmakuSourceSheet> {
       setState(() {
         _loading = false;
         _episodes = response.episodes;
-        if (_episodes.isEmpty) _error = '暂无分集';
+        if (_episodes.isEmpty) _error = S.t('暂无分集');
       });
     } catch (error) {
       AnikumoLogger().w('Danmaku episode list failed to load', error: error);
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = '分集加载失败';
+        _error = S.t('分集加载失败');
       });
     }
   }
@@ -242,12 +243,12 @@ class _DanmakuSourceSheetState extends State<_DanmakuSourceSheet> {
       widget.danmakuController.setDanmakuEnabled(hasDanmakus);
       AnikumoDialog.dismiss(context: context);
       AnikumoDialog.showToast(
-        message: hasDanmakus ? '已切换弹幕源' : '暂无弹幕',
+        message: hasDanmakus ? S.t('已切换弹幕源') : S.t('暂无弹幕'),
       );
     } catch (_) {
       if (!mounted) return;
       setState(() => _loading = false);
-      AnikumoDialog.showToast(message: '弹幕源切换失败');
+      AnikumoDialog.showToast(message: S.t('弹幕源切换失败'));
     }
   }
 
@@ -275,7 +276,7 @@ class _DanmakuSourceSheetState extends State<_DanmakuSourceSheet> {
   void _jumpToEpisode() {
     final number = int.tryParse(_episodeJumpController.text.trim());
     if (number == null || number < 1 || number > _episodes.length) {
-      AnikumoDialog.showToast(message: '集号范围：1–${_episodes.length}');
+      AnikumoDialog.showToast(message: S.f('集号范围：1–{}', [_episodes.length]));
       return;
     }
 
@@ -355,8 +356,8 @@ class _DanmakuSourceSheetState extends State<_DanmakuSourceSheet> {
 
   Widget _buildLoading() {
     final label = switch (_step) {
-      _SourceStep.search || _SourceStep.anime => '搜索中…',
-      _SourceStep.episode => _episodes.isEmpty ? '加载分集…' : '切换中…',
+      _SourceStep.search || _SourceStep.anime => S.t('搜索中…'),
+      _SourceStep.episode => _episodes.isEmpty ? S.t('加载分集…') : S.t('切换中…'),
     };
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 20),
@@ -395,12 +396,12 @@ class _DanmakuSourceSheetState extends State<_DanmakuSourceSheet> {
               textInputAction: TextInputAction.search,
               onSubmitted: (_) => _searchAnime(),
               decoration: InputDecoration(
-                hintText: '番剧名称',
+                hintText: S.t('番剧名称'),
                 prefixIcon: const Icon(AnikumoIcons.search),
                 suffixIcon: value.text.isEmpty
                     ? null
                     : IconButton(
-                        tooltip: '清空',
+                        tooltip: S.t('清空'),
                         onPressed: () => _keywordController.clear(),
                         icon: const Icon(AnikumoIcons.close, size: 18),
                       ),
@@ -420,7 +421,7 @@ class _DanmakuSourceSheetState extends State<_DanmakuSourceSheet> {
                 ],
                 if (_recentKeywords.isNotEmpty) ...[
                   Text(
-                    '最近搜索',
+                    S.t('最近搜索'),
                     style: Theme.of(context).textTheme.labelLarge,
                   ),
                   const SizedBox(height: 10),
@@ -457,13 +458,13 @@ class _DanmakuSourceSheetState extends State<_DanmakuSourceSheet> {
               children: [
                 TextButton(
                   onPressed: () => AnikumoDialog.dismiss(context: context),
-                  child: const Text('取消'),
+                  child: Text(S.t('取消')),
                 ),
                 const SizedBox(width: 10),
                 StateActionButton(
                   onPressed: _searchAnime,
                   icon: AnikumoIcons.search,
-                  text: '搜索',
+                  text: S.t('搜索'),
                 ),
               ],
             ),
@@ -478,9 +479,9 @@ class _DanmakuSourceSheetState extends State<_DanmakuSourceSheet> {
       return GeneralEmptyState(
         compact: true,
         icon: AnikumoIcons.key_rounded,
-        title: '弹幕服务未配置，暂时无法搜索弹幕',
+        title: S.t('弹幕服务未配置，暂时无法搜索弹幕'),
         actions: [
-          StateActionButton.tonal(onPressed: _goBack, text: '返回搜索'),
+          StateActionButton.tonal(onPressed: _goBack, text: S.t('返回搜索')),
         ],
       );
     }
@@ -490,7 +491,7 @@ class _DanmakuSourceSheetState extends State<_DanmakuSourceSheet> {
         icon: AnikumoIcons.search_off,
         title: _error!,
         actions: [
-          StateActionButton.tonal(onPressed: _goBack, text: '返回搜索'),
+          StateActionButton.tonal(onPressed: _goBack, text: S.t('返回搜索')),
         ],
       );
     }
@@ -501,7 +502,7 @@ class _DanmakuSourceSheetState extends State<_DanmakuSourceSheet> {
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
             child: Text(
-              '仅显示部分结果',
+              S.t('仅显示部分结果'),
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
@@ -544,7 +545,7 @@ class _DanmakuSourceSheetState extends State<_DanmakuSourceSheet> {
         icon: AnikumoIcons.subtitles_off_outlined,
         title: _error!,
         errMsg: '',
-        actions: [StateActionButton.tonal(onPressed: _goBack, text: '返回番剧')],
+        actions: [StateActionButton.tonal(onPressed: _goBack, text: S.t('返回番剧'))],
       );
     }
     final visible = _visibleEpisodes;
@@ -567,10 +568,10 @@ class _DanmakuSourceSheetState extends State<_DanmakuSourceSheet> {
           ),
         Flexible(
           child: visible.isEmpty
-              ? const GeneralEmptyState(
+              ? GeneralEmptyState(
                   compact: true,
                   icon: AnikumoIcons.filter_list_off,
-                  title: '未找到分集',
+                  title: S.t('未找到分集'),
                 )
               : ListView.builder(
                   controller: _episodeScrollController,
@@ -620,9 +621,9 @@ class _SheetHeader extends StatelessWidget {
   final VoidCallback onClose;
 
   String get title => switch (step) {
-        _SourceStep.search => '选择弹幕源',
-        _SourceStep.anime => '选择番剧',
-        _SourceStep.episode => '选择分集',
+        _SourceStep.search => S.t('选择弹幕源'),
+        _SourceStep.anime => S.t('选择番剧'),
+        _SourceStep.episode => S.t('选择分集'),
       };
 
   String? get subtitle => switch (step) {
@@ -644,7 +645,7 @@ class _SheetHeader extends StatelessWidget {
             leading: onBack == null
                 ? null
                 : IconButton(
-                    tooltip: '返回',
+                    tooltip: S.t('返回'),
                     onPressed: onBack,
                     icon: const Icon(AnikumoIcons.arrow_back),
                   ),
@@ -738,12 +739,12 @@ class _EpisodeToolbar extends StatelessWidget {
                     onChanged: onSearch,
                     decoration: InputDecoration(
                       isDense: true,
-                      hintText: '标题或集号',
+                      hintText: S.t('标题或集号'),
                       prefixIcon: const Icon(AnikumoIcons.search, size: 18),
                       suffixIcon: searchController.text.isEmpty
                           ? null
                           : IconButton(
-                              tooltip: '清空',
+                              tooltip: S.t('清空'),
                               onPressed: () {
                                 searchController.clear();
                                 onSearch('');
@@ -767,9 +768,9 @@ class _EpisodeToolbar extends StatelessWidget {
                     onSubmitted: (_) => onJump(),
                     decoration: InputDecoration(
                       isDense: true,
-                      hintText: '集号',
+                      hintText: S.t('集号'),
                       suffixIcon: IconButton(
-                        tooltip: '跳转',
+                        tooltip: S.t('跳转'),
                         onPressed: onJump,
                         icon: const Icon(AnikumoIcons.arrow_forward, size: 18),
                       ),
@@ -786,7 +787,7 @@ class _EpisodeToolbar extends StatelessWidget {
               child: Row(
                 children: [
                   Text(
-                    '集数',
+                    S.t('集数'),
                     style: Theme.of(context).textTheme.labelMedium,
                   ),
                   const SizedBox(width: 10),
@@ -802,7 +803,7 @@ class _EpisodeToolbar extends StatelessWidget {
                         scrollDirection: Axis.horizontal,
                         children: [
                           _SegmentChip(
-                            label: '全部',
+                            label: S.t('全部'),
                             selected: segmentStart == null,
                             onTap: () => onSegment(null),
                           ),
@@ -825,7 +826,7 @@ class _EpisodeToolbar extends StatelessWidget {
           ],
           const SizedBox(height: 8),
           Text(
-            matched == total ? '共 $total 集' : '显示 $matched 集，共 $total 集',
+            matched == total ? S.f('共 {} 集', [total]) : S.f('显示 {} 集，共 {} 集', [matched, total]),
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],

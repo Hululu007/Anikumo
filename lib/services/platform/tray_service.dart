@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'dart:io';
 
 import 'package:tray_manager/tray_manager.dart';
@@ -23,9 +24,9 @@ class TrayService {
     }
 
     Menu trayMenu = Menu(items: [
-      MenuItem(key: 'show_window', label: '显示窗口'),
+      MenuItem(key: 'show_window', label: S.t('显示窗口')),
       MenuItem.separator(),
-      MenuItem(key: 'exit', label: '退出 Anikumo')
+      MenuItem(key: 'exit', label: S.t('退出 Anikumo'))
     ]);
     await trayManager.setContextMenu(trayMenu);
   }

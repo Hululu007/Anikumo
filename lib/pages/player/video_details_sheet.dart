@@ -11,6 +11,7 @@ import 'package:anikumo/bean/widget/empty_state_widget.dart';
 import 'package:anikumo/bean/widget/tonal_card.dart';
 import 'package:anikumo/pages/player/player_controller.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 void showVideoDetailsSheet(
   BuildContext context, {
@@ -87,7 +88,7 @@ class _VideoDetailsSheetState extends State<_VideoDetailsSheet>
 
   void _copyToClipboard(BuildContext context, String value) {
     Clipboard.setData(ClipboardData(text: value));
-    AnikumoDialog.showToast(message: '已复制到剪贴板', context: context);
+    AnikumoDialog.showToast(message: S.t('已复制到剪贴板'), context: context);
   }
 
   @override
@@ -98,13 +99,13 @@ class _VideoDetailsSheetState extends State<_VideoDetailsSheet>
                 backgroundColor: Colors.transparent,
                 body: Column(children: [
                   MaterialBottomSheetHeader(
-                    title: '播放信息',
+                    title: S.t('播放信息'),
                     onClose: () => Navigator.of(context).pop(),
                   ),
                   ConnectedTabs(
                     padding: materialBottomSheetTabsPadding,
                     controller: _tabController,
-                    labels: const ['概览', '日志'],
+                    labels: [S.t('概览'), S.t('日志')],
                   ),
                   Expanded(
                       child: TabBarView(
@@ -122,13 +123,13 @@ class _VideoDetailsSheetState extends State<_VideoDetailsSheet>
       final theme = Theme.of(context);
       final resolution = debug.playerWidth > 0 && debug.playerHeight > 0
           ? '${debug.playerWidth} × ${debug.playerHeight}'
-          : '等待画面';
+          : S.t('等待画面');
       return ListView(
         key: const PageStorageKey('video-details-overview'),
         padding: materialBottomSheetContentPadding,
         children: [
           ContentSection(
-            title: '画面与声音',
+            title: S.t('画面与声音'),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(resolution, style: theme.textTheme.headlineSmall),
@@ -143,16 +144,16 @@ class _VideoDetailsSheetState extends State<_VideoDetailsSheet>
             ]),
           ),
           const SizedBox(height: 24),
-          ContentSection.group(title: '媒体', children: [
+          ContentSection.group(title: S.t('媒体'), children: [
             _statusField(context, '媒体地址', playerController.videoUrl,
                 compact: true),
             _statusField(context, '播放列表', debug.playerPlaylist, compact: true),
           ]),
           const SizedBox(height: 24),
-          ContentSection.group(title: '技术信息', children: [
+          ContentSection.group(title: S.t('技术信息'), children: [
             ExpansionTile(
               key: const PageStorageKey('video-parameters'),
-              title: const Text('视频参数'),
+              title: Text(S.t('视频参数')),
               shape: const Border(),
               collapsedShape: const Border(),
               children: [
@@ -162,7 +163,7 @@ class _VideoDetailsSheetState extends State<_VideoDetailsSheet>
             ),
             ExpansionTile(
               key: const PageStorageKey('audio-parameters'),
-              title: const Text('音频参数'),
+              title: Text(S.t('音频参数')),
               shape: const Border(),
               collapsedShape: const Border(),
               children: [
@@ -179,7 +180,7 @@ class _VideoDetailsSheetState extends State<_VideoDetailsSheet>
   Widget _metric(BuildContext context, String label, String value) {
     final theme = Theme.of(context);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label,
+      Text(S.t(label),
           style: theme.textTheme.labelMedium
               ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
       const SizedBox(height: 4),
@@ -190,16 +191,16 @@ class _VideoDetailsSheetState extends State<_VideoDetailsSheet>
   Widget _statusField(BuildContext context, String label, String value,
       {bool compact = false}) {
     return ListTile(
-      title: Text(label),
+      title: Text(S.t(label)),
       subtitle: Text(
-        value.isEmpty ? '尚未获取' : value,
+        value.isEmpty ? S.t('尚未获取') : value,
         maxLines: compact ? 2 : null,
         overflow: compact ? TextOverflow.ellipsis : null,
       ),
       trailing: value.isEmpty
           ? null
           : IconButton(
-              tooltip: '复制$label',
+              tooltip: S.f('复制{}', [S.t(label)]),
               icon: const Icon(AnikumoIcons.content_copy_rounded, size: 18),
               onPressed: () => _copyToClipboard(context, value),
             ),
@@ -238,23 +239,23 @@ class _VideoDetailsSheetState extends State<_VideoDetailsSheet>
         padding: materialBottomSheetContentPadding,
         child: Column(children: [
           Row(children: [
-            Text('${logs.length} 条记录', style: theme.textTheme.labelMedium),
+            Text(S.f('{} 条记录', [logs.length]), style: theme.textTheme.labelMedium),
             const Spacer(),
             TextButton.icon(
               onPressed: logs.isEmpty
                   ? null
                   : () => _copyToClipboard(context, logs.join('\n')),
               icon: const Icon(AnikumoIcons.content_copy_rounded, size: 18),
-              label: const Text('复制全部'),
+              label: Text(S.t('复制全部')),
             ),
           ]),
           const SizedBox(height: 8),
           Expanded(
               child: TonalCard(
             child: logs.isEmpty
-                ? const GeneralEmptyState(
+                ? GeneralEmptyState(
                     icon: AnikumoIcons.receipt_long_rounded,
-                    title: '还没有运行日志',
+                    title: S.t('还没有运行日志'),
                     compact: true,
                   )
                 : ListView.builder(

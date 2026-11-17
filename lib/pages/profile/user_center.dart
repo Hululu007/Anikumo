@@ -5,6 +5,7 @@ import 'package:anikumo/bean/dialog/dialog.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
 import 'package:anikumo/services/profile/github_sync.dart';
 import 'package:anikumo/services/storage/storage.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// Batch 257: the user-center entry — one avatar button
 /// in every zone's top-right corner, opening a small
@@ -21,7 +22,7 @@ class UserCenterAvatarButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final avatar = GithubSync.avatarUrl;
     return IconButton(
-      tooltip: '用户中心',
+      tooltip: S.t('用户中心'),
       onPressed: () => showUserCenterMenu(context),
       icon: avatar.isEmpty
           ? const Icon(AnikumoIcons.account_circle_outlined)
@@ -44,11 +45,11 @@ class UserCenterAvatarButton extends StatelessWidget {
 /// menu and the profile page.
 Future<void> runGithubSync(BuildContext context) async {
   if (!GithubSync.connected) {
-    AnikumoDialog.showToast(context: context, message: '请先在个人信息里登录 GitHub');
+    AnikumoDialog.showToast(context: context, message: S.t('请先在个人信息里登录 GitHub'));
     return;
   }
   if (GithubSync.syncRepo.isEmpty) {
-    AnikumoDialog.showToast(context: context, message: '请先在个人信息里选择或创建同步仓库');
+    AnikumoDialog.showToast(context: context, message: S.t('请先在个人信息里选择或创建同步仓库'));
     return;
   }
   try {
@@ -58,19 +59,22 @@ Future<void> runGithubSync(BuildContext context) async {
         final ok = await showDialog<bool>(
           context: context,
           builder: (dialogContext) => AlertDialog(
-            title: const Text('云端数据较新'),
+            title: Text(S.t('云端数据较新')),
             content: Text(
-              '云端仓库里的备份（${remoteAt.toLocal()}）与这台设备上次同步的版本不同。'
-              '继续将用云端数据覆盖本机的收藏、历史与进度，本机未同步的改动会丢失。',
+              S.f(
+                '云端仓库里的备份（{}）与这台设备上次同步的版本不同。'
+                '继续将用云端数据覆盖本机的收藏、历史与进度，本机未同步的改动会丢失。',
+                [remoteAt.toLocal()],
+              ),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: const Text('先不拉取'),
+                child: Text(S.t('先不拉取')),
               ),
               FilledButton(
                 onPressed: () => Navigator.of(dialogContext).pop(true),
-                child: const Text('拉取并覆盖'),
+                child: Text(S.t('拉取并覆盖')),
               ),
             ],
           ),
@@ -87,7 +91,7 @@ Future<void> runGithubSync(BuildContext context) async {
     }
   } catch (e) {
     if (context.mounted) {
-      AnikumoDialog.showToast(context: context, message: '同步失败：$e');
+      AnikumoDialog.showToast(context: context, message: S.f('同步失败：{}', [e]));
     }
   }
 }
@@ -114,29 +118,29 @@ void showUserCenterMenu(BuildContext context) {
               title: Text(
                 displayName.isNotEmpty
                     ? displayName
-                    : (ghName.isNotEmpty ? ghName : '用户中心'),
+                    : (ghName.isNotEmpty ? ghName : S.t('用户中心')),
               ),
               subtitle: Text(
                 ghName.isNotEmpty
-                    ? 'GitHub @$ghName${lastSync.isNotEmpty ? ' · 上次同步 ${lastSync.substring(0, 16).replaceFirst('T', ' ')}' : ''}'
-                    : '尚未登录 GitHub',
+                    ? S.f('GitHub @{}{}', [ghName, lastSync.isNotEmpty ? S.f(' · 上次同步 {}', [lastSync.substring(0, 16).replaceFirst('T', ' ')]) : ''])
+                    : S.t('尚未登录 GitHub'),
               ),
             ),
             const Divider(height: 1),
             ListTile(
               leading: const Icon(AnikumoIcons.person_outline_rounded),
-              title: const Text('个人信息'),
+              title: Text(S.t('个人信息')),
               onTap: () => go('/profile'),
             ),
             ListTile(
               leading: const Icon(AnikumoIcons.settings_rounded),
-              title: const Text('设置'),
+              title: Text(S.t('设置')),
               onTap: () => go('/settings'),
             ),
             ListTile(
               leading: const Icon(AnikumoIcons.sync_rounded),
-              title: const Text('立即同步'),
-              subtitle: const Text('与 GitHub 仓库对账：远端较新先拉取，否则推送本机'),
+              title: Text(S.t('立即同步')),
+              subtitle: Text(S.t('与 GitHub 仓库对账：远端较新先拉取，否则推送本机')),
               onTap: () {
                 Navigator.of(sheetContext).pop();
                 runGithubSync(context);
@@ -144,14 +148,14 @@ void showUserCenterMenu(BuildContext context) {
             ),
             ListTile(
               leading: const Icon(AnikumoIcons.backup_outlined),
-              title: const Text('本地备份与恢复'),
+              title: Text(S.t('本地备份与恢复')),
               onTap: () => go('/settings/toolbox/backup'),
             ),
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: () => go('/profile/about-sync'),
-                child: const Text('同步怎么运作？有没有风险？'),
+                child: Text(S.t('同步怎么运作？有没有风险？')),
               ),
             ),
             const SizedBox(height: 8),

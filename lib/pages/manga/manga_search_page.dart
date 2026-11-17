@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:anikumo/bean/widget/empty_state_widget.dart';
 import 'package:anikumo/bean/widget/search_stage.dart';
@@ -286,14 +287,14 @@ class _MangaSearchPageState extends State<MangaSearchPage> with RouteAware {
         scrollDirection: Axis.horizontal,
         scrollCacheExtent: const ScrollCacheExtent.pixels(700),
         children: [
-          chip('', '全部源'),
+          chip('', S.t('全部源')),
           for (final source in sources)
             Padding(
               padding: const EdgeInsets.only(left: 8),
               child: chip(
                 source.id,
                 source.id == activeId
-                    ? '${_shortSourceName(source.name)}·当前源'
+                    ? S.f('{}·当前源', [_shortSourceName(source.name)])
                     : _shortSourceName(source.name),
               ),
             ),
@@ -587,7 +588,7 @@ class _MangaSearchPageState extends State<MangaSearchPage> with RouteAware {
               child: Row(
                 children: [
                   IconButton(
-                    tooltip: '返回',
+                    tooltip: S.t('返回'),
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(AnikumoIcons.arrow_back_rounded),
                   ),
@@ -608,8 +609,8 @@ class _MangaSearchPageState extends State<MangaSearchPage> with RouteAware {
                               focusNode: _searchFocus,
                               autofocus: true,
                               textInputAction: TextInputAction.search,
-                              decoration: const InputDecoration(
-                                hintText: '搜索动漫 / 漫画',
+                              decoration: InputDecoration(
+                                hintText: S.t('搜索动漫 / 漫画'),
                                 border: InputBorder.none,
                               ),
                               onSubmitted: (_) => _searchFromUser(),
@@ -623,7 +624,7 @@ class _MangaSearchPageState extends State<MangaSearchPage> with RouteAware {
                   IconButton(
                     onPressed: _searchFromUser,
                     icon: const Icon(AnikumoIcons.search_rounded),
-                    tooltip: '搜索',
+                    tooltip: S.t('搜索'),
                   ),
                 ],
               ),
@@ -747,15 +748,15 @@ class _MangaSearchPageState extends State<MangaSearchPage> with RouteAware {
   Widget _historyPane() {
     final history = MangaExtrasStore.loadSearchHistory();
     if (history.isEmpty) {
-      return const Center(child: Text('输入名称，同时搜索动漫、漫画与小说'));
+      return Center(child: Text(S.t('输入名称，同时搜索动漫、漫画与小说')));
     }
     return ListView(
       scrollCacheExtent: const ScrollCacheExtent.pixels(700),
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
         VioletSectionHeader(
-          title: '搜索历史',
-          actionLabel: '清空',
+          title: S.t('搜索历史'),
+          actionLabel: S.t('清空'),
           onAction: () async {
             await MangaExtrasStore.clearSearchHistory();
             if (mounted) setState(() {});
@@ -790,12 +791,12 @@ class _MangaSearchPageState extends State<MangaSearchPage> with RouteAware {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            '已自动隐藏 $_hiddenCount 部（源里没有信息或无可读章节）',
+            S.f('已自动隐藏 {} 部（源里没有信息或无可读章节）', [_hiddenCount]),
             style: Theme.of(context).textTheme.bodySmall,
           ),
           TextButton(
             onPressed: () => setState(() => _showHidden = !_showHidden),
-            child: Text(_showHidden ? '重新隐藏' : '显示出来'),
+            child: Text(_showHidden ? S.t('重新隐藏') : S.t('显示出来')),
           ),
         ],
       ),
@@ -811,9 +812,9 @@ class _MangaSearchPageState extends State<MangaSearchPage> with RouteAware {
       return Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const GeneralEmptyState(
+          GeneralEmptyState(
             icon: AnikumoIcons.search_off_rounded,
-            title: '没有找到能观看的漫画，换个关键词试试',
+            title: S.t('没有找到能观看的漫画，换个关键词试试'),
             compact: true,
           ),
           _hiddenNote(),
@@ -851,9 +852,9 @@ class _MangaSearchPageState extends State<MangaSearchPage> with RouteAware {
       return _skeletonGrid();
     }
     if (_animeResults.isEmpty) {
-      return const GeneralEmptyState(
+      return GeneralEmptyState(
         icon: AnikumoIcons.search_off_rounded,
-        title: '没有找到相关动漫，换个关键词试试',
+        title: S.t('没有找到相关动漫，换个关键词试试'),
       );
     }
     return Padding(
@@ -869,9 +870,9 @@ class _MangaSearchPageState extends State<MangaSearchPage> with RouteAware {
       return const Center(child: CircularProgressIndicator());
     }
     if (_novelResultsAll.isEmpty) {
-      return const GeneralEmptyState(
+      return GeneralEmptyState(
         icon: AnikumoIcons.auto_stories_outlined,
-        title: '没有找到小说，换个关键词试试',
+        title: S.t('没有找到小说，换个关键词试试'),
       );
     }
     return CustomScrollView(
@@ -896,9 +897,9 @@ class _MangaSearchPageState extends State<MangaSearchPage> with RouteAware {
       return Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const GeneralEmptyState(
+          GeneralEmptyState(
             icon: AnikumoIcons.search_off_rounded,
-            title: '动漫、漫画和小说都没有找到能看的，换个关键词试试',
+            title: S.t('动漫、漫画和小说都没有找到能看的，换个关键词试试'),
             compact: true,
           ),
           _hiddenNote(),
@@ -919,7 +920,7 @@ class _MangaSearchPageState extends State<MangaSearchPage> with RouteAware {
               if (_animeResults.isNotEmpty) ...[
                 SliverToBoxAdapter(
                   child: CrossSectionHeader(
-                    title: '动漫',
+                    title: S.t('动漫'),
                     count: _animeResults.length,
                   ),
                 ),
@@ -933,7 +934,7 @@ class _MangaSearchPageState extends State<MangaSearchPage> with RouteAware {
                 ),
               if (visible.isNotEmpty) ...[
                 SliverToBoxAdapter(
-                  child: CrossSectionHeader(title: '漫画', count: visible.length),
+                  child: CrossSectionHeader(title: S.t('漫画'), count: visible.length),
                 ),
                 MangaResultsSliver(
                   items: visible,
@@ -949,7 +950,7 @@ class _MangaSearchPageState extends State<MangaSearchPage> with RouteAware {
               if (_novelResults.isNotEmpty) ...[
                 SliverToBoxAdapter(
                   child: CrossSectionHeader(
-                    title: '小说',
+                    title: S.t('小说'),
                     count: _novelResults.length,
                   ),
                 ),

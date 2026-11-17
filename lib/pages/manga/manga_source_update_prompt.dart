@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/bean/dialog/dialog.dart';
 import 'package:anikumo/services/manga/manga_source_updates.dart';
 
@@ -46,7 +47,7 @@ class MangaSourceUpdatePrompt {
     if (!context.mounted) return;
     if (_cached.isEmpty) {
       if (force) {
-        AnikumoDialog.showToast(message: '所有漫画源都是最新版');
+        AnikumoDialog.showToast(message: S.t('所有漫画源都是最新版'));
       }
       return;
     }
@@ -56,7 +57,7 @@ class MangaSourceUpdatePrompt {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: const Text('漫画源有新版本'),
+          title: Text(S.t('漫画源有新版本')),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,17 +76,17 @@ class MangaSourceUpdatePrompt {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('稍后'),
+              child: Text(S.t('稍后')),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('更新'),
+              child: Text(S.t('更新')),
             ),
           ],
         ),
       );
       if (confirmed != true || !context.mounted) return;
-      AnikumoDialog.showToast(message: '正在更新 ${updates.length} 个源…');
+      AnikumoDialog.showToast(message: S.f('正在更新 {} 个源…', [updates.length]));
       final result = await MangaSourceUpdates.apply(updates);
       // Whatever was attempted is re-evaluated by the
       // next fresh check, not by this cached verdict.
@@ -94,8 +95,8 @@ class MangaSourceUpdatePrompt {
       if (!context.mounted) return;
       AnikumoDialog.showToast(
         message: result.failed == 0
-            ? '已更新 ${result.updated} 个源'
-            : '已更新 ${result.updated} 个，${result.failed} 个更新失败',
+            ? S.f('已更新 {} 个源', [result.updated])
+            : S.f('已更新 {} 个，{} 个更新失败', [result.updated, result.failed]),
       );
     } finally {
       _showing = false;

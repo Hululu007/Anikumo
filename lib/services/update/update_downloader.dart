@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -23,7 +24,7 @@ class UpdateIntegrityException implements Exception {
   final String actual;
 
   @override
-  String toString() => '文件完整性验证失败: 期望 $expected，实际 $actual';
+  String toString() => S.f('文件完整性验证失败: 期望 {}，实际 {}', [expected, actual]);
 }
 
 Iterable<Object> _errorChain(Object error) sync* {
@@ -57,15 +58,15 @@ String getUpdateDownloadErrorMessage(Object error) {
     final code = fileError.osError?.errorCode;
     final windows = Platform.isWindows;
     if (windows ? code == 5 : code == 1 || code == 13) {
-      return '无法写入更新文件，请检查临时目录权限';
+      return S.t('无法写入更新文件，请检查临时目录权限');
     }
     if (windows ? code == 112 || code == 39 : code == 28) {
-      return '磁盘空间不足';
+      return S.t('磁盘空间不足');
     }
-    return '更新文件读写失败';
+    return S.t('更新文件读写失败');
   }
   if (error is UpdateIntegrityException) {
-    return '文件完整性验证失败，可能是网络传输错误';
+    return S.t('文件完整性验证失败，可能是网络传输错误');
   }
   final networkType =
       causes.whereType<NetworkException>().firstOrNull?.type;
@@ -73,19 +74,19 @@ String getUpdateDownloadErrorMessage(Object error) {
     case NetworkExceptionType.connectionTimeout ||
           NetworkExceptionType.receiveTimeout ||
           NetworkExceptionType.sendTimeout:
-      return '下载超时，请稍后重试';
+      return S.t('下载超时，请稍后重试');
     case NetworkExceptionType.connectionError ||
           NetworkExceptionType.badResponse ||
           NetworkExceptionType.badCertificate:
-      return '网络连接错误';
+      return S.t('网络连接错误');
     default:
       if (causes.any((cause) =>
           cause is SocketException ||
           cause is HttpException ||
           cause is HandshakeException)) {
-        return '网络连接错误';
+        return S.t('网络连接错误');
       }
-      return '下载失败';
+      return S.t('下载失败');
   }
 }
 
@@ -105,7 +106,7 @@ Future<String> downloadUpdateFile({
 
   final hash = expectedHash.toLowerCase();
   if (!RegExp(r'^[a-f0-9]{64}$').hasMatch(hash)) {
-    throw ArgumentError('更新缺少有效的 SHA256 校验值');
+    throw ArgumentError(S.t('更新缺少有效的 SHA256 校验值'));
   }
 
   final file = File(filePath);

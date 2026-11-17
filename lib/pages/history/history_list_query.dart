@@ -1,4 +1,5 @@
 import 'package:anikumo/modules/history/history_module.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 enum HistorySourceFilter {
   all('全部'),
@@ -27,10 +28,10 @@ class HistoryDateGroup {
   String label(DateTime now) {
     final localNow = now.toLocal();
     final today = DateTime(localNow.year, localNow.month, localNow.day);
-    if (date == today) return '今天';
-    if (date == DateTime(today.year, today.month, today.day - 1)) return '昨天';
-    final prefix = date.year == today.year ? '' : '${date.year}年';
-    return '$prefix${date.month}月${date.day}日';
+    if (date == today) return S.t('今天');
+    if (date == DateTime(today.year, today.month, today.day - 1)) return S.t('昨天');
+    if (date.year == today.year) return S.f('{}月{}日', [date.month, date.day]);
+    return S.f('{}年{}月{}日', [date.year, date.month, date.day]);
   }
 }
 

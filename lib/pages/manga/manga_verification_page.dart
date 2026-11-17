@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview_platform_interface/flutter_inappwebview_platform_interface.dart';
 
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/navigation.dart';
 import 'package:anikumo/services/manga/js/mangakit_host.dart';
 
@@ -120,7 +121,7 @@ class _MangaVerificationPageState extends State<MangaVerificationPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('完成验证')),
+      appBar: AppBar(title: Text(S.t('完成验证'))),
       body: Column(
         children: [
           Container(
@@ -128,7 +129,7 @@ class _MangaVerificationPageState extends State<MangaVerificationPage> {
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
             color: theme.colorScheme.surfaceContainerHighest,
             child: Text(
-              '源站要求先完成人机验证。在下面页面里完成验证后，点「已完成验证」回到阅读。',
+              S.t('源站要求先完成人机验证。在下面页面里完成验证后，点「已完成验证」回到阅读。'),
               style: theme.textTheme.bodySmall,
             ),
           ),
@@ -142,7 +143,7 @@ class _MangaVerificationPageState extends State<MangaVerificationPage> {
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: _finishing ? null : _finish,
-                  child: Text(_finishing ? '正在同步…' : '已完成验证'),
+                  child: Text(_finishing ? S.t('正在同步…') : S.t('已完成验证')),
                 ),
               ),
             ),
@@ -175,7 +176,7 @@ class MangaVerificationButton extends StatelessWidget {
         if (solved) onSolved();
       },
       icon: const Icon(Icons.verified_user_outlined, size: 18),
-      label: const Text('完成验证'),
+      label: Text(S.t('完成验证')),
     );
   }
 }

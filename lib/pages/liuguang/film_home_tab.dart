@@ -8,6 +8,8 @@ import 'package:anikumo/bean/widget/anikumo_menu.dart';
 import 'package:anikumo/bean/widget/editorial_kit.dart';
 import 'package:anikumo/pages/liuguang/film_discover_tab.dart';
 import 'package:anikumo/pages/liuguang/film_widgets.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
+import 'package:anikumo/services/i18n/film_vocab_i18n.dart';
 import 'package:anikumo/services/liuguang/cms_api_source.dart';
 import 'package:anikumo/services/liuguang/video_engine.dart';
 import 'package:anikumo/services/liuguang/film_prefs.dart';
@@ -308,7 +310,7 @@ class _FilmHomeTabState extends State<FilmHomeTab> {
           _errors.remove(kind);
           return;
         }
-        _errors[kind] = '暂时没有取到内容，请下拉重试或检查源是否可用。';
+        _errors[kind] = S.t('暂时没有取到内容，请下拉重试或检查源是否可用。');
         return;
       }
       // Batch 237: a pinned source serves its channel
@@ -353,7 +355,7 @@ class _FilmHomeTabState extends State<FilmHomeTab> {
         }
       }
       if (winner == null) {
-        _errors[kind] = '暂时没有取到内容，请下拉重试或检查源是否可用。';
+        _errors[kind] = S.t('暂时没有取到内容，请下拉重试或检查源是否可用。');
         return;
       }
       final (entry, provider, first) = winner;
@@ -487,7 +489,7 @@ class _FilmHomeTabState extends State<FilmHomeTab> {
         publish();
       }
     } catch (e) {
-      _errors[kind] = '加载失败：$e';
+      _errors[kind] = S.f('加载失败：{}', [e]);
     } finally {
       _loading.remove(kind);
       if (mounted) {
@@ -534,7 +536,7 @@ class _FilmHomeTabState extends State<FilmHomeTab> {
           children: [
             Expanded(
               child: FilmEditorialTitle(
-                eyebrow: 'FEATURED · 影视精选',
+                eyebrow: S.t('FEATURED · 影视精选'),
                 title: AnikumoMenuButton(
                   animated: true,
                   style: const MenuStyle(
@@ -551,7 +553,7 @@ class _FilmHomeTabState extends State<FilmHomeTab> {
                       FilmKindFilter.live,
                     ])
                       AnikumoMenuItem(
-                        label: kind.label,
+                        label: filmKindLabel(kind.label),
                         selected: kind == _kind,
                         onPressed: () {
                           setState(() => _kind = kind);
@@ -566,7 +568,7 @@ class _FilmHomeTabState extends State<FilmHomeTab> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        filmHeadline(context, _kind.label),
+                        filmHeadline(context, filmKindLabel(_kind.label)),
                         const SizedBox(width: 4),
                         Icon(
                           AnikumoIcons.keyboard_arrow_down,
@@ -584,7 +586,7 @@ class _FilmHomeTabState extends State<FilmHomeTab> {
               child: TextButton.icon(
                 onPressed: () => context.pushNamed('/film/history'),
                 icon: const Icon(AnikumoIcons.history_rounded, size: 19),
-                label: const Text('历史记录'),
+                label: Text(S.t('历史记录')),
               ),
             ),
           ],
@@ -594,13 +596,14 @@ class _FilmHomeTabState extends State<FilmHomeTab> {
             animation: service,
             builder: (context, _) {
               if (!service.hasSources) {
-                return const FilmEmptyState(
+                return FilmEmptyState(
                   icon: AnikumoIcons.dns_rounded,
-                  title: '还没有可用的数据源',
-                  message:
-                      '影视区与其它专区一样不内置内容来源。'
-                      '到「源」页添加仓库地址或单个接口后，'
-                      '这里会按电视剧 / 电影分别展示精选。',
+                  title: S.t('还没有可用的数据源'),
+                  message: S.t(
+                    '影视区与其它专区一样不内置内容来源。'
+                    '到「源」页添加仓库地址或单个接口后，'
+                    '这里会按电视剧 / 电影分别展示精选。',
+                  ),
                 );
               }
               return _shelfView(context);
@@ -661,9 +664,9 @@ class _FilmHomeTabState extends State<FilmHomeTab> {
       if (_errors.containsKey(_kind)) {
         return FilmEmptyState(
           icon: AnikumoIcons.movie_rounded,
-          title: '${_kind.label}精选',
+          title: S.f('{}精选', [filmKindLabel(_kind.label)]),
           message: _errors[_kind]!,
-          actionLabel: '重试',
+          actionLabel: S.t('重试'),
           onAction: () => _ensureLoaded(_kind, refresh: true),
         );
       }
@@ -698,9 +701,17 @@ class _FilmHomeTabState extends State<FilmHomeTab> {
               EditorialSectionHeader(
                 index: (i + 1).toString().padLeft(2, '0'),
                 label: _railLabel(rail.title),
-                title: rail.title,
-                subtitle: i == 0 ? '来自「${shelf.sourceName}」' : null,
-                actionLabel: '全部',
+                title: rail.genre != null
+                    ? filmGenreLabel(rail.title)
+                    : rail.area != null
+                    ? filmAreaLabel(rail.title)
+                    : rail.year != null
+                    ? S.f('{} 新作', [rail.year])
+                    : S.t(rail.title),
+                subtitle: i == 0
+                    ? S.f('来自「{}」', [shelf.sourceName])
+                    : null,
+                actionLabel: filmKindLabel('全部'),
                 onAction: () => _openAll(rail),
               ),
               FilmRail(

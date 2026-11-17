@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:anikumo/bean/appbar/sys_app_bar.dart';
 import 'package:anikumo/bean/dialog/dialog.dart';
 import 'package:anikumo/bean/glass/glass_surface.dart';
+import 'package:anikumo/services/backup/auto_backup.dart';
+import 'package:anikumo/services/backup/backup_crypto.dart';
 import 'package:anikumo/services/backup/local_backup.dart';
 import 'package:anikumo/services/library/user_library.dart';
 import 'package:anikumo/services/manga/manga_downloads.dart';
@@ -14,6 +16,7 @@ import 'package:anikumo/services/novel/novel_library.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/utils/constants.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// 本地备份/恢复 (hub 区三）: export the user's own data to one JSON
 /// file, or merge a previously exported file back in. Complements —
@@ -52,7 +55,7 @@ class _BackupPageState extends State<BackupPage> {
     try {
       final bytes = utf8.encode(await LocalBackup.exportJson());
       final path = await FilePicker.platform.saveFile(
-        dialogTitle: '保存备份文件',
+        dialogTitle: S.t('保存备份文件'),
         fileName: _fileName,
         type: FileType.custom,
         allowedExtensions: const ['json'],
@@ -61,11 +64,133 @@ class _BackupPageState extends State<BackupPage> {
       if (!mounted) return;
       AnikumoDialog.showToast(
         context: context,
-        message: path == null ? '已取消导出' : '备份已保存',
+        message: path == null ? S.t('已取消导出') : S.t('备份已保存'),
       );
     } catch (_) {
       if (mounted) {
-        AnikumoDialog.showToast(context: context, message: '导出失败，请稍后重试');
+        AnikumoDialog.showToast(context: context, message: S.t('导出失败，请稍后重试'));
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  /// Batch 271: full bundle export — the JSON backup
+  /// plus downloaded manga chapter files in one zip.
+  Future<void> _exportBundle() async {
+    setState(() => _busy = true);
+    try {
+      final bytes = await LocalBackup.exportBundleBytes();
+      final path = await FilePicker.platform.saveFile(
+        dialogTitle: S.t('保存备份文件'),
+        fileName: _fileName.replaceAll('.json', '.zip'),
+        type: FileType.custom,
+        allowedExtensions: const ['zip'],
+        bytes: bytes,
+      );
+      if (!mounted) return;
+      AnikumoDialog.showToast(
+        context: context,
+        message: path == null ? S.t('已取消导出') : S.t('备份已保存'),
+      );
+    } catch (_) {
+      if (mounted) {
+        AnikumoDialog.showToast(context: context, message: S.t('导出失败，请稍后重试'));
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  /// Batch 274 (#40): asks for a password (set or
+  /// enter mode) in a small dialog.
+  Future<String?> _askPassword({required bool confirm}) async {
+    final first = TextEditingController();
+    final second = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(confirm ? S.t('设置备份密码') : S.t('输入备份密码')),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: first,
+              obscureText: true,
+              autofocus: true,
+              decoration: InputDecoration(labelText: S.t('密码')),
+            ),
+            if (confirm)
+              TextField(
+                controller: second,
+                obscureText: true,
+                decoration: InputDecoration(labelText: S.t('再输入一次')),
+              ),
+            const SizedBox(height: 8),
+            Text(
+              S.t('密码只用于加密这份文件，不会保存；忘了密码就无法恢复这份备份。'),
+              style: Theme.of(dialogContext).textTheme.bodySmall,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(S.t('取消')),
+          ),
+          FilledButton(
+            onPressed: () {
+              final value = first.text;
+              if (value.length < 4) {
+                AnikumoDialog.showToast(
+                  context: dialogContext,
+                  message: S.t('密码至少 4 位'),
+                );
+                return;
+              }
+              if (confirm && second.text != value) {
+                AnikumoDialog.showToast(
+                  context: dialogContext,
+                  message: S.t('两次输入的密码不一致'),
+                );
+                return;
+              }
+              Navigator.of(dialogContext).pop(value);
+            },
+            child: Text(S.t('确定')),
+          ),
+        ],
+      ),
+    );
+    first.dispose();
+    second.dispose();
+    return result;
+  }
+
+  /// Batch 274 (#40): encrypted export of the JSON
+  /// backup.
+  Future<void> _exportEncrypted() async {
+    final password = await _askPassword(confirm: true);
+    if (password == null || !mounted) return;
+    setState(() => _busy = true);
+    try {
+      final encrypted =
+          BackupCrypto.encrypt(await LocalBackup.exportJson(), password);
+      final path = await FilePicker.platform.saveFile(
+        dialogTitle: S.t('保存备份文件'),
+        fileName: _fileName.replaceAll('.json', '.enc'),
+        type: FileType.custom,
+        allowedExtensions: const ['enc'],
+        bytes: utf8.encode(encrypted),
+      );
+      if (!mounted) return;
+      AnikumoDialog.showToast(
+        context: context,
+        message: path == null ? S.t('已取消导出') : S.t('备份已保存'),
+      );
+    } catch (_) {
+      if (mounted) {
+        AnikumoDialog.showToast(context: context, message: S.t('导出失败，请稍后重试'));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -77,7 +202,7 @@ class _BackupPageState extends State<BackupPage> {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: const ['json'],
+        allowedExtensions: const ['json', 'zip', 'enc'],
         withData: true,
       );
       if (result == null || !mounted) return;
@@ -86,40 +211,76 @@ class _BackupPageState extends State<BackupPage> {
           (file.path == null ? null : await File(file.path!).readAsBytes());
       if (bytes == null) throw const FileSystemException('无法读取所选文件');
       if (!mounted) return;
-      final data = LocalBackup.parse(utf8.decode(bytes));
+      // Batch 274 (#40): an encrypted backup asks for
+      // its password first and then flows through the
+      // plain-JSON path below.
+      var effectiveBytes = bytes;
+      final asText = utf8.decode(bytes, allowMalformed: true);
+      if (BackupCrypto.isEncrypted(asText)) {
+        final password = await _askPassword(confirm: false);
+        if (password == null || !mounted) return;
+        try {
+          effectiveBytes =
+              utf8.encode(BackupCrypto.decrypt(asText, password));
+        } catch (_) {
+          AnikumoDialog.showToast(
+            context: context,
+            message: S.t('密码不正确或文件已损坏'),
+          );
+          return;
+        }
+      }
+      // Batch 271: a bundle zip lands its chapter files
+      // FIRST, so the JSON apply below finds them on disk
+      // instead of skipping those download records.
+      var jsonText = '';
+      if (LocalBackup.isBundle(effectiveBytes)) {
+        await LocalBackup.extractBundleFiles(effectiveBytes);
+        jsonText = LocalBackup.bundleJson(effectiveBytes) ?? '';
+      } else {
+        jsonText = utf8.decode(effectiveBytes);
+      }
+      final data = LocalBackup.parse(jsonText);
       if (data == null) {
         AnikumoDialog.showToast(
           context: context,
-          message: '这不是有效的 anikumo 备份文件',
+          message: S.t('这不是有效的 anikumo 备份文件'),
         );
         return;
       }
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('恢复这份备份？'),
+          title: Text(S.t('恢复这份备份？')),
           content: Text(
-            '将合并：观看历史 ${data.histories.length} 条 · '
-            '追番 ${data.collectibles.length} 部 · '
-            '搜索记录 ${data.searchHistories.length} 条 · '
-            '榜单 ${data.userLists.length} 个 · '
-            '笔记 ${data.notes.length} 条 · '
-            '漫画收藏 ${data.mangaFavorites.length} 部 · '
-            '漫画进度 ${data.mangaProgress.length} 条 · '
-            '小说收藏 ${data.novelFavorites.length} 部 · '
-            '小说进度 ${data.novelProgress.length} 条 · '
-            '下载记录 ${data.mangaDownloads.length + data.animeDownloads.length} 条。\n\n'
-            '恢复只会覆盖同名记录，不会删除现有数据。'
-            '下载只恢复记录：文件已不在本机的记录会被跳过。',
+            S.f(
+              '将合并：观看历史 {} 条 · 追番 {} 部 · 搜索记录 {} 条 · 榜单 {} 个 · '
+              '笔记 {} 条 · 漫画收藏 {} 部 · 漫画进度 {} 条 · 小说收藏 {} 部 · '
+              '小说进度 {} 条 · 下载记录 {} 条。\n\n'
+              '恢复只会覆盖同名记录，不会删除现有数据。'
+              '下载只恢复记录：文件已不在本机的记录会被跳过。',
+              [
+                data.histories.length,
+                data.collectibles.length,
+                data.searchHistories.length,
+                data.userLists.length,
+                data.notes.length,
+                data.mangaFavorites.length,
+                data.mangaProgress.length,
+                data.novelFavorites.length,
+                data.novelProgress.length,
+                data.mangaDownloads.length + data.animeDownloads.length,
+              ],
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('取消'),
+              child: Text(S.t('取消')),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('恢复'),
+              child: Text(S.t('恢复')),
             ),
           ],
         ),
@@ -130,13 +291,13 @@ class _BackupPageState extends State<BackupPage> {
       AnikumoDialog.showToast(
         context: context,
         message: report.downloadsSkipped > 0
-            ? '恢复完成；${report.downloadsSkipped} 条下载记录因文件不在本机已跳过'
-            : '恢复完成',
+            ? S.f('恢复完成；{} 条下载记录因文件不在本机已跳过', [report.downloadsSkipped])
+            : S.t('恢复完成'),
       );
       setState(() {});
     } catch (_) {
       if (mounted) {
-        AnikumoDialog.showToast(context: context, message: '导入失败，请稍后重试');
+        AnikumoDialog.showToast(context: context, message: S.t('导入失败，请稍后重试'));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -183,7 +344,7 @@ class _BackupPageState extends State<BackupPage> {
       ),
     ];
     return Scaffold(
-      appBar: const SysAppBar(title: Text('本地备份与恢复')),
+      appBar: SysAppBar(title: Text(S.t('本地备份与恢复'))),
       body: ListView(
         padding: const EdgeInsets.all(StyleString.pagePadding),
         children: [
@@ -193,7 +354,7 @@ class _BackupPageState extends State<BackupPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '当前设备上的数据',
+                  S.t('当前设备上的数据'),
                   style: Theme.of(context)
                       .textTheme
                       .titleMedium
@@ -207,7 +368,7 @@ class _BackupPageState extends State<BackupPage> {
                       children: [
                         Icon(icon, size: 18),
                         const SizedBox(width: 10),
-                        Expanded(child: Text(label)),
+                        Expanded(child: Text(S.t(label))),
                         Text(
                           value,
                           style: Theme.of(context)
@@ -225,20 +386,133 @@ class _BackupPageState extends State<BackupPage> {
           FilledButton.icon(
             onPressed: _busy ? null : _export,
             icon: const Icon(AnikumoIcons.upload_file_outlined),
-            label: const Text('导出备份文件'),
+            label: Text(S.t('导出备份文件')),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: _busy ? null : _exportBundle,
+            icon: const Icon(AnikumoIcons.folder_zip_outlined),
+            label: Text(S.t('完整备份（含已下载漫画）')),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: _busy ? null : _exportEncrypted,
+            icon: const Icon(Icons.lock_outline),
+            label: Text(S.t('加密导出（设密码）')),
           ),
           const SizedBox(height: 10),
           OutlinedButton.icon(
             onPressed: _busy ? null : _import,
             icon: const Icon(AnikumoIcons.file_download_outlined),
-            label: const Text('从文件恢复'),
+            label: Text(S.t('从文件恢复')),
+          ),
+          const SizedBox(height: StyleString.sectionSpace),
+          // Batch 274 (#41): automatic backup schedule.
+          GlassSurface(
+            padding: const EdgeInsets.all(StyleString.pagePadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        S.t('自动备份'),
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    Switch(
+                      value:
+                          GStorage.getSetting(SettingsKeys.autoBackupEnabled),
+                      onChanged: _busy
+                          ? null
+                          : (value) async {
+                              await GStorage.putSetting(
+                                SettingsKeys.autoBackupEnabled,
+                                value,
+                              );
+                              if (mounted) setState(() {});
+                            },
+                    ),
+                  ],
+                ),
+                Text(
+                  S.t('按计划把备份存到应用私有目录（不加密，最多保留最近 3 份）。'),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color:
+                            Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Text(S.t('间隔')),
+                    const SizedBox(width: 12),
+                    DropdownButton<int>(
+                      value: GStorage.getSetting(
+                        SettingsKeys.autoBackupIntervalDays,
+                      ),
+                      items: [
+                        for (final days in [1, 3, 7, 14, 30])
+                          DropdownMenuItem(
+                            value: days,
+                            child: Text(S.f('{} 天', [days])),
+                          ),
+                      ],
+                      onChanged: _busy
+                          ? null
+                          : (value) async {
+                              if (value == null) return;
+                              await GStorage.putSetting(
+                                SettingsKeys.autoBackupIntervalDays,
+                                value,
+                              );
+                              if (mounted) setState(() {});
+                            },
+                    ),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: _busy
+                          ? null
+                          : () async {
+                              setState(() => _busy = true);
+                              final done = await AutoBackupService.runNow();
+                              if (mounted) {
+                                setState(() => _busy = false);
+                                AnikumoDialog.showToast(
+                                  context: context,
+                                  message: done
+                                      ? S.t('备份已保存')
+                                      : S.t('导出失败，请稍后重试'),
+                                );
+                              }
+                            },
+                      child: Text(S.t('立即备份一次')),
+                    ),
+                  ],
+                ),
+                if (GStorage.getSetting(SettingsKeys.lastAutoBackupMs) >
+                    0)
+                  Text(
+                    S.f('上次自动备份：{}', [
+                      DateTime.fromMillisecondsSinceEpoch(
+                        GStorage.getSetting(SettingsKeys.lastAutoBackupMs),
+                      ).toString().substring(0, 16),
+                    ]),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+              ],
+            ),
           ),
           const SizedBox(height: StyleString.sectionSpace),
           Text(
-            '备份文件包含你的观看历史、三区收藏与进度、榜单、笔记、已装内容源和下载记录，'
-            '请像对待其他私人文件一样保管。下载的视频与漫画图片文件本身不在备份内，'
-            '恢复时文件还在本机的下载会一并复活。'
-            '换手机或重装前先导出一份，装好后在这里恢复即可。',
+            S.t('备份文件包含你的观看历史、三区收藏与进度、榜单、笔记、已装内容源和下载记录，'
+            '请像对待其他私人文件一样保管。普通备份不含下载文件本身；'
+            '「完整备份」会把已下载的漫画章节一并打包，恢复后可直接离线阅读。'
+            '换手机或重装前先导出一份，装好后在这里恢复即可。'),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),

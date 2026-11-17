@@ -43,7 +43,7 @@ __define('src/compat/venera.js', function (module, exports, __require) {
 //      MangaKit definition whose handlers translate call
 //      shapes both ways.
 // Incompatibilities are reported as diagnostics, never
-// papered over: unmapped surfaces (favorites, comments,
+// papered over: unmapped surfaces (favorites,
 // webview login) are listed on the returned registration.
 //
 // Known semantic notes (deliberate, documented):
@@ -850,6 +850,19 @@ class VeneraCompat {
       });
     }
 
+    if (instance.comic && typeof instance.comic.loadComments === 'function') {
+      def.comments = async (ctx, { comicId, subId, page, replyTo }) => withH(ctx, async () => {
+        return await instance.comic.loadComments(comicId, subId, page || 1, replyTo || null);
+      });
+    }
+
+    if (instance.comic && typeof instance.comic.sendComment === 'function') {
+      def.sendComment = async (ctx, { comicId, subId, content, replyTo }) => withH(ctx, async () => {
+        await instance.comic.sendComment(comicId, subId, content, replyTo || null);
+        return { ok: true };
+      });
+    }
+
     if (instance.account && typeof instance.account === 'object') {
       const account = instance.account;
       def.account = {
@@ -948,7 +961,6 @@ class VeneraCompat {
   _diagnostics(instance, holder) {
     const unmapped = [];
     if (instance.favorites) unmapped.push('favorites');
-    if (instance.comic && (instance.comic.loadComments || instance.comic.sendComment)) unmapped.push('comments');
     if (instance.account && instance.account.loginWithWebview) unmapped.push('account.loginWithWebview');
     if (instance.comic && instance.comic.likeId) unmapped.push('comic.like');
     if (instance.comic && instance.comic.starRating) unmapped.push('comic.starRating');
@@ -1605,6 +1617,35 @@ function normalizeDetails(raw, sourceKey, extra = {}) {
 /// Each image keeps its request headers and the three reader
 /// hooks (byte transform / modify / fallback source ids) as
 /// opaque strings the host pipeline understands.
+// Comment list (comic or chapter comments). Input shape
+// follows the de-facto source convention: either a bare
+// array or { comments: [...], maxPage }. Entries keep the
+// fields hosts render — author, avatar, text, time, reply
+// count and the id a reply threads onto.
+function normalizeComments(raw, extra = {}) {
+  const list = Array.isArray(raw) ? raw : (raw && raw.comments) || null;
+  if (!Array.isArray(list)) {
+    throw new MkError(ERR.BAD_RESULT, 'comments result has no comment list', extra);
+  }
+  const comments = [];
+  for (const entry of list) {
+    if (!isPlainObject(entry)) continue;
+    const content = str(entry.content);
+    if (!content) continue;
+    comments.push({
+      userName: str(entry.userName ?? entry.user ?? entry.name),
+      avatar: str(entry.avatar),
+      content,
+      time: str(entry.time),
+      replyCount: Math.max(0, Math.floor(num(entry.replyCount) || 0)),
+      id: entry.id != null ? String(entry.id) : '',
+    });
+  }
+  const rawMax = raw && !Array.isArray(raw) ? num(raw.maxPage) : 0;
+  const maxPage = rawMax && rawMax > 1 ? Math.floor(rawMax) : 1;
+  return { comments, maxPage };
+}
+
 function normalizePages(raw, extra = {}) {
   let list = null;
   if (Array.isArray(raw)) list = raw;
@@ -1672,6 +1713,7 @@ exports.normalizeSections = normalizeSections;
 exports.normalizeChapter = normalizeChapter;
 exports.normalizeChapters = normalizeChapters;
 exports.normalizeDetails = normalizeDetails;
+exports.normalizeComments = normalizeComments;
 exports.normalizePages = normalizePages;
 exports.normalizeCategories = normalizeCategories;
 
@@ -3330,7 +3372,7 @@ __define('src/source/dispatcher.js', function (module, exports, __require) {
 // MkError so hosts never see a bare string rejection.
 const { ERR, MkError, wrapError } = __require('../core/errors.js');
 const { withTimeout } = __require('../core/utils.js');
-const { normalizePaged, normalizeSections, normalizeDetails, normalizeChapters, normalizePages, normalizeCategories } = __require('../core/validate.js');
+const { normalizePaged, normalizeSections, normalizeDetails, normalizeChapters, normalizePages, normalizeCategories, normalizeComments } = __require('../core/validate.js');
 const { SourceState } = __require('./define.js');
 const { isVerificationMessage } = __require('../core/verification.js');
 
@@ -3349,6 +3391,8 @@ const KIND_TIMEOUTS = {
   account: 15000,
   login: 180000,
   logout: 15000,
+  comments: 30000,
+  sendComment: 30000,
 };
 
 function handlerOf(def, kind) {
@@ -3364,6 +3408,8 @@ function handlerOf(def, kind) {
     case 'imageOnResponse': return def.imageOnResponse;
     case 'imageModify': return def.imageModify;
     case 'imageFallback': return def.imageFallback;
+    case 'comments': return def.comments;
+    case 'sendComment': return def.sendComment;
     default: return null;
   }
 }
@@ -3564,6 +3610,20 @@ class Dispatcher {
         const raw = await this._runSource(() => load(ctx, { id: args.id }), extra);
         const list = Array.isArray(raw) ? raw : (raw && raw.images) || [];
         return { images: list.map((u) => (typeof u === 'string' ? u : (u && u.url) || '')).filter(Boolean) };
+      }
+      case 'comments': {
+        const raw = await this._runSource(() => load(ctx, {
+          comicId: args.comicId, subId: args.subId,
+          page: args.page || 1, replyTo: args.replyTo || null,
+        }), extra);
+        return normalizeComments(raw, extra);
+      }
+      case 'sendComment': {
+        await this._runSource(() => load(ctx, {
+          comicId: args.comicId, subId: args.subId,
+          content: args.content || '', replyTo: args.replyTo || null,
+        }), extra);
+        return { ok: true };
       }
       case 'imageOnResponse': {
         const raw = await this._runSource(() => load(ctx, {

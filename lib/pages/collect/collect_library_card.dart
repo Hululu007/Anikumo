@@ -107,13 +107,13 @@ class _CollectPosterCard extends StatelessWidget {
                         hasRating ? item.ratingScore.toStringAsFixed(1) : ''),
                   if (showStatus) ...[
                     if (showRating) const SizedBox(height: 2),
-                    detailLine(type.label, status: true),
+                    detailLine(S.t(type.label), status: true),
                   ],
                 ],
               )
             : detailLine([
-                if (hasRating) '${item.ratingScore.toStringAsFixed(1)} 分',
-                if (showStatus) type.label,
+                if (hasRating) S.f('{} 分', [item.ratingScore.toStringAsFixed(1)]),
+                if (showStatus) S.t(type.label),
               ].join(' · ')),
       );
       final menu = _CollectEntryMenu(entry: entry, onChanged: onChangeType);
@@ -186,9 +186,9 @@ class _CollectPosterCard extends StatelessWidget {
           button: true,
           label: [
             title,
-            type.label,
-            if (year != null) '$year 年',
-            if (hasRating) '${item.ratingScore.toStringAsFixed(1)} 分',
+            S.t(type.label),
+            if (year != null) S.f('{} 年', [year]),
+            if (hasRating) S.f('{} 分', [item.ratingScore.toStringAsFixed(1)]),
           ].join('，'),
           child: InkWell(
             onTap: onOpen,
@@ -233,9 +233,9 @@ class _CollectListTile extends StatelessWidget {
     final title = CollectLibraryQuery.titleOf(entry);
     final airDate = DateTime.tryParse(item.airDate);
     final metadata = [
-      if (airDate != null) '${airDate.year} 年',
+      if (airDate != null) S.f('{} 年', [airDate.year]),
       if (showRating && item.ratingScore > 0)
-        '${item.ratingScore.toStringAsFixed(1)} 分',
+        S.f('{} 分', [item.ratingScore.toStringAsFixed(1)]),
     ];
 
     return Material(
@@ -383,20 +383,20 @@ class _CollectEntryMenu extends StatelessWidget {
             onPressed: onChanged == null || status == type
                 ? null
                 : () => onChanged!(status),
-            label: status.label,
+            label: S.t(status.label),
           ),
         const Divider(indent: 16, endIndent: 16),
         AnikumoMenuItem(
           onPressed:
               onChanged == null ? null : () => onChanged!(CollectType.none),
-          label: '取消收藏',
+          label: S.t('取消收藏'),
           destructive: true,
         ),
       ],
       builder: (context, toggle) {
         return showStatusLabel
             ? Tooltip(
-                message: '调整《$title》的观看状态',
+                message: S.f('调整《{}》的观看状态', [title]),
                 child: FilledButton.tonalIcon(
                   style: FilledButton.styleFrom(
                     visualDensity: VisualDensity.standard,
@@ -407,11 +407,11 @@ class _CollectEntryMenu extends StatelessWidget {
                   onPressed: toggle,
                   iconAlignment: IconAlignment.end,
                   icon: const Icon(AnikumoIcons.expand_more_rounded, size: 18),
-                  label: Text(type.label),
+                  label: Text(S.t(type.label)),
                 ),
               )
             : IconButton(
-                tooltip: '管理《$title》 · ${type.label}',
+                tooltip: S.f('管理《{}》 · {}', [title, S.t(type.label)]),
                 onPressed: toggle,
                 style: IconButton.styleFrom(
                   foregroundColor: colors.onSurfaceVariant,

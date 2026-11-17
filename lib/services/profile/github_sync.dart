@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
@@ -170,7 +171,7 @@ abstract final class GithubSync {
 
   static Future<GithubDeviceCode> startDeviceFlow() async {
     if (!configured) {
-      throw GithubSyncException('这个版本没有配置 GitHub 登录（缺少应用标识）。');
+      throw GithubSyncException(S.t('这个版本没有配置 GitHub 登录（缺少应用标识）。'));
     }
     final res = await _http(
       'POST',
@@ -181,7 +182,7 @@ abstract final class GithubSync {
     final code = body['device_code'];
     final userCode = body['user_code'];
     if (res.status != 200 || code is! String || userCode is! String) {
-      throw GithubSyncException('无法向 GitHub 申请登录码，请检查网络后重试。');
+      throw GithubSyncException(S.t('无法向 GitHub 申请登录码，请检查网络后重试。'));
     }
     return GithubDeviceCode(
       deviceCode: code,
@@ -262,7 +263,7 @@ abstract final class GithubSync {
       headers: _apiHeaders,
     );
     if (res.status != 200) {
-      throw GithubSyncException('读取仓库列表失败（${res.status}），请检查网络或重新登录。');
+      throw GithubSyncException(S.f('读取仓库列表失败（{}），请检查网络或重新登录。', [res.status]));
     }
     final items = res.data is List ? res.data as List : const [];
     return [
@@ -297,7 +298,7 @@ abstract final class GithubSync {
       final user = username.isNotEmpty ? username : (await _fetchLogin());
       if (user.isNotEmpty) return '$user/$defaultRepoName';
     }
-    throw GithubSyncException('创建同步仓库失败（${res.status}）。');
+    throw GithubSyncException(S.f('创建同步仓库失败（{}）。', [res.status]));
   }
 
   static Future<String> _fetchLogin() async {
@@ -325,7 +326,7 @@ abstract final class GithubSync {
     );
     if (res.status == 404) return (payload: null, sha: null);
     if (res.status != 200) {
-      throw GithubSyncException('读取远端同步文件失败（${res.status}）。');
+      throw GithubSyncException(S.f('读取远端同步文件失败（{}）。', [res.status]));
     }
     final body = _asMap(res.data);
     final encoded = '${body['content'] ?? ''}'.replaceAll('\n', '');
@@ -346,8 +347,8 @@ abstract final class GithubSync {
   static Future<String> syncNow({
     required Future<bool> Function(DateTime remoteAt) confirmPull,
   }) async {
-    if (!connected) throw GithubSyncException('请先登录 GitHub。');
-    if (syncRepo.isEmpty) throw GithubSyncException('请先选择或创建同步仓库。');
+    if (!connected) throw GithubSyncException(S.t('请先登录 GitHub。'));
+    if (syncRepo.isEmpty) throw GithubSyncException(S.t('请先选择或创建同步仓库。'));
     final remote = await _fetchRemote();
     final remoteAt = parseSyncExportedAt(remote.payload);
     final lastKnown = GStorage.getSetting(
@@ -359,10 +360,10 @@ abstract final class GithubSync {
           lastKnownExportedAt: lastKnown,
         )) {
       final at = remoteAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-      if (!await confirmPull(at)) return '已取消：远端较新，未做任何改动。';
+      if (!await confirmPull(at)) return S.t('已取消：远端较新，未做任何改动。');
       final data = LocalBackup.parse(remote.payload!);
       if (data == null) {
-        throw GithubSyncException('远端文件不是有效的 Anikumo 备份，未做任何改动。');
+        throw GithubSyncException(S.t('远端文件不是有效的 Anikumo 备份，未做任何改动。'));
       }
       await LocalBackup.apply(data);
       await GStorage.putSetting(
@@ -373,14 +374,13 @@ abstract final class GithubSync {
         SettingsKeys.githubLastSyncAt,
         DateTime.now().toIso8601String(),
       );
-      return '已从云端拉取并应用（远端时间 ${remoteAt?.toLocal()}）。';
+      return S.f('已从云端拉取并应用（远端时间 {}）。', [remoteAt?.toLocal()]);
     }
     // Push path.
     final payload = await LocalBackup.exportJson();
     if (utf8.encode(payload).length > maxPayloadBytes) {
       throw GithubSyncException(
-        '本地数据超过 GitHub 单文件接口上限（约 1MB），本次未同步。'
-        '可以先到本地备份页导出文件手动保存。',
+        S.t('本地数据超过 GitHub 单文件接口上限（约 1MB），本次未同步。可以先到本地备份页导出文件手动保存。'),
       );
     }
     var sha = remote.sha;
@@ -405,7 +405,7 @@ abstract final class GithubSync {
           SettingsKeys.githubLastSyncAt,
           DateTime.now().toIso8601String(),
         );
-        return '已把本机数据同步到云端仓库。';
+        return S.t('已把本机数据同步到云端仓库。');
       }
       if ((res.status == 409 || res.status == 422) && attempt == 0) {
         // The file moved under us — refetch its sha and
@@ -413,8 +413,8 @@ abstract final class GithubSync {
         sha = (await _fetchRemote()).sha;
         continue;
       }
-      throw GithubSyncException('上传同步文件失败（${res.status}）。');
+      throw GithubSyncException(S.f('上传同步文件失败（{}）。', [res.status]));
     }
-    throw GithubSyncException('上传同步文件失败，请稍后重试。');
+    throw GithubSyncException(S.t('上传同步文件失败，请稍后重试。'));
   }
 }

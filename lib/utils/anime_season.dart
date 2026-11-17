@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 /// This class asks for DateTime to get a string to indicate seasonal anime
 class AnimeSeason {
   late DateTime _date;
@@ -48,7 +49,7 @@ class AnimeSeason {
   String toString() {
     var yas = _getYearAndSeason(_date);
 
-    return '${yas[0]}年${_seasons[yas[1]]}新番';
+    return S.f('{}年{}新番', [yas[0], S.t(_seasons[yas[1]])]);
   }
 }
 

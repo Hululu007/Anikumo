@@ -35,14 +35,14 @@ void _showCustomKeywordDialog({
 
   AnikumoDialog.show(
     builder: (context) => AlertDialog(
-      title: const Text('修改检索词'),
+      title: Text(S.t('修改检索词')),
       content: TextFormField(
         initialValue: initialKeyword,
         autofocus: true,
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
-          labelText: '检索关键词',
-          helperText: '仅检索来源：$sourceName',
+          labelText: S.t('检索关键词'),
+          helperText: S.f('仅检索来源：{}', [sourceName]),
           helperMaxLines: 3,
           border: const OutlineInputBorder(),
         ),
@@ -53,13 +53,13 @@ void _showCustomKeywordDialog({
         TextButton(
           onPressed: AnikumoDialog.dismiss,
           child: Text(
-            '取消',
+            S.t('取消'),
             style: TextStyle(color: Theme.of(context).colorScheme.outline),
           ),
         ),
         TextButton(
           onPressed: () => submit(keyword),
-          child: const Text('检索'),
+          child: Text(S.t('检索')),
         ),
       ],
     ),
@@ -87,13 +87,13 @@ class _AliasPickerDialogState extends State<_AliasPickerDialog> {
   void _confirmDelete(int index) {
     AnikumoDialog.show(
       builder: (context) => AlertDialog(
-        title: const Text('删除确认'),
-        content: const Text('删除后无法恢复，确认要永久删除这个别名吗？'),
+        title: Text(S.t('删除确认')),
+        content: Text(S.t('删除后无法恢复，确认要永久删除这个别名吗？')),
         actions: [
           TextButton(
             onPressed: AnikumoDialog.dismiss,
             child: Text(
-              '取消',
+              S.t('取消'),
               style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
           ),
@@ -107,7 +107,7 @@ class _AliasPickerDialogState extends State<_AliasPickerDialog> {
                 Navigator.of(this.context).pop();
               }
             },
-            child: const Text('确认'),
+            child: Text(S.t('确认')),
           ),
         ],
       ),
@@ -128,10 +128,10 @@ class _AliasPickerDialogState extends State<_AliasPickerDialog> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('别名检索', style: Theme.of(context).textTheme.titleLarge),
+                  Text(S.t('别名检索'), style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 8),
                   Text(
-                    '仅检索来源：${widget.sourceName}',
+                    S.f('仅检索来源：{}', [widget.sourceName]),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -143,6 +143,7 @@ class _AliasPickerDialogState extends State<_AliasPickerDialog> {
               ListTile(
                 title: Text(widget.aliases[index]),
                 trailing: IconButton(
+                  tooltip: S.t('删除'),
                   onPressed: () => _confirmDelete(index),
                   icon: const Icon(AnikumoIcons.delete),
                 ),

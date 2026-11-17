@@ -10,6 +10,7 @@ import 'package:anikumo/services/download/background_download_service.dart';
 import 'package:anikumo/services/download/download_manager.dart';
 import 'package:anikumo/utils/format.dart';
 import 'package:anikumo/services/logging/logger.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/services/video_source/services.dart';
 import 'package:anikumo/request/apis/danmaku_api.dart';
@@ -563,7 +564,7 @@ abstract class _DownloadController with Store {
       final plugin = _findPlugin(request.pluginName);
       if (plugin == null) {
         _failEpisode(request.recordKey, request.episodeNumber,
-            '找不到插件 ${request.pluginName}');
+            S.f('找不到插件 {}', [request.pluginName]));
         return;
       }
 
@@ -614,7 +615,7 @@ abstract class _DownloadController with Store {
       }
 
       if (m3u8Url == null || m3u8Url.isEmpty) {
-        _failEpisode(request.recordKey, request.episodeNumber, '解析视频源超时');
+        _failEpisode(request.recordKey, request.episodeNumber, S.t('解析视频源超时'));
         return;
       }
 
@@ -803,7 +804,7 @@ abstract class _DownloadController with Store {
 
     final plugin = _findPlugin(pluginName);
     if (plugin == null) {
-      _failEpisode(recordKey, episodeNumber, '找不到插件 $pluginName');
+      _failEpisode(recordKey, episodeNumber, S.f('找不到插件 {}', [pluginName]));
       return;
     }
 
@@ -923,7 +924,7 @@ abstract class _DownloadController with Store {
 
     final plugin = _findPlugin(pluginName);
     if (plugin == null) {
-      _failEpisode(recordKey, episodeNumber, '找不到插件 $pluginName');
+      _failEpisode(recordKey, episodeNumber, S.f('找不到插件 {}', [pluginName]));
       return;
     }
 

@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:flutter/material.dart';
 
 import 'package:anikumo/bean/dialog/dialog.dart';
@@ -19,13 +20,13 @@ String mangaDiagnosticsText(Map<String, dynamic> diagnostics) {
   final parts = <String>[];
   final unmapped = diagnostics['unmappedSurfaces'];
   if (unmapped is List && unmapped.isNotEmpty) {
-    parts.add('以下功能暂未适配：${unmapped.join('、')}');
+    parts.add(S.f('以下功能暂未适配：{}', [unmapped.join('、')]));
   }
   final warning = diagnostics['initWarning']?.toString() ?? '';
-  if (warning.isNotEmpty) parts.add('初始化提示：$warning');
+  if (warning.isNotEmpty) parts.add(S.f('初始化提示：{}', [warning]));
   return parts.isEmpty
-      ? '兼容性检查：全部通过'
-      : '兼容性提示：${parts.join('；')}';
+      ? S.t('兼容性检查：全部通过')
+      : S.f('兼容性提示：{}', [parts.join('；')]);
 }
 
 class MangaSourceSettingsPanel extends StatefulWidget {
@@ -77,9 +78,9 @@ class _MangaSourceSettingsPanelState
       await widget.source.writeSetting(key, value);
       if (!mounted) return;
       setState(() => _values = widget.source.settingValues());
-      AnikumoDialog.showToast(message: '已保存');
+      AnikumoDialog.showToast(message: S.t('已保存'));
     } catch (_) {
-      if (mounted) AnikumoDialog.showToast(message: '保存失败，请重试');
+      if (mounted) AnikumoDialog.showToast(message: S.t('保存失败，请重试'));
     } finally {
       if (mounted) setState(() => _busyKey = null);
     }
@@ -91,9 +92,9 @@ class _MangaSourceSettingsPanelState
       await widget.source.invokeSettingCallback(def.key);
       if (!mounted) return;
       setState(() => _values = widget.source.settingValues());
-      AnikumoDialog.showToast(message: '已执行「${def.title}」');
+      AnikumoDialog.showToast(message: S.f('已执行「{}」', [def.title]));
     } catch (_) {
-      if (mounted) AnikumoDialog.showToast(message: '执行失败，请重试');
+      if (mounted) AnikumoDialog.showToast(message: S.t('执行失败，请重试'));
     } finally {
       if (mounted) setState(() => _busyKey = null);
     }
@@ -119,7 +120,7 @@ class _MangaSourceSettingsPanelState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '版本 ${source.version} · ${source.jsKey} · ${source.fileName}',
+            S.f('版本 {} · {} · {}', [source.version, source.jsKey, source.fileName]),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -127,14 +128,14 @@ class _MangaSourceSettingsPanelState
           if (source.declaredUrl != null) ...[
             const SizedBox(height: 6),
             SelectableText(
-              '源站：${source.declaredUrl}',
+              S.f('源站：{}', [source.declaredUrl]),
               style: theme.textTheme.bodySmall,
             ),
           ],
           if (origin != null) ...[
             const SizedBox(height: 6),
             SelectableText(
-              '来源：$origin',
+              S.f('来源：{}', [origin]),
               style: theme.textTheme.bodySmall,
             ),
           ],
@@ -153,15 +154,15 @@ class _MangaSourceSettingsPanelState
               alignment: Alignment.centerLeft,
               child: TextButton(
                 onPressed: widget.onActivate,
-                child: const Text('设为当前源'),
+                child: Text(S.t('设为当前源')),
               ),
             ),
           ],
           const Divider(height: 20),
           if (_failed)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 8),
-              child: Text('设置读取失败，折叠后重新展开可重试'),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(S.t('设置读取失败，折叠后重新展开可重试')),
             )
           else if (_schema == null)
             const Padding(
@@ -173,9 +174,9 @@ class _MangaSourceSettingsPanelState
               ),
             )
           else if (_schema!.isEmpty)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 8),
-              child: Text('这个源没有可设置的项'),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(S.t('这个源没有可设置的项')),
             )
           else
             for (final def in _schema!) _editor(theme, def),
@@ -231,7 +232,7 @@ class _MangaSourceSettingsPanelState
               Expanded(child: Text(def.title)),
               FilledButton.tonal(
                 onPressed: busy ? null : () => _runCallback(def),
-                child: Text(def.buttonText ?? '执行'),
+                child: Text(def.buttonText ?? S.t('执行')),
               ),
             ],
           ),
@@ -283,7 +284,7 @@ class _InputSettingEditorState extends State<_InputSettingEditor> {
     if (validator != null && validator.isNotEmpty) {
       try {
         if (!RegExp(validator).hasMatch(value)) {
-          AnikumoDialog.showToast(message: '「${widget.def.title}」格式不正确');
+          AnikumoDialog.showToast(message: S.f('「{}」格式不正确', [widget.def.title]));
           return;
         }
       } catch (_) {
@@ -313,7 +314,7 @@ class _InputSettingEditorState extends State<_InputSettingEditor> {
           const SizedBox(width: 8),
           TextButton(
             onPressed: widget.busy ? null : _save,
-            child: const Text('保存'),
+            child: Text(S.t('保存')),
           ),
         ],
       ),

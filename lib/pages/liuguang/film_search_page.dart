@@ -5,6 +5,8 @@ import 'package:liuguang_core/liuguang_core.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
 import 'package:anikumo/pages/liuguang/film_discover_tab.dart';
 import 'package:anikumo/pages/liuguang/film_widgets.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
+import 'package:anikumo/services/i18n/film_vocab_i18n.dart';
 import 'package:anikumo/services/liuguang/cms_api_source.dart';
 import 'package:anikumo/services/liuguang/tmdb_enrich.dart';
 import 'package:anikumo/services/liuguang/video_engine.dart';
@@ -78,7 +80,7 @@ class _FilmSearchPageState extends State<FilmSearchPage> {
       _results = page.items;
       _searched = true;
     } catch (e) {
-      _error = '搜索失败：$e';
+      _error = S.f('搜索失败：{}', [e]);
     } finally {
       if (mounted) setState(() => _searching = false);
     }
@@ -154,9 +156,9 @@ class _FilmSearchPageState extends State<FilmSearchPage> {
       var matches = _matchesByIndex[index];
       if (matches == null && _matcher != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('正在为你找可用线路…'),
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Text(S.t('正在为你找可用线路…')),
+            duration: const Duration(seconds: 2),
           ),
         );
         matches = await _matcher!.matchesFor(work);
@@ -169,7 +171,11 @@ class _FilmSearchPageState extends State<FilmSearchPage> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('已装的源里还没找到《${work.title}》，转到源内搜索看看')),
+        SnackBar(
+          content: Text(
+            S.f('已装的源里还没找到《{}》，转到源内搜索看看', [work.title]),
+          ),
+        ),
       );
       _controller.text = work.title;
       _setMode(false);
@@ -203,7 +209,7 @@ class _FilmSearchPageState extends State<FilmSearchPage> {
                 child: Row(
                   children: [
                     IconButton(
-                      tooltip: '返回',
+                      tooltip: S.t('返回'),
                       icon: const Icon(AnikumoIcons.arrow_back_rounded),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
@@ -212,15 +218,15 @@ class _FilmSearchPageState extends State<FilmSearchPage> {
                         controller: _controller,
                         autofocus: widget.initialQuery.isEmpty,
                         textInputAction: TextInputAction.search,
-                        decoration: const InputDecoration(
-                          hintText: '搜索电视剧 / 电影',
+                        decoration: InputDecoration(
+                          hintText: S.t('搜索电视剧 / 电影'),
                           border: InputBorder.none,
                         ),
                         onSubmitted: (_) => _search(),
                       ),
                     ),
                     IconButton(
-                      tooltip: '搜索',
+                      tooltip: S.t('搜索'),
                       icon: const Icon(AnikumoIcons.search_rounded),
                       onPressed: _search,
                     ),
@@ -246,20 +252,20 @@ class _FilmSearchPageState extends State<FilmSearchPage> {
       child: Row(
         children: [
           ChoiceChip(
-            label: const Text('源内搜索'),
+            label: Text(S.t('源内搜索')),
             selected: !_tmdbMode,
             onSelected: (_) => _setMode(false),
           ),
           const SizedBox(width: 7),
           ChoiceChip(
-            label: const Text('TMDB 作品'),
+            label: Text(S.t('TMDB 作品')),
             selected: _tmdbMode,
             onSelected: (_) => _setMode(true),
           ),
           const Spacer(),
           if (_tmdbMode)
             Text(
-              '作品数据来自 TMDB',
+              S.t('作品数据来自 TMDB'),
               style: TextStyle(color: scheme.outline, fontSize: 11),
             ),
         ],
@@ -269,10 +275,10 @@ class _FilmSearchPageState extends State<FilmSearchPage> {
 
   Widget _body(BuildContext context) {
     if (!VideoEngineService.instance.hasSources) {
-      return const FilmEmptyState(
+      return FilmEmptyState(
         icon: AnikumoIcons.dns_rounded,
-        title: '还没有可用的数据源',
-        message: '先到「源」页添加仓库或接口，再回来搜索。',
+        title: S.t('还没有可用的数据源'),
+        message: S.t('先到「源」页添加仓库或接口，再回来搜索。'),
       );
     }
     if (_searching) {
@@ -281,19 +287,19 @@ class _FilmSearchPageState extends State<FilmSearchPage> {
     if (_error != null) {
       return FilmEmptyState(
         icon: AnikumoIcons.search_rounded,
-        title: '搜索',
+        title: S.t('搜索'),
         message: _error!,
-        actionLabel: '重试',
+        actionLabel: S.t('重试'),
         onAction: _search,
       );
     }
     if (!_searched) {
       return FilmEmptyState(
         icon: AnikumoIcons.search_rounded,
-        title: '搜索',
+        title: S.t('搜索'),
         message: _tmdbMode
-            ? '输入片名，先看 TMDB 的作品资料，再自动为你匹配可播的源。'
-            : '输入片名，同时在全部已启用的源里查找。',
+            ? S.t('输入片名，先看 TMDB 的作品资料，再自动为你匹配可播的源。')
+            : S.t('输入片名，同时在全部已启用的源里查找。'),
       );
     }
     if (_tmdbMode) return _tmdbBody(context);
@@ -305,10 +311,10 @@ class _FilmSearchPageState extends State<FilmSearchPage> {
     if (filtered.isEmpty) {
       final empty = FilmEmptyState(
         icon: AnikumoIcons.search_rounded,
-        title: '没有找到结果',
+        title: S.t('没有找到结果'),
         message: _kindFilter == FilmKindFilter.all
-            ? '换个片名试试，或检查源是否可用。'
-            : '当前分类下没有结果，试试切换到「全部」。',
+            ? S.t('换个片名试试，或检查源是否可用。')
+            : S.t('当前分类下没有结果，试试切换到「全部」。'),
       );
       if (tagGenre == null) return empty;
       return Column(
@@ -333,7 +339,7 @@ class _FilmSearchPageState extends State<FilmSearchPage> {
             children: [
               for (final filter in FilmKindFilter.values) ...[
                 ChoiceChip(
-                  label: Text(filter.label),
+                  label: Text(filmKindLabel(filter.label)),
                   selected: _kindFilter == filter,
                   onSelected: (_) => setState(() => _kindFilter = filter),
                 ),
@@ -341,7 +347,7 @@ class _FilmSearchPageState extends State<FilmSearchPage> {
               ],
               const Spacer(),
               Text(
-                '共 ${filtered.length} 部',
+                S.f('共 {} 部', [filtered.length]),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -359,14 +365,14 @@ class _FilmSearchPageState extends State<FilmSearchPage> {
                   child: Row(
                     children: [
                       Text(
-                        names[entry.key] ?? '未知来源',
+                        names[entry.key] ?? S.t('未知来源'),
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '${entry.value.length} 部',
+                        S.f('{} 部', [entry.value.length]),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -416,7 +422,7 @@ class _FilmSearchPageState extends State<FilmSearchPage> {
               kind: FilmKindFilter.all,
               genre: tag,
               allSources: true,
-              title: '标签：$tag',
+              title: S.f('标签：{}', [filmGenreLabel(tag)]),
             ),
           ),
           child: Padding(
@@ -425,7 +431,7 @@ class _FilmSearchPageState extends State<FilmSearchPage> {
               children: [
                 Expanded(
                   child: Text(
-                    '按标签浏览「$tag」',
+                    S.f('按标签浏览「{}」', [filmGenreLabel(tag)]),
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
@@ -446,9 +452,9 @@ class _FilmSearchPageState extends State<FilmSearchPage> {
     if (_works.isEmpty) {
       return FilmEmptyState(
         icon: AnikumoIcons.search_rounded,
-        title: 'TMDB 没有找到',
-        message: 'TMDB 未收录这个片名时有发生，源内搜索可能有。',
-        actionLabel: '转到源内搜索',
+        title: S.t('TMDB 没有找到'),
+        message: S.t('TMDB 未收录这个片名时有发生，源内搜索可能有。'),
+        actionLabel: S.t('转到源内搜索'),
         onAction: () => _setMode(false),
       );
     }
@@ -460,14 +466,14 @@ class _FilmSearchPageState extends State<FilmSearchPage> {
           child: Row(
             children: [
               Text(
-                '共 ${_works.length} 部作品',
+                S.f('共 {} 部作品', [_works.length]),
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(color: variant),
               ),
               const Spacer(),
               Text(
-                '点开自动落到可播的源',
+                S.t('点开自动落到可播的源'),
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(color: variant),
@@ -536,8 +542,8 @@ class _FilmSearchPageState extends State<FilmSearchPage> {
                         ),
                         child: Text(
                           matches.isNotEmpty
-                              ? '${matches.length} 个源可播'
-                              : '暂无可播源',
+                              ? S.f('{} 个源可播', [matches.length])
+                              : S.t('暂无可播源'),
                           style: TextStyle(
                             color: matches.isNotEmpty
                                 ? scheme.onPrimary
@@ -562,7 +568,7 @@ class _FilmSearchPageState extends State<FilmSearchPage> {
           Text(
             [
               if (work.year != null) '${work.year}',
-              work.isSeries ? '剧' : '影',
+              work.isSeries ? S.t('剧') : S.t('影'),
               if (work.score > 0) '★ ${work.score.toStringAsFixed(1)}',
             ].join(' · '),
             maxLines: 1,

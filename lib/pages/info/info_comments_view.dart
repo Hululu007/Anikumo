@@ -5,6 +5,7 @@ import 'package:anikumo/bean/widget/error_widget.dart';
 import 'package:anikumo/modules/bangumi/bangumi_interest.dart';
 import 'package:anikumo/modules/comments/comment_item.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class InfoCommentsView extends StatelessWidget {
   const InfoCommentsView({
@@ -112,8 +113,8 @@ class InfoCommentsView extends StatelessWidget {
                 SliverFillRemaining(
                   hasScrollBody: false,
                   child: GeneralErrorWidget(
-                    title: '评论加载失败',
-                    errMsg: '请检查网络连接后重试。',
+                    title: S.t('评论加载失败'),
+                    errMsg: S.t('请检查网络连接后重试。'),
                     onRetry: onRetry,
                   ),
                 )
@@ -122,14 +123,14 @@ class InfoCommentsView extends StatelessWidget {
                   hasScrollBody: false,
                   child: GeneralEmptyState(
                     icon: AnikumoIcons.chat_bubble_outline_rounded,
-                    title: '暂无吐槽',
+                    title: S.t('暂无吐槽'),
                     actions: [
                       TextButton(
                         onPressed: onReviewTap,
                         style: TextButton.styleFrom(
                           minimumSize: const Size(48, 48),
                         ),
-                        child: const Text(_writeReviewLabel),
+                        child: Text(S.t(_writeReviewLabel)),
                       ),
                     ],
                   ),
@@ -170,7 +171,7 @@ class InfoCommentsView extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       child: Row(children: [
-        Expanded(child: Text(editing ? '编辑' : _writeReviewLabel)),
+        Expanded(child: Text(editing ? S.t('编辑') : S.t(_writeReviewLabel))),
         const SizedBox(width: 8),
         const Icon(AnikumoIcons.chevron_right_rounded, size: 20),
       ]),
@@ -189,7 +190,7 @@ class InfoCommentsView extends StatelessWidget {
             child: TextButton(
               onPressed: onReviewTap,
               style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
-              child: const Text('编辑'),
+              child: Text(S.t('编辑')),
             ),
           ),
         ),

@@ -4,6 +4,8 @@ import 'package:anikumo/bean/widget/anikumo_icons.dart';
 import 'package:anikumo/pages/liuguang/film_widgets.dart';
 
 import 'package:anikumo/pages/liuguang/film_account_section.dart';
+import 'package:anikumo/pages/settings/language_setting_tile.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/liuguang/film_prefs.dart';
 import 'package:anikumo/services/liuguang/film_probes.dart';
 import 'package:anikumo/services/liuguang/tmdb_enrich.dart';
@@ -32,17 +34,17 @@ class FilmSettingsTab extends StatelessWidget {
           children: [
             // Batch 221: editorial title bar.
             FilmEditorialTitle(
-              eyebrow: 'SETTINGS · 设置',
-              title: filmHeadline(context, '设置'),
+              eyebrow: S.t('SETTINGS · 设置'),
+              title: filmHeadline(context, S.t('设置')),
               padding: const EdgeInsets.fromLTRB(4, 2, 4, 10),
             ),
+            const LanguageSettingTile(),
             _title(context, '播放'),
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(AnikumoIcons.play_circle_rounded),
-              title: const Text('与动漫区共用播放器'),
-              subtitle: const Text(
-                '跳过片头片尾、默认倍速、弹幕显示等在「设置 → 播放设置」里调整，对本专区同样生效。',
+              title: Text(S.t('与动漫区共用播放器')),
+              subtitle: Text(S.t('跳过片头片尾、默认倍速、弹幕显示等在「设置 → 播放设置」里调整，对本专区同样生效。'),
               ),
             ),
             const SizedBox(height: 14),
@@ -54,8 +56,8 @@ class FilmSettingsTab extends StatelessWidget {
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(AnikumoIcons.extension_rounded),
-              title: const Text('功能仓库'),
-              subtitle: const Text('极速解析、线路测速、下载省空间、追剧自动更新等可选功能'),
+              title: Text(S.t('功能仓库')),
+              subtitle: Text(S.t('极速解析、线路测速、下载省空间、追剧自动更新等可选功能')),
               trailing: const Icon(AnikumoIcons.chevron_right_rounded),
               onTap: () => context.pushNamed('/film/features'),
             ),
@@ -68,23 +70,25 @@ class FilmSettingsTab extends StatelessWidget {
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(AnikumoIcons.download_rounded),
-              title: const Text('下载管理'),
-              subtitle: const Text('查看进度、暂停续传、离线播放已下载的剧集'),
+              title: Text(S.t('下载管理')),
+              subtitle: Text(S.t('查看进度、暂停续传、离线播放已下载的剧集')),
               trailing: const Icon(AnikumoIcons.chevron_right_rounded),
               onTap: () => context.pushNamed('/film/downloads'),
             ),
             const SizedBox(height: 14),
             _title(context, '数据源'),
-            _infoRow(context, '已添加仓库', '${service.repositories.length} 个'),
-            _infoRow(context, '已装接口源', '${service.sources.length} 个'),
+            _infoRow(context, '已添加仓库',
+                S.f('{} 个', [service.repositories.length])),
+            _infoRow(
+                context, '已装接口源', S.f('{} 个', [service.sources.length])),
             _infoRow(
               context,
               '已启用接口源',
-              '${service.sources.where((s) => s.enabled).length} 个',
+              S.f('{} 个',
+                  [service.sources.where((s) => s.enabled).length]),
             ),
             const SizedBox(height: 6),
-            Text(
-              '仓库与接口源在「源」页签里管理。',
+            Text(S.t('仓库与接口源在「源」页签里管理。'),
               style: TextStyle(color: variant, fontSize: 12.5),
             ),
           ],
@@ -97,7 +101,7 @@ class FilmSettingsTab extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Text(
-        text,
+        S.t(text),
         style: Theme.of(
           context,
         ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
@@ -110,7 +114,7 @@ class FilmSettingsTab extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
         children: [
-          Expanded(child: Text(label)),
+          Expanded(child: Text(S.t(label))),
           Text(
             value,
             style: TextStyle(
@@ -152,8 +156,7 @@ class _TmdbModeSectionState extends State<_TmdbModeSection> {
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: 6),
-          child: Text(
-            '资料',
+          child: Text(S.t('资料'),
             style: Theme.of(
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
@@ -162,11 +165,11 @@ class _TmdbModeSectionState extends State<_TmdbModeSection> {
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           secondary: const Icon(AnikumoIcons.language_rounded),
-          title: const Text('TMDB 海外资料'),
+          title: Text(S.t('TMDB 海外资料')),
           subtitle: Text(
             _overseas
-                ? '当前：海外 — 标题、简介、海报与影评按原文（多为英文）显示'
-                : '当前：国内 — 标题、简介、海报与影评优先中文',
+                ? S.t('当前：海外 — 标题、简介、海报与影评按原文（多为英文）显示')
+                : S.t('当前：国内 — 标题、简介、海报与影评优先中文'),
           ),
           value: _overseas,
           onChanged: (value) {
@@ -229,10 +232,10 @@ class _PlaybackSourceSectionState extends State<_PlaybackSourceSection> {
     final fastest = FilmSourceSpeeds.fastestId(DateTime.now());
     if (fastest != null) {
       for (final s in VideoEngineService.instance.sources) {
-        if (s.id == fastest) return '当前最快：${s.name}';
+        if (s.id == fastest) return S.f('当前最快：{}', [s.name]);
       }
     }
-    return '按自动测速排序取源';
+    return S.t('按自动测速排序取源');
   }
 
   Future<void> _pickCustom() async {
@@ -243,7 +246,7 @@ class _PlaybackSourceSectionState extends State<_PlaybackSourceSection> {
     final picked = await showDialog<String>(
       context: context,
       builder: (ctx) => SimpleDialog(
-        title: const Text('自定义看剧接口'),
+        title: Text(S.t('自定义看剧接口')),
         children: [
           for (final s in enabled)
             SimpleDialogOption(
@@ -267,21 +270,19 @@ class _PlaybackSourceSectionState extends State<_PlaybackSourceSection> {
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: 6),
-          child: Text(
-            '看剧取源',
+          child: Text(S.t('看剧取源'),
             style: Theme.of(
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
         ),
-        Text(
-          '点开一部剧时用哪个接口的片源。与下面的「主页接口」分工不同：主页接口管首页货架的目录，这个管播放取源；两者共用同一份接口列表和测速结果。',
+        Text(S.t('点开一部剧时用哪个接口的片源。与下面的「主页接口」分工不同：主页接口管首页货架的目录，这个管播放取源；两者共用同一份接口列表和测速结果。'),
           style: TextStyle(color: variant, fontSize: 12.5),
         ),
         const SizedBox(height: 4),
         ListTile(
           contentPadding: EdgeInsets.zero,
-          title: const Text('最快优先'),
+          title: Text(S.t('最快优先')),
           subtitle: Text(_fastestLabel),
           trailing: pin == null
               ? const Icon(AnikumoIcons.check_circle_rounded)
@@ -290,11 +291,12 @@ class _PlaybackSourceSectionState extends State<_PlaybackSourceSection> {
         ),
         ListTile(
           contentPadding: EdgeInsets.zero,
-          title: const Text('自定义'),
+          title: Text(S.t('自定义')),
           subtitle: Text(
             pin == null
-                ? '指定一个接口，它有这部剧时就用它的'
-                : '当前指定：${_pinName ?? '接口已停用或移除（走自动）'}',
+                ? S.t('指定一个接口，它有这部剧时就用它的')
+                : S.f('当前指定：{}',
+                    [_pinName ?? S.t('接口已停用或移除（走自动）')]),
           ),
           trailing: pin != null
               ? const Icon(AnikumoIcons.check_circle_rounded)
@@ -354,31 +356,31 @@ class _HomeSourceSectionState extends State<_HomeSourceSection> {
       final fastest = FilmSourceSpeeds.fastestId(DateTime.now());
       if (fastest != null) {
         for (final s in VideoEngineService.instance.sources) {
-          if (s.id == fastest) return '自动 · 最快 ${s.name}';
+          if (s.id == fastest) return S.f('自动 · 最快 {}', [s.name]);
         }
       }
-      return '自动';
+      return S.t('自动');
     }
     for (final s in VideoEngineService.instance.sources) {
       if (s.id == id) return s.name;
     }
-    return '自动';
+    return S.t('自动');
   }
 
   String get _speedLabel {
-    if (_speedBusy) return '测速中 $_speedDone/$_speedTotal';
+    if (_speedBusy) return S.f('测速中 {}/{}', [_speedDone, _speedTotal]);
     final now = DateTime.now();
     final fastest = FilmSourceSpeeds.fastestId(now);
     if (fastest != null) {
       final record = FilmSourceSpeeds.recordOf(fastest)!;
       for (final s in VideoEngineService.instance.sources) {
         if (s.id == fastest) {
-          return '最快：${s.name} · ${record.ms}ms · '
-              '${filmCheckAgeText(record.at, now)}测';
+          return S.f('最快：{} · {}ms · {}测',
+              [s.name, record.ms, filmCheckAgeText(record.at, now)]);
         }
       }
     }
-    return '测一测哪个接口最快，「自动」会优先用最快的';
+    return S.t('测一测哪个接口最快，「自动」会优先用最快的');
   }
 
   Future<void> _runSpeedTest() async {
@@ -413,11 +415,11 @@ class _HomeSourceSectionState extends State<_HomeSourceSection> {
     final picked = await showDialog<String>(
       context: context,
       builder: (ctx) => SimpleDialog(
-        title: Text('${kind.label}主页接口'),
+        title: Text(S.f('{}主页接口', [S.t(kind.label)])),
         children: [
           SimpleDialogOption(
             onPressed: () => Navigator.pop(ctx, ''),
-            child: const Text('自动（按测速优先，没测过时竞赛）'),
+            child: Text(S.t('自动（按测速优先，没测过时竞赛）')),
           ),
           for (final s in enabled)
             SimpleDialogOption(
@@ -442,15 +444,13 @@ class _HomeSourceSectionState extends State<_HomeSourceSection> {
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: 6),
-          child: Text(
-            '主页接口',
+          child: Text(S.t('主页接口'),
             style: Theme.of(
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
         ),
-        Text(
-          '给每个频道指定供内容的接口；选「自动」时先按测速结果从最快的接口取，没测过则所有已启用接口竞赛、先返回的先用。指定的接口取不到内容时会自动回退，不会让货架空着。',
+        Text(S.t('给每个频道指定供内容的接口；选「自动」时先按测速结果从最快的接口取，没测过则所有已启用接口竞赛、先返回的先用。指定的接口取不到内容时会自动回退，不会让货架空着。'),
           style: TextStyle(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
             fontSize: 12.5,
@@ -459,7 +459,7 @@ class _HomeSourceSectionState extends State<_HomeSourceSection> {
         const SizedBox(height: 4),
         ListTile(
           contentPadding: EdgeInsets.zero,
-          title: const Text('接口测速'),
+          title: Text(S.t('接口测速')),
           subtitle: Text(_speedLabel),
           trailing: _speedBusy
               ? const SizedBox(
@@ -467,12 +467,12 @@ class _HomeSourceSectionState extends State<_HomeSourceSection> {
                   height: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : TextButton(onPressed: _runSpeedTest, child: const Text('测速')),
+              : TextButton(onPressed: _runSpeedTest, child: Text(S.t('测速'))),
         ),
         for (final kind in _kinds)
           ListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text('${kind.label}主页'),
+            title: Text(S.f('{}主页', [S.t(kind.label)])),
             subtitle: Text(_currentLabel(kind)),
             trailing: const Icon(AnikumoIcons.chevron_right_rounded),
             onTap: () => _pick(kind),

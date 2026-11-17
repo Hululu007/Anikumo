@@ -9,6 +9,7 @@ import 'package:anikumo/pages/discover/bangumi_picker.dart';
 import 'package:anikumo/services/library/user_library.dart';
 import 'package:anikumo/utils/constants.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// 番剧笔记 (hub 区二）: short private notes attached to bangumis —
 /// 「第 8 集封神」「等第二季一起看」 — stored locally, never synced.
@@ -37,26 +38,26 @@ class _NotesPageState extends State<NotesPage> {
     final text = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('番剧笔记'),
+        title: Text(S.t('番剧笔记')),
         content: TextField(
           controller: controller,
           autofocus: true,
           maxLines: 4,
           maxLength: 200,
-          decoration: const InputDecoration(
-            hintText: '记一句只有你懂的话…',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            hintText: S.t('记一句只有你懂的话…'),
+            border: const OutlineInputBorder(),
           ),
           onSubmitted: (value) => Navigator.of(context).pop(value),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(controller.text),
-            child: const Text('保存'),
+            child: Text(S.t('保存')),
           ),
         ],
       ),
@@ -75,7 +76,7 @@ class _NotesPageState extends State<NotesPage> {
   }
 
   Future<void> _addNote() async {
-    final picked = await showBangumiPicker(context, title: '给哪部番写笔记');
+    final picked = await showBangumiPicker(context, title: S.t('给哪部番写笔记'));
     if (picked == null || !mounted) return;
     await _editNote(picked.id, initial: _notes[picked.id] ?? '');
   }
@@ -84,7 +85,7 @@ class _NotesPageState extends State<NotesPage> {
     setState(() => _notes.remove(bangumiId));
     await BangumiNotesStore.save(_notes);
     if (mounted) {
-      AnikumoDialog.showToast(context: context, message: '笔记已删除');
+      AnikumoDialog.showToast(context: context, message: S.t('笔记已删除'));
     }
   }
 
@@ -94,10 +95,10 @@ class _NotesPageState extends State<NotesPage> {
       ..sort((a, b) => a.key.compareTo(b.key));
     return Scaffold(
       appBar: SysAppBar(
-        title: const Text('番剧笔记'),
+        title: Text(S.t('番剧笔记')),
         actions: [
           IconButton(
-            tooltip: '写笔记',
+            tooltip: S.t('写笔记'),
             onPressed: _addNote,
             icon: const Icon(AnikumoIcons.add),
           ),
@@ -106,12 +107,12 @@ class _NotesPageState extends State<NotesPage> {
       body: entries.isEmpty
           ? GeneralEmptyState(
               icon: AnikumoIcons.sticky_note_2_outlined,
-              title: '还没有笔记',
+              title: S.t('还没有笔记'),
               actions: [
                 StateActionButton.tonal(
                   onPressed: _addNote,
                   icon: AnikumoIcons.add,
-                  text: '写第一条笔记',
+                  text: S.t('写第一条笔记'),
                 ),
               ],
             )
@@ -141,7 +142,7 @@ class _NotesPageState extends State<NotesPage> {
                   title: Text(
                     item != null
                         ? bangumiDisplayTitle(item)
-                        : '条目 #${entry.key}',
+                        : S.f('条目 #{}', [entry.key]),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -151,7 +152,7 @@ class _NotesPageState extends State<NotesPage> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   trailing: IconButton(
-                    tooltip: '删除笔记',
+                    tooltip: S.t('删除笔记'),
                     onPressed: () => _deleteNote(entry.key),
                     icon: const Icon(AnikumoIcons.delete_outline),
                   ),

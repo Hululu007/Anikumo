@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:liuguang_storage/liuguang_storage.dart';
+import 'aes.dart';
 import 'm3u8.dart';
 
 enum DownloadStatus { queued, downloading, paused, completed, failed, canceled }
@@ -79,9 +80,11 @@ class IoDownloadTransport implements DownloadTransport {
 /// pause/resume/cancel, bounded auto-retry, progress stream, and task
 /// persistence via [StorageAdapter] (unfinished tasks survive restarts;
 /// a task found in `downloading` state after restore is parked as
-/// paused). HLS media playlists are downloaded segment by segment and
-/// concatenated into a single output file with segment-level resume.
-/// Encrypted (AES-128) and live playlists fail with an explicit error.
+/// paused). HLS downloads accept master playlists (the highest
+/// bandwidth variant is used) and AES-128 encrypted media
+/// playlists (segments are decrypted before concatenation);
+/// live playlists fail with an explicit error because a live
+/// stream has no complete file to write.
 class DownloadManager {
   final StorageAdapter storage;
   final DownloadTransport transport;
@@ -282,22 +285,75 @@ class DownloadManager {
     await part.parent.create(recursive: true);
     // ---- segment plan (persisted for segment-level resume)
     Map<String, dynamic>? segRow = await storage.get(segmentsTable, id);
-    List<String> urls; List<int> lengths; var done = 0;
+    late List<M3u8Segment> segments; late List<int> lengths; var done = 0;
+    Future<void> persistPlan() => storage.put(segmentsTable, id, {
+          'segments': [
+            for (final s in segments)
+              {
+                'u': s.uri,
+                if (s.keyUri != null) 'k': s.keyUri,
+                if (s.keyIv != null) 'iv': s.keyIv,
+                's': s.sequence,
+              }
+          ],
+          'lengths': lengths,
+          'done': done,
+        });
     if (segRow == null) {
-      final text = await _fetchText(Uri.parse(t.url), t.headers);
-      final pl = parseM3u8(text, base: Uri.parse(t.url));
-      if (pl.isMaster) throw DownloadException('master playlists are not supported for download; enqueue a media playlist instead');
-      if (pl.isEncrypted) throw DownloadException('encrypted HLS segments are not supported (EXT-X-KEY METHOD=${pl.keyMethod}, e.g. AES-128)');
-      if (pl.isLive) throw DownloadException('live HLS playlists (no EXT-X-ENDLIST) are not supported for download');
-      if (pl.segmentUris.isEmpty) throw DownloadException('HLS playlist contains no segments');
-      urls = pl.segmentUris;
-      lengths = List<int>.filled(urls.length, -1);
-      await storage.put(segmentsTable, id, {'urls': urls, 'lengths': lengths, 'done': 0});
+      var text = await _fetchText(Uri.parse(t.url), t.headers);
+      var pl = parseM3u8(text, base: Uri.parse(t.url));
+      if (pl.isMaster) {
+        // Master playlist: follow the highest-bandwidth
+        // variant one level down to its media playlist.
+        final variant = pl.bestVariant;
+        if (variant == null) {
+          throw DownloadException('HLS master playlist has no variants');
+        }
+        text = await _fetchText(Uri.parse(variant.uri), t.headers);
+        pl = parseM3u8(text, base: Uri.parse(variant.uri));
+        if (pl.isMaster) {
+          throw DownloadException('nested HLS master playlists are not supported');
+        }
+      }
+      if (pl.isLive) throw DownloadException('live HLS playlists (no EXT-X-ENDLIST) cannot be downloaded; playback only');
+      if (pl.isEncrypted && pl.keyMethod != 'AES-128') {
+        throw DownloadException('unsupported EXT-X-KEY METHOD=${pl.keyMethod}; only AES-128 is supported');
+      }
+      if (pl.segments.isEmpty) throw DownloadException('HLS playlist contains no segments');
+      for (final s in pl.segments) {
+        if (s.keyUri == null && pl.keyMethod == 'AES-128') {
+          throw DownloadException('AES-128 playlist segment has no key URI');
+        }
+      }
+      segments = pl.segments;
+      lengths = List<int>.filled(segments.length, -1);
+      done = 0;
+      await persistPlan();
+    } else if (segRow['segments'] is List) {
+      segments = [
+        for (final raw in segRow['segments'] as List)
+          if (raw is Map)
+            M3u8Segment(
+              uri: raw['u']?.toString() ?? '',
+              keyUri: raw['k']?.toString(),
+              keyIv: raw['iv'] is List
+                  ? (raw['iv'] as List).map((e) => (e as num).toInt()).toList()
+                  : null,
+              sequence: raw['s'] is num ? (raw['s'] as num).toInt() : 0,
+            )
+      ];
+      lengths = (segRow['lengths'] as List).map((e) => (e as num).toInt()).toList();
+      done = (segRow['done'] as num).toInt();
     } else {
-      urls = (segRow['urls'] as List).map((e) => e.toString()).toList();
+      // Legacy plan rows (pre-AES) stored plain URL lists.
+      segments = [
+        for (final u in (segRow['urls'] as List).map((e) => e.toString()))
+          M3u8Segment(uri: u, sequence: 0)
+      ];
       lengths = (segRow['lengths'] as List).map((e) => (e as num).toInt()).toList();
       done = (segRow['done'] as num).toInt();
     }
+    final urls = segments.map((s) => s.uri).toList();
     var expected = 0;
     for (var i = 0; i < done; i++) { if (lengths[i] < 0) { done = i; break; } expected += lengths[i]; }
     var partLen = await part.exists() ? await part.length() : 0;
@@ -311,7 +367,7 @@ class DownloadManager {
         done = 0; expected = 0;
         lengths = List<int>.filled(urls.length, -1);
         if (await part.exists()) await part.delete();
-        await storage.put(segmentsTable, id, {'urls': urls, 'lengths': lengths, 'done': 0});
+        await persistPlan();
       }
       partLen = expected;
     }
@@ -320,22 +376,64 @@ class DownloadManager {
     final sink = part.openWrite(mode: FileMode.append);
     var downloaded = partLen;
     try {
+      final keyCache = <String, Aes128>{};
+      Future<Aes128> cipherFor(String keyUri) async {
+        final cached = keyCache[keyUri];
+        if (cached != null) return cached;
+        final resp = await transport.open(Uri.parse(keyUri), headers: t.headers);
+        if (resp.statusCode >= 400) {
+          throw DownloadException('HTTP ${resp.statusCode} for HLS key $keyUri');
+        }
+        final keyBytes = <int>[];
+        await for (final c in resp.body) { keyBytes.addAll(c); }
+        if (keyBytes.length != 16) {
+          throw DownloadException('HLS key must be 16 bytes, got ${keyBytes.length}');
+        }
+        final cipher = Aes128(keyBytes);
+        keyCache[keyUri] = cipher;
+        return cipher;
+      }
+
       for (var i = done; i < urls.length; i++) {
         if (_cancelFlags.contains(id)) { await sink.close(); await _deletePart(t); await storage.delete(segmentsTable, id); _set(t.copyWith(status: DownloadStatus.canceled)); return true; }
         if (_pauseFlags.contains(id)) { await sink.flush(); await sink.close(); _set(t.copyWith(status: DownloadStatus.paused, downloadedBytes: downloaded)); return true; }
+        final segment = segments[i];
         final resp = await transport.open(Uri.parse(urls[i]), headers: t.headers);
         if (resp.statusCode >= 400) throw DownloadException('HTTP ${resp.statusCode} for segment $i');
         var segLen = 0;
-        await for (final chunk in resp.body) {
-          if (_cancelFlags.contains(id) || _pauseFlags.contains(id)) break;
-          sink.add(chunk);
-          segLen += chunk.length;
-          downloaded += chunk.length;
+        if (segment.keyUri != null) {
+          // Encrypted segment: buffer it whole, decrypt,
+          // then write the plain bytes (lengths[] always
+          // tracks plaintext so resume math stays honest).
+          final cipherBytes = <int>[];
+          await for (final chunk in resp.body) { cipherBytes.addAll(chunk); }
+          if (_cancelFlags.contains(id) || _pauseFlags.contains(id)) { i--; continue; }
+          final cipher = await cipherFor(segment.keyUri!);
+          final List<int> plain;
+          try {
+            plain = cipher.decryptCbc(
+              cipherBytes,
+              segment.keyIv ?? hlsSequenceIv(segment.sequence),
+            );
+          } on FormatException catch (e) {
+            throw DownloadException('segment $i failed AES-128 decryption: ${e.message}');
+          }
+          sink.add(plain);
+          segLen = plain.length;
+          downloaded += segLen;
+        } else {
+          await for (final chunk in resp.body) {
+            if (_cancelFlags.contains(id) || _pauseFlags.contains(id)) break;
+            sink.add(chunk);
+            segLen += chunk.length;
+            downloaded += chunk.length;
+          }
+          if (_cancelFlags.contains(id) || _pauseFlags.contains(id)) { i--; downloaded -= segLen; continue; }
         }
-        if (_cancelFlags.contains(id) || _pauseFlags.contains(id)) { i--; downloaded -= segLen; continue; }
         lengths[i] = segLen;
         await sink.flush();
-        await storage.put(segmentsTable, id, {'urls': urls, 'lengths': lengths, 'done': i + 1});
+        done = i + 1;
+        await persistPlan();
         t = t.copyWith(downloadedBytes: downloaded);
         _set(t, persist: false);
       }

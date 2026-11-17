@@ -10,6 +10,7 @@ import 'package:anikumo/request/apis/bangumi_api.dart';
 import 'package:anikumo/services/library/user_library.dart';
 import 'package:anikumo/utils/constants.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// 随便看一部： for decision paralysis. Draws one random title from
 /// trends + this week's calendar; reroll as often as you like.
@@ -83,11 +84,11 @@ class _RandomPageState extends State<RandomPage> {
     final theme = Theme.of(context);
     final current = _current;
     return Scaffold(
-      appBar: AppBar(title: const Text('随便看一部')),
+      appBar: AppBar(title: Text(S.t('随便看一部'))),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _failed
-              ? const Center(child: Text('加载失败，请检查网络后重试'))
+              ? Center(child: Text(S.t('加载失败，请检查网络后重试')))
               : ListView(
                   padding: const EdgeInsets.fromLTRB(
                     StyleString.pagePadding,
@@ -130,7 +131,7 @@ class _RandomPageState extends State<RandomPage> {
                                   if (current.ratingScore > 0)
                                     Chip(
                                       label: Text(
-                                        '评分 ${current.ratingScore.toStringAsFixed(1)}',
+                                        S.f('评分 {}', [current.ratingScore.toStringAsFixed(1)]),
                                       ),
                                       visualDensity: VisualDensity.compact,
                                     ),
@@ -158,11 +159,11 @@ class _RandomPageState extends State<RandomPage> {
                     FilledButton.icon(
                       onPressed: _draw,
                       icon: const Icon(AnikumoIcons.casino_rounded),
-                      label: const Text('换一部'),
+                      label: Text(S.t('换一部')),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '从 ${_pool.length} 部热门与本周新番里随机抽取',
+                      S.f('从 {} 部热门与本周新番里随机抽取', [_pool.length]),
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodySmall
                           ?.copyWith(color: theme.colorScheme.outline),

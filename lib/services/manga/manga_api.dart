@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:anikumo/services/cross_search_trio.dart';
 import 'package:anikumo/services/manga/js/mangakit_source.dart';
 import 'package:anikumo/services/manga/manga_source.dart';
+import 'package:anikumo/services/manga/manga_source_health.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/services/manga/manga_sources.dart';
 import 'package:anikumo/services/manga/cross_media.dart';
@@ -102,11 +103,27 @@ class MangaApi {
     // internally on an unusual keyword, some tag names
     // among them) waited forever, and the search page's
     // spinner with it.
-    final result = await source
-        .search(keyword, limit: limit, page: page)
-        .timeout(const Duration(seconds: 30));
-    if (result.isNotEmpty) _searchCache.put(key, result);
-    return result;
+    final watch = Stopwatch()..start();
+    try {
+      final result = await source
+          .search(keyword, limit: limit, page: page)
+          .timeout(const Duration(seconds: 30));
+      MangaSourceHealth.record(
+        source.id,
+        ok: true,
+        elapsedMs: watch.elapsedMilliseconds,
+      );
+      if (result.isNotEmpty) _searchCache.put(key, result);
+      return result;
+    } catch (error) {
+      MangaSourceHealth.record(
+        source.id,
+        ok: false,
+        elapsedMs: watch.elapsedMilliseconds,
+        error: '$error',
+      );
+      rethrow;
+    }
   }
 
   /// The sources a cross-zone manga search uses by default
@@ -515,11 +532,27 @@ class MangaApi {
     // fetchPopularFor — chapter fetches that chain paged
     // requests get 60 s for long series, then the detail
     // page's error state (with retry) takes over.
-    final result = await retryTransient(
-      () => source.chapters(manga).timeout(const Duration(seconds: 60)),
-    );
-    if (result.isNotEmpty) _chaptersCache.put(key, result);
-    return result;
+    final watch = Stopwatch()..start();
+    try {
+      final result = await retryTransient(
+        () => source.chapters(manga).timeout(const Duration(seconds: 60)),
+      );
+      MangaSourceHealth.record(
+        source.id,
+        ok: true,
+        elapsedMs: watch.elapsedMilliseconds,
+      );
+      if (result.isNotEmpty) _chaptersCache.put(key, result);
+      return result;
+    } catch (error) {
+      MangaSourceHealth.record(
+        source.id,
+        ok: false,
+        elapsedMs: watch.elapsedMilliseconds,
+        error: '$error',
+      );
+      rethrow;
+    }
   }
 
   // ---- Batch 42: readable-edition fallback ----------------
@@ -621,11 +654,28 @@ class MangaApi {
     if (cached != null) return cached;
     // Batch 40: same aggregate timeout as chapters — a
     // wedged loadEp previously spun the reader forever.
-    final result = await retryTransient(
-      () => source.pages(manga, chapter).timeout(const Duration(seconds: 60)),
-    );
-    if (result.isNotEmpty) _pagesCache.put(key, result);
-    return result;
+    final watch = Stopwatch()..start();
+    try {
+      final result = await retryTransient(
+        () =>
+            source.pages(manga, chapter).timeout(const Duration(seconds: 60)),
+      );
+      MangaSourceHealth.record(
+        source.id,
+        ok: true,
+        elapsedMs: watch.elapsedMilliseconds,
+      );
+      if (result.isNotEmpty) _pagesCache.put(key, result);
+      return result;
+    } catch (error) {
+      MangaSourceHealth.record(
+        source.id,
+        ok: false,
+        elapsedMs: watch.elapsedMilliseconds,
+        error: '$error',
+      );
+      rethrow;
+    }
   }
 
   static Future<MangaItem?> fetchDetails(MangaItem manga) async {

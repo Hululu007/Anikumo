@@ -9,6 +9,7 @@ import 'package:anikumo/services/novel/novel_sources.dart';
 import 'package:anikumo/services/plugin/plugin_import_parser.dart';
 import 'package:anikumo/utils/github_links.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// Batch 59: first-run source setup. The app ships with no
 /// built-in sources, so each zone gets one step: paste your
@@ -24,10 +25,10 @@ class AnimeSourceUrlStep extends StatelessWidget {
   Widget build(BuildContext context) => _SourceUrlStep(
         icon: AnikumoIcons.live_tv_rounded,
         shape: OnboardingIconShape.sunny,
-        title: '添加动漫来源',
-        subtitle: '粘贴你自己的规则文件 URL，导入后即可搜索和播放番剧。',
-        fieldLabel: '动漫规则 URL',
-        hint: 'https://…/rule.json，或 anikumo:// 规则链接',
+        title: S.t('添加动漫来源'),
+        subtitle: S.t('粘贴你自己的规则文件 URL，导入后即可搜索和播放番剧。'),
+        fieldLabel: S.t('动漫规则 URL'),
+        hint: S.t('https://…/rule.json，或 anikumo:// 规则链接'),
         importer: (text) async {
           // Batch 62 optimization: same shared pipeline as
           // the import dialog (local parse, then per-line
@@ -37,11 +38,11 @@ class AnimeSourceUrlStep extends StatelessWidget {
           final result = await importFromPastedText(text);
           if (result.plugins.isEmpty) {
             throw FormatException(
-              result.failures.isEmpty ? '没有识别到规则' : result.failures.first,
+              result.failures.isEmpty ? S.t('没有识别到规则') : result.failures.first,
             );
           }
           await controller.updatePlugins(result.plugins);
-          return '已导入 ${result.plugins.length} 条规则';
+          return S.f('已导入 {} 条规则', [result.plugins.length]);
         },
       );
 }
@@ -53,21 +54,21 @@ class MangaSourceUrlStep extends StatelessWidget {
   Widget build(BuildContext context) => _SourceUrlStep(
         icon: AnikumoIcons.menu_book_rounded,
         shape: OnboardingIconShape.cookie,
-        title: '添加漫画来源',
-        subtitle: '粘贴你自己的 JS 漫画源文件 URL。',
-        fieldLabel: '漫画源 URL',
-        hint: 'https://…/source.js（JS 源文件直链）',
+        title: S.t('添加漫画来源'),
+        subtitle: S.t('粘贴你自己的 JS 漫画源文件 URL。'),
+        fieldLabel: S.t('漫画源 URL'),
+        hint: S.t('https://…/source.js（JS 源文件直链）'),
         importer: (text) async {
           if (!isBareRuleUrl(text)) {
-            throw const FormatException('请粘贴以 http 开头的源文件链接');
+            throw FormatException(S.t('请粘贴以 http 开头的源文件链接'));
           }
           // Batch 63: GitHub repository addresses need the
           // picker in source management; file-page addresses
           // are rewritten to raw before downloading.
           if (GithubLinks.parseRepo(text) != null) {
-            throw const FormatException(
-              '这是 GitHub 仓库地址。先进首页，之后在漫画的源管理里'
-              '粘贴它，就能勾选仓库里的源文件批量导入。',
+            throw FormatException(
+              S.t('这是 GitHub 仓库地址。先进首页，之后在漫画的源管理里'
+              '粘贴它，就能勾选仓库里的源文件批量导入。'),
             );
           }
           final response = await Dio().get<String>(
@@ -80,13 +81,13 @@ class MangaSourceUrlStep extends StatelessWidget {
           );
           final code = response.data ?? '';
           if (code.trim().isEmpty) {
-            throw const FormatException('下载到的文件是空的');
+            throw FormatException(S.t('下载到的文件是空的'));
           }
           final meta = await MangaSources.installCustomJs(
             code,
             fileName: text.split('/').last,
           );
-          return '已导入漫画源「${meta.name}」v${meta.version}';
+          return S.f('已导入漫画源「{}」v{}', [meta.name, meta.version]);
         },
       );
 }
@@ -98,30 +99,30 @@ class NovelSourceUrlStep extends StatelessWidget {
   Widget build(BuildContext context) => _SourceUrlStep(
         icon: AnikumoIcons.auto_stories_rounded,
         shape: OnboardingIconShape.flower,
-        title: '添加小说来源',
-        subtitle: '粘贴你自己的书源 URL（JSON 或合集链接）。',
-        fieldLabel: '小说书源 URL',
+        title: S.t('添加小说来源'),
+        subtitle: S.t('粘贴你自己的书源 URL（JSON 或合集链接）。'),
+        fieldLabel: S.t('小说书源 URL'),
         hint: 'https://…/sources.json',
         importer: (text) async {
           if (!isBareRuleUrl(text)) {
-            throw const FormatException('请粘贴以 http 开头的书源链接');
+            throw FormatException(S.t('请粘贴以 http 开头的书源链接'));
           }
           // Batch 63: a GitHub repository address needs the
           // file picker in source management (GitHub *file*
           // links are rewritten to raw automatically).
           if (GithubLinks.parseRepo(text) != null) {
-            throw const FormatException(
-              '这是 GitHub 仓库地址。先进首页，之后在小说的书源管理里'
-              '粘贴它，就能勾选仓库里的书源文件批量导入。',
+            throw FormatException(
+              S.t('这是 GitHub 仓库地址。先进首页，之后在小说的书源管理里'
+              '粘贴它，就能勾选仓库里的书源文件批量导入。'),
             );
           }
           final count = await NovelSources.importFromUrl(text);
           if (count == 0) {
-            throw const FormatException(
-              '没有导入新书源（可能已导入过，或链接里没有书源）',
+            throw FormatException(
+              S.t('没有导入新书源（可能已导入过，或链接里没有书源）'),
             );
           }
-          return '已导入 $count 个书源';
+          return S.f('已导入 {} 个书源', [count]);
         },
       );
 }
@@ -180,14 +181,14 @@ class _SourceUrlStepState extends State<_SourceUrlStep> {
       if (!mounted) return;
       setState(() {
         _importing = false;
-        _status = '导入失败：${error.message}';
+        _status = S.f('导入失败：{}', [error.message]);
         _statusOk = false;
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _importing = false;
-        _status = '导入失败：无法下载，请检查链接与网络';
+        _status = S.t('导入失败：无法下载，请检查链接与网络');
         _statusOk = false;
       });
     }
@@ -223,7 +224,7 @@ class _SourceUrlStepState extends State<_SourceUrlStep> {
             icon: _importing
                 ? const LoadingIndicator(size: 18)
                 : const Icon(AnikumoIcons.download_rounded, size: 18),
-            label: Text(_importing ? '导入中' : '导入'),
+            label: Text(_importing ? S.t('导入中') : S.t('导入')),
           ),
           if (_status != null) ...[
             const SizedBox(height: 12),
@@ -238,8 +239,8 @@ class _SourceUrlStepState extends State<_SourceUrlStep> {
             ),
           ],
           const SizedBox(height: 16),
-          const OnboardingHint(
-            text: '不输入也可以直接点「下一步」，之后随时能在源管理里添加。',
+          OnboardingHint(
+            text: S.t('不输入也可以直接点「下一步」，之后随时能在源管理里添加。'),
           ),
         ],
       ),

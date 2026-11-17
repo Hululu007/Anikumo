@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui' as ui;
 
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:anikumo/utils/error_message.dart';
 import 'package:anikumo/bean/theme/violet_glass.dart';
@@ -272,36 +273,36 @@ class _MangaMainPageState extends State<MangaMainPage>
           _index = index;
           _visited.add(index);
         }),
-        destinations: const [
+        destinations: [
           NavigationDestination(
             icon: Icon(AnikumoIcons.home_outlined),
             selectedIcon: Icon(AnikumoIcons.home_rounded),
-            label: '首页',
+            label: S.t('首页'),
           ),
           NavigationDestination(
             icon: Icon(AnikumoIcons.local_activity_outlined),
             selectedIcon: Icon(AnikumoIcons.local_activity_rounded),
-            label: '收藏',
+            label: S.t('收藏'),
           ),
           NavigationDestination(
             icon: Icon(AnikumoIcons.library_books_outlined),
             selectedIcon: Icon(AnikumoIcons.library_books_rounded),
-            label: '书柜',
+            label: S.t('书柜'),
           ),
           NavigationDestination(
             icon: Icon(AnikumoIcons.explore_outlined),
             selectedIcon: Icon(AnikumoIcons.explore_rounded),
-            label: '探索',
+            label: S.t('探索'),
           ),
           NavigationDestination(
             icon: Icon(AnikumoIcons.category_outlined),
             selectedIcon: Icon(AnikumoIcons.category_rounded),
-            label: '分类',
+            label: S.t('分类'),
           ),
           NavigationDestination(
             icon: Icon(AnikumoIcons.settings_outlined),
             selectedIcon: Icon(AnikumoIcons.settings_rounded),
-            label: '设置',
+            label: S.t('设置'),
           ),
         ],
       ),
@@ -450,7 +451,7 @@ class _MangaHomeTabState extends State<MangaHomeTab> {
                   Padding(
                     padding: const EdgeInsets.only(top: 6),
                     child: IconButton(
-                      tooltip: '返回动漫区',
+                      tooltip: S.t('返回动漫区'),
                       icon: const Icon(AnikumoIcons.arrow_back_rounded),
                       onPressed: () => context.pop(),
                     ),
@@ -465,7 +466,7 @@ class _MangaHomeTabState extends State<MangaHomeTab> {
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(8, 10, 16, 4),
                       child: VioletSearchPill(
-                        hint: '搜索漫画',
+                        hint: S.t('搜索漫画'),
                         onTap: () => context.pushNamed('/manga/search'),
                       ),
                     ),
@@ -496,7 +497,7 @@ class _MangaHomeTabState extends State<MangaHomeTab> {
                             child: Row(
                               children: [
                                 Text(
-                                  '历史',
+                                  S.t('历史'),
                                   style: theme.textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -523,11 +524,11 @@ class _MangaHomeTabState extends State<MangaHomeTab> {
                           ),
                         ),
                         if (railProgress.isEmpty)
-                          const Padding(
-                            padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                             child: Align(
                               alignment: Alignment.centerLeft,
-                              child: Text('还没有阅读记录，去探索页逛逛吧'),
+                              child: Text(S.t('还没有阅读记录，去探索页逛逛吧')),
                             ),
                           )
                         else
@@ -580,7 +581,7 @@ class _MangaHomeTabState extends State<MangaHomeTab> {
                                               ),
                                         ),
                                         Text(
-                                          '${entry.chapterLabel} · 第 ${entry.page + 1} 页',
+                                          S.f('{} · 第 {} 页', [entry.chapterLabel, entry.page + 1]),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: theme.textTheme.labelSmall
@@ -610,9 +611,9 @@ class _MangaHomeTabState extends State<MangaHomeTab> {
                     radius: 20,
                     child: ListTile(
                       leading: const Icon(AnikumoIcons.extension_off_rounded),
-                      title: const Text('还没有漫画源'),
-                      subtitle: const Text(
-                        'Anikumo 不内置任何漫画源。用你自己的 URL 链接导入 JS 源后，这里就会有内容。',
+                      title: Text(S.t('还没有漫画源')),
+                      subtitle: Text(
+                        S.t('Anikumo 不内置任何漫画源。用你自己的 URL 链接导入 JS 源后，这里就会有内容。'),
                       ),
                       trailing: const Icon(AnikumoIcons.chevron_right),
                       onTap: () => context.pushNamed('/manga/sources'),
@@ -646,8 +647,8 @@ class _MangaHomeTabState extends State<MangaHomeTab> {
                     ),
                     label: Text(
                       _showAllSourceBands
-                          ? '收起多余的源分区'
-                          : '显示全部 ${MangaSources.all().length} 个源的分区',
+                          ? S.t('收起多余的源分区')
+                          : S.f('显示全部 {} 个源的分区', [MangaSources.all().length]),
                     ),
                   ),
                 ),
@@ -664,8 +665,8 @@ class _MangaHomeTabState extends State<MangaHomeTab> {
                     radius: 20,
                     child: ListTile(
                       leading: const Icon(AnikumoIcons.library_books_outlined),
-                      title: const Text('漫画源管理'),
-                      subtitle: const Text('下载 JS 源、切换或删除来源'),
+                      title: Text(S.t('漫画源管理')),
+                      subtitle: Text(S.t('下载 JS 源、切换或删除来源')),
                       trailing: const Icon(AnikumoIcons.chevron_right),
                       onTap: () => context.pushNamed('/manga/sources'),
                     ),
@@ -674,7 +675,7 @@ class _MangaHomeTabState extends State<MangaHomeTab> {
               ),
             ),
             // ── latest updates ──────────────────────────────
-            _sectionTitle(context, '最新更新'),
+            _sectionTitle(context, S.t('最新更新')),
             if (_loading && _updated.isEmpty)
               const SliverToBoxAdapter(
                 child: Padding(
@@ -950,7 +951,7 @@ class _SourceHomeSectionState extends State<_SourceHomeSection> {
                 const SizedBox(width: 8),
                 if (isActive)
                   Chip(
-                    label: const Text('当前源'),
+                    label: Text(S.t('当前源')),
                     visualDensity: VisualDensity.compact,
                     side: BorderSide.none,
                     backgroundColor: theme.colorScheme.secondaryContainer,
@@ -958,17 +959,17 @@ class _SourceHomeSectionState extends State<_SourceHomeSection> {
                 else
                   TextButton(
                     onPressed: () => MangaSources.setActive(source.id),
-                    child: const Text('切换到此源'),
+                    child: Text(S.t('切换到此源')),
                   ),
                 const Spacer(),
                 TextButton(
                   onPressed: () =>
                       context.pushNamed('/manga/source', arguments: source.id),
-                  child: const Text('更多'),
+                  child: Text(S.t('更多')),
                 ),
                 IconButton(
                   icon: const Icon(AnikumoIcons.refresh_rounded, size: 20),
-                  tooltip: '重新加载此源',
+                  tooltip: S.t('重新加载此源'),
                   onPressed: () {
                     setState(() => _loading = true);
                     _load(force: true);
@@ -989,7 +990,7 @@ class _SourceHomeSectionState extends State<_SourceHomeSection> {
                 itemBuilder: (context, index) {
                   if (index == 14) {
                     return ActionChip(
-                      label: const Text('全部分类'),
+                      label: Text(S.t('全部分类')),
                       onPressed: () => mangaTabSwitchRequest.value = 3,
                     );
                   }
@@ -1022,7 +1023,7 @@ class _SourceHomeSectionState extends State<_SourceHomeSection> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '该源暂时没有内容（网络或源本身的问题）',
+                    S.t('该源暂时没有内容（网络或源本身的问题）'),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -1243,7 +1244,7 @@ class _ForYouSectionState extends State<_ForYouSection> {
                 ),
                 const SizedBox(width: 9),
                 Text(
-                  '猜你喜欢',
+                  S.t('猜你喜欢'),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
@@ -1254,7 +1255,7 @@ class _ForYouSectionState extends State<_ForYouSection> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
             child: Text(
-              _seedFavorite ? '因为你收藏了《$_seedTitle》' : '因为你在读《$_seedTitle》',
+              _seedFavorite ? S.f('因为你收藏了《{}》', [_seedTitle]) : S.f('因为你在读《{}》', [_seedTitle]),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -1428,8 +1429,8 @@ class _FeaturedBannerState extends State<_FeaturedBanner> {
                                         gradient: VioletGlass.gradient,
                                         borderRadius: BorderRadius.circular(8),
                                       ),
-                                      child: const Text(
-                                        '精选推荐',
+                                      child: Text(
+                                        S.t('精选推荐'),
                                         style: TextStyle(
                                           fontSize: 11,
                                           fontWeight: FontWeight.w700,
@@ -1465,7 +1466,7 @@ class _FeaturedBannerState extends State<_FeaturedBanner> {
                                             AnikumoIcons.play_arrow_rounded,
                                             size: 18,
                                           ),
-                                          label: const Text('阅读'),
+                                          label: Text(S.t('阅读')),
                                           style: FilledButton.styleFrom(
                                             visualDensity:
                                                 VisualDensity.compact,

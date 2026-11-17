@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:anikumo/services/i18n/app_strings.dart';
 import '../../bean/dialog/dialog.dart';
 import '../../services/build_info.dart';
+import '../../services/manga/manga_source_health.dart';
 import '../../services/manga/manga_sources.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
 
@@ -94,22 +96,88 @@ class _MangaDiagnosticsPageState extends State<MangaDiagnosticsPage> {
     });
   }
 
+  /// Batch 271: accumulated health from real usage
+  /// (MangaSourceHealth), one row per source that has
+  /// served at least one measured call.
+  List<Widget> _buildHealthSection(BuildContext context) {
+    final snapshot = MangaSourceHealth.snapshot();
+    if (snapshot.isEmpty) return const [];
+    final entries = snapshot.entries.toList()
+      ..sort((a, b) => b.value.total.compareTo(a.value.total));
+    return [
+      Row(
+        children: [
+          Expanded(
+            child: Text(
+              S.t('源健康度（实际使用统计）'),
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              MangaSourceHealth.clear();
+              setState(() {});
+            },
+            child: Text(S.t('清空统计')),
+          ),
+        ],
+      ),
+      for (final entry in entries)
+        ListTile(
+          dense: true,
+          contentPadding: EdgeInsets.zero,
+          title: Text(
+            MangaSources.byId(entry.key)?.name ?? entry.key,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Text(
+            _healthLine(entry.value),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          trailing: entry.value.successRate == null
+              ? null
+              : Text(
+                  '${(entry.value.successRate! * 100).toStringAsFixed(0)}%',
+                  style: TextStyle(
+                    color: entry.value.successRate! >= 0.8
+                        ? Colors.green
+                        : Colors.orange,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+        ),
+    ];
+  }
+
+  String _healthLine(SourceHealthStats stats) {
+    final parts = <String>[
+      S.f('成功 {} · 失败 {}', [stats.okCount, stats.failCount]),
+      if (stats.averageMs != null) S.f('平均 {} ms', [stats.averageMs!]),
+    ];
+    if (stats.lastError.isNotEmpty) {
+      parts.add(S.f('最近错误：{}', [stats.lastError]));
+    }
+    return parts.join(' · ');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('漫画源诊断')),
+      appBar: AppBar(title: Text(S.t('漫画源诊断'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
           Text(
-            '构建 $kAnikumoBuildStamp',
+            S.f('构建 {}', [kAnikumoBuildStamp]),
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 8),
-          const Text(
-            '逐个源跑完整阅读链（热门 → 详情 → 章节 → 页图），'
-            '每步显示真实结果或真实错误。跑完可点「复制报告」，'
-            '把报告发给开发者协助排查。',
+          ..._buildHealthSection(context),
+          const SizedBox(height: 8),
+          Text(
+            S.t('逐个源跑完整阅读链（热门 → 详情 → 章节 → 页图），每步显示真实结果或真实错误。跑完可点「复制报告」，把报告发给开发者协助排查。'),
           ),
           const SizedBox(height: 16),
           Row(
@@ -123,7 +191,7 @@ class _MangaDiagnosticsPageState extends State<MangaDiagnosticsPage> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(AnikumoIcons.play_arrow_rounded),
-                label: Text(_running ? '诊断中…' : '开始诊断'),
+                label: Text(_running ? S.t('诊断中…') : S.t('开始诊断')),
               ),
               const SizedBox(width: 12),
               OutlinedButton.icon(
@@ -133,10 +201,10 @@ class _MangaDiagnosticsPageState extends State<MangaDiagnosticsPage> {
                         await Clipboard.setData(
                           ClipboardData(text: _report),
                         );
-                        AnikumoDialog.showToast(message: '报告已复制');
+                        AnikumoDialog.showToast(message: S.t('报告已复制'));
                       },
                 icon: const Icon(AnikumoIcons.copy_rounded),
-                label: const Text('复制报告'),
+                label: Text(S.t('复制报告')),
               ),
             ],
           ),

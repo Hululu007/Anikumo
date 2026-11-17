@@ -4,6 +4,7 @@ import 'package:anikumo/modules/bangumi/bangumi_item.dart';
 import 'package:anikumo/pages/discover/bangumi_picker.dart';
 import 'package:anikumo/services/ui/card_style.dart';
 import 'package:anikumo/utils/constants.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// 卡片样式： five looks for the bangumi card used across the whole
 /// app. The preview uses the first title from the library/history
@@ -30,7 +31,7 @@ class _CardStylePageState extends State<CardStylePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('卡片样式')),
+      appBar: AppBar(title: Text(S.t('卡片样式'))),
       body: ValueListenableBuilder<int>(
         valueListenable: CardStyle.styleNotifier,
         builder: (context, current, _) {
@@ -64,8 +65,8 @@ class _CardStylePageState extends State<CardStylePage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  '预览（样式会应用到全 App 的番剧卡片）',
+                Text(
+                  S.t('预览（样式会应用到全 App 的番剧卡片）'),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
@@ -82,8 +83,8 @@ class _CardStylePageState extends State<CardStylePage> {
                     for (var i = 0; i < CardStyle.options.length; i++)
                       RadioListTile<int>(
                         value: i,
-                        title: Text(CardStyle.options[i].name),
-                        subtitle: Text(CardStyle.options[i].description),
+                        title: Text(S.t(CardStyle.options[i].name)),
+                        subtitle: Text(S.t(CardStyle.options[i].description)),
                       ),
                   ],
                 ),

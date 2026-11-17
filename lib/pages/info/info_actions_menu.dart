@@ -13,6 +13,7 @@ import 'package:anikumo/utils/device.dart';
 import 'package:saver_gallery/saver_gallery.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class InfoActionsMenu extends StatefulWidget {
   const InfoActionsMenu({super.key, required this.bangumiItem});
@@ -37,10 +38,10 @@ class _InfoActionsMenuState extends State<InfoActionsMenu> {
   Future<void> _copyTitle() async {
     try {
       await Clipboard.setData(ClipboardData(text: _title));
-      _notify('标题已复制');
+      _notify(S.t('标题已复制'));
     } catch (error) {
       AnikumoLogger().w('InfoActionsMenu: failed to copy title', error: error);
-      _notify('复制失败，请重试');
+      _notify(S.t('复制失败，请重试'));
     }
   }
 
@@ -55,7 +56,7 @@ class _InfoActionsMenuState extends State<InfoActionsMenu> {
     } catch (error) {
       AnikumoLogger().w('InfoActionsMenu: failed to open browser', error: error);
     }
-    _notify('无法打开浏览器');
+    _notify(S.t('无法打开浏览器'));
   }
 
   Future<void> _saveCover() async {
@@ -65,7 +66,7 @@ class _InfoActionsMenuState extends State<InfoActionsMenu> {
         .map((size) => item.images[size]?.trim() ?? '')
         .firstWhere((url) => url.isNotEmpty, orElse: () => '');
     if (imageUrl.isEmpty) {
-      _notify('暂无封面');
+      _notify(S.t('暂无封面'));
       return;
     }
     final fileName = _coverFileName(_title, item.id);
@@ -76,14 +77,14 @@ class _InfoActionsMenuState extends State<InfoActionsMenu> {
 
       if (isDesktop()) {
         final path = await FilePicker.platform.saveFile(
-          dialogTitle: '保存封面',
+          dialogTitle: S.t('保存封面'),
           fileName: fileName,
           type: FileType.custom,
           allowedExtensions: const ['png'],
           bytes: bytes,
           lockParentWindow: true,
         );
-        if (path != null) _notify('封面已保存');
+        if (path != null) _notify(S.t('封面已保存'));
         return;
       }
 
@@ -95,10 +96,10 @@ class _InfoActionsMenuState extends State<InfoActionsMenu> {
       if (!result.isSuccess) {
         throw StateError(result.errorMessage ?? 'Gallery save failed');
       }
-      _notify('已保存到相册');
+      _notify(S.t('已保存到相册'));
     } catch (error) {
       AnikumoLogger().w('InfoActionsMenu: failed to save cover', error: error);
-      _notify('封面保存失败，请重试');
+      _notify(S.t('封面保存失败，请重试'));
     } finally {
       if (mounted) setState(() => _savingCover = false);
     }
@@ -107,12 +108,12 @@ class _InfoActionsMenuState extends State<InfoActionsMenu> {
   Future<void> _addToList() async {
     final lists = UserListsStore.load();
     if (lists.isEmpty) {
-      _notify('还没有榜单，先在发现页「我的榜单」里建一个');
+      _notify(S.t('还没有榜单，先在发现页「我的榜单」里建一个'));
       return;
     }
     final picked = await AnikumoDialog.show<UserList>(
       builder: (dialogContext) => SimpleDialog(
-        title: const Text('加入榜单'),
+        title: Text(S.t('加入榜单')),
         children: [
           for (final list in lists)
             SimpleDialogOption(
@@ -125,7 +126,7 @@ class _InfoActionsMenuState extends State<InfoActionsMenu> {
     );
     if (picked == null) return;
     if (picked.bangumiIds.contains(widget.bangumiItem.id)) {
-      _notify('这部番已经在「${picked.name}」里了');
+      _notify(S.f('这部番已经在「{}」里了', [picked.name]));
       return;
     }
     picked.bangumiIds.add(widget.bangumiItem.id);
@@ -135,7 +136,7 @@ class _InfoActionsMenuState extends State<InfoActionsMenu> {
       all[index] = picked;
       await UserListsStore.save(all);
     }
-    _notify('已加入「${picked.name}」');
+    _notify(S.f('已加入「{}」', [picked.name]));
   }
 
   Future<void> _editNote() async {
@@ -144,26 +145,26 @@ class _InfoActionsMenuState extends State<InfoActionsMenu> {
     final controller = TextEditingController(text: existing);
     final saved = await AnikumoDialog.show<bool>(
       builder: (dialogContext) => AlertDialog(
-        title: Text('「$_title」的笔记'),
+        title: Text(S.f('「{}」的笔记', [_title])),
         content: TextField(
           controller: controller,
           autofocus: true,
           maxLines: 4,
-          decoration: const InputDecoration(
-            hintText: '写点只有你能看到的备注…',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            hintText: S.t('写点只有你能看到的备注…'),
+            border: const OutlineInputBorder(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () =>
                 AnikumoDialog.dismiss(context: dialogContext, popWith: false),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           TextButton(
             onPressed: () =>
                 AnikumoDialog.dismiss(context: dialogContext, popWith: true),
-            child: const Text('保存'),
+            child: Text(S.t('保存')),
           ),
         ],
       ),
@@ -177,7 +178,7 @@ class _InfoActionsMenuState extends State<InfoActionsMenu> {
       notes[bangumiId] = text;
     }
     await BangumiNotesStore.save(notes);
-    _notify(text.isEmpty ? '笔记已删除' : '笔记已保存');
+    _notify(text.isEmpty ? S.t('笔记已删除') : S.t('笔记已保存'));
   }
 
   @override
@@ -186,27 +187,27 @@ class _InfoActionsMenuState extends State<InfoActionsMenu> {
       menuChildren: [
         AnikumoMenuItem(
           onPressed: _addToList,
-          label: '加入榜单',
+          label: S.t('加入榜单'),
         ),
         AnikumoMenuItem(
           onPressed: _editNote,
-          label: '写笔记',
+          label: S.t('写笔记'),
         ),
         AnikumoMenuItem(
           onPressed: _savingCover ? null : _saveCover,
-          label: _savingCover ? '保存中…' : '保存封面',
+          label: _savingCover ? S.t('保存中…') : S.t('保存封面'),
         ),
         AnikumoMenuItem(
           onPressed: _title.trim().isEmpty ? null : _copyTitle,
-          label: '复制标题',
+          label: S.t('复制标题'),
         ),
         AnikumoMenuItem(
           onPressed: _openExternally,
-          label: '外部打开',
+          label: S.t('外部打开'),
         ),
       ],
       builder: (context, toggle) => IconButton(
-        tooltip: '更多操作',
+        tooltip: S.t('更多操作'),
         icon: const Icon(AnikumoIcons.more_horiz_rounded),
         onPressed: toggle,
       ),

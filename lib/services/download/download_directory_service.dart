@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -74,7 +75,7 @@ class DownloadDirectoryService {
     final directory = customDirectory;
     if (directory.isEmpty) return getDefaultDownloadDirectory();
     if (_accessLost) {
-      throw const DownloadDirectoryException('下载目录访问权限已失效，请在下载设置中重新选择该目录');
+      throw DownloadDirectoryException(S.t('下载目录访问权限已失效，请在下载设置中重新选择该目录'));
     }
     return directory;
   }
@@ -83,7 +84,7 @@ class DownloadDirectoryService {
   /// it proves writable and its access is persisted.
   Future<String?> selectDirectory() async {
     if (!supportsCustomDirectory) {
-      throw const DownloadDirectoryException('当前平台不支持手动选择目录');
+      throw DownloadDirectoryException(S.t('当前平台不支持手动选择目录'));
     }
     final current = customDirectory.isEmpty
         ? await getDefaultDownloadDirectory()
@@ -109,7 +110,7 @@ class DownloadDirectoryService {
   Future<String?> _pickDirectory(String? initialDirectory) async {
     if (!Platform.isAndroid) {
       return FilePicker.platform.getDirectoryPath(
-        dialogTitle: '选择下载位置',
+        dialogTitle: S.t('选择下载位置'),
         initialDirectory: initialDirectory,
       );
     }
@@ -119,7 +120,7 @@ class DownloadDirectoryService {
           await _androidChannel.invokeMethod<bool>('requestStorageAccess') ??
           false;
       if (!granted) {
-        throw const DownloadDirectoryException('未授予存储访问权限，下载位置未修改');
+        throw DownloadDirectoryException(S.t('未授予存储访问权限，下载位置未修改'));
       }
       return await _androidChannel.invokeMethod<String>('pickDirectory', {
         'initialDirectory': initialDirectory,
@@ -127,8 +128,8 @@ class DownloadDirectoryService {
     } on PlatformException catch (e) {
       throw DownloadDirectoryException(
         e.code == 'UNSUPPORTED_DIRECTORY'
-            ? '请选择内部存储或 SD 卡中的本地文件夹'
-            : '选择下载位置失败，请重试',
+            ? S.t('请选择内部存储或 SD 卡中的本地文件夹')
+            : S.t('选择下载位置失败，请重试'),
       );
     }
   }
@@ -143,7 +144,7 @@ class DownloadDirectoryService {
         'DownloadDirectoryService: failed to bookmark $directory',
         error: e,
       );
-      throw const DownloadDirectoryException('无法获得该目录的持久访问权限，请更换目录');
+      throw DownloadDirectoryException(S.t('无法获得该目录的持久访问权限，请更换目录'));
     }
     await GStorage.putSetting(SettingsKeys.downloadDirectoryBookmark, bookmark);
   }

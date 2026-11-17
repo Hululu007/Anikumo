@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:anikumo/bean/dialog/dialog_helper.dart';
 import 'package:anikumo/bean/settings/settings_list.dart';
 import 'package:anikumo/bean/widget/split_list_row.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/network/metered_network_service.dart';
 import 'package:anikumo/services/player/low_memory_mode.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
@@ -14,7 +15,7 @@ class LowMemoryModeSettingsTile extends StatelessWidget {
     return _ModeBuilder(builder: (context, mode, isMetered) {
       return SettingsTile(
         leading: AnikumoIcons.data_saver_on_rounded,
-        title: const Text('低内存模式'),
+        title: Text(S.t('低内存模式')),
         description: Text(mode.statusDescription(isMetered)),
         value: Text(mode.label),
         trailing: const Icon(AnikumoIcons.chevron_right_rounded),
@@ -46,7 +47,7 @@ class _LowMemoryModeDialogState extends State<_LowMemoryModeDialog> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);
-      AnikumoDialog.showToast(context: context, message: '设置保存失败，请重试');
+      AnikumoDialog.showToast(context: context, message: S.t('设置保存失败，请重试'));
     }
   }
 
@@ -55,7 +56,7 @@ class _LowMemoryModeDialogState extends State<_LowMemoryModeDialog> {
     final colors = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     return AlertDialog(
-      title: const Text('低内存模式'),
+      title: Text(S.t('低内存模式')),
       scrollable: true,
       content: SizedBox(
         width: 440,
@@ -106,7 +107,7 @@ class _LowMemoryModeDialogState extends State<_LowMemoryModeDialog> {
                     for (final option in LowMemoryMode.values)
                       SettingsTile<LowMemoryMode>.radioTile(
                         title: Text(option == LowMemoryMode.auto
-                            ? '${option.label}（默认）'
+                            ? S.f('{}（默认）', [option.label])
                             : option.label),
                         description: Text(option.description),
                         radioValue: option,
@@ -117,8 +118,8 @@ class _LowMemoryModeDialogState extends State<_LowMemoryModeDialog> {
               ),
               const SizedBox(height: 16),
               Text(
-                '减少缓存可降低内存占用和额外流量，网络不稳定时可能更容易缓冲。'
-                '\n选择后立即生效并记住选择；跟随网络仅影响在线播放。',
+                S.t('减少缓存可降低内存占用和额外流量，网络不稳定时可能更容易缓冲。'
+                    '\n选择后立即生效并记住选择；跟随网络仅影响在线播放。'),
                 style: textTheme.bodySmall
                     ?.copyWith(color: colors.onSurfaceVariant),
               ),
@@ -129,7 +130,7 @@ class _LowMemoryModeDialogState extends State<_LowMemoryModeDialog> {
       actions: [
         TextButton(
           onPressed: () => AnikumoDialog.dismiss(context: context),
-          child: const Text('取消'),
+          child: Text(S.t('取消')),
         ),
       ],
     );
@@ -147,23 +148,25 @@ class _ModeBuilder extends StatefulWidget {
 
 extension _ModePresentation on LowMemoryMode {
   String get label => switch (this) {
-        LowMemoryMode.auto => '跟随网络',
-        LowMemoryMode.always => '始终开启',
-        LowMemoryMode.never => '始终关闭',
+        LowMemoryMode.auto => S.t('跟随网络'),
+        LowMemoryMode.always => S.t('始终开启'),
+        LowMemoryMode.never => S.t('始终关闭'),
       };
 
   String get description => switch (this) {
-        LowMemoryMode.auto => '移动数据自动开启，WLAN / 有线网络自动关闭',
-        LowMemoryMode.always => '所有网络均减少缓存，降低内存占用',
-        LowMemoryMode.never => '使用完整缓存，移动数据下也不自动开启',
+        LowMemoryMode.auto => S.t('移动数据自动开启，WLAN / 有线网络自动关闭'),
+        LowMemoryMode.always => S.t('所有网络均减少缓存，降低内存占用'),
+        LowMemoryMode.never => S.t('使用完整缓存，移动数据下也不自动开启'),
       };
 
   String statusDescription(bool isMetered) => switch (this) {
-        LowMemoryMode.auto =>
-          isMetered ? '已自动开启 · 移动数据下减少缓存' : '已自动关闭 · 非移动网络使用完整缓存',
-        LowMemoryMode.always => '已手动开启 · 所有网络均减少缓存',
-        LowMemoryMode.never =>
-          isMetered ? '已手动关闭 · 移动数据使用完整缓存' : '已手动关闭 · 使用完整缓存',
+        LowMemoryMode.auto => isMetered
+            ? S.t('已自动开启 · 移动数据下减少缓存')
+            : S.t('已自动关闭 · 非移动网络使用完整缓存'),
+        LowMemoryMode.always => S.t('已手动开启 · 所有网络均减少缓存'),
+        LowMemoryMode.never => isMetered
+            ? S.t('已手动关闭 · 移动数据使用完整缓存')
+            : S.t('已手动关闭 · 使用完整缓存'),
       };
 }
 

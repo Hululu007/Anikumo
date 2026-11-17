@@ -6,6 +6,7 @@ import 'package:anikumo/pages/manga/manga_detail_page.dart';
 import 'package:anikumo/pages/manga/manga_history_page.dart';
 import 'package:anikumo/pages/manga/manga_diagnostics_page.dart';
 import 'package:anikumo/pages/manga/manga_login_page.dart';
+import 'package:anikumo/pages/manga/manga_web_login_page.dart';
 import 'package:anikumo/pages/manga/manga_explore_page.dart';
 import 'package:anikumo/pages/manga/manga_verification_page.dart';
 import 'package:anikumo/pages/manga/manga_main_page.dart';
@@ -13,6 +14,7 @@ import 'package:anikumo/pages/manga/manga_reader_page.dart';
 import 'package:anikumo/pages/manga/manga_search_page.dart';
 import 'package:anikumo/pages/manga/manga_settings_page.dart';
 import 'package:anikumo/pages/manga/manga_sources_page.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/bean/theme/violet_glass.dart';
 import 'package:anikumo/pages/route_error_page.dart';
 
@@ -72,7 +74,7 @@ final mangaModule = createModule(
         child: (context, state) {
           final args = state.arguments;
           if (args is! String) {
-            return const RouteErrorPage(message: '漫画源参数无效，请返回后重新打开。');
+            return RouteErrorPage(message: S.t('漫画源参数无效，请返回后重新打开。'));
           }
           return VioletZone(child: MangaSourcePage(sourceId: args));
         },
@@ -89,9 +91,20 @@ final mangaModule = createModule(
         child: (context, state) {
           final args = state.arguments;
           if (args is! String) {
-            return const RouteErrorPage(message: '漫画源参数无效，请返回后重新打开。');
+            return RouteErrorPage(message: S.t('漫画源参数无效，请返回后重新打开。'));
           }
           return VioletZone(child: MangaLoginPage(sourceId: args));
+        },
+        transition: _mangaTransition,
+      )
+      ..route(
+        '/web-login',
+        child: (context, state) {
+          final args = state.arguments;
+          if (args is! String) {
+            return RouteErrorPage(message: S.t('漫画源参数无效，请返回后重新打开。'));
+          }
+          return VioletZone(child: MangaWebLoginPage(sourceId: args));
         },
         transition: _mangaTransition,
       )
@@ -118,7 +131,7 @@ final mangaModule = createModule(
         child: (context, state) {
           final args = state.arguments;
           if (args is! MangaCategoryArgs) {
-            return const RouteErrorPage(message: '分类参数无效，请返回后重新打开。');
+            return RouteErrorPage(message: S.t('分类参数无效，请返回后重新打开。'));
           }
           return VioletZone(child: MangaCategoryPage(args: args));
         },
@@ -129,7 +142,7 @@ final mangaModule = createModule(
         child: (context, state) {
           final manga = state.arguments;
           if (manga is! MangaItem) {
-            return const RouteErrorPage(message: '漫画详情参数无效，请返回后重新打开。');
+            return RouteErrorPage(message: S.t('漫画详情参数无效，请返回后重新打开。'));
           }
           return VioletZone(child: MangaDetailPage(manga: manga));
         },
@@ -140,7 +153,7 @@ final mangaModule = createModule(
         child: (context, state) {
           final args = state.arguments;
           if (args is! MangaReaderArgs) {
-            return const RouteErrorPage(message: '阅读参数无效，请返回后重新打开。');
+            return RouteErrorPage(message: S.t('阅读参数无效，请返回后重新打开。'));
           }
           return VioletZone(child: MangaReaderPage(args: args));
         },

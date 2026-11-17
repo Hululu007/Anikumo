@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:anikumo/bean/widget/embedded_native_control_area.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/platform/desktop_window_config.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:anikumo/utils/device.dart';
@@ -40,6 +41,7 @@ class SysAppBar extends StatelessWidget implements PreferredSizeWidget {
         leading ??
         ((ModalRoute.of(context)?.impliesAppBarDismissal ?? false)
             ? IconButton(
+              tooltip: S.t('返回'),
                 onPressed: () => context.maybePop(),
                 icon: const Icon(AnikumoIcons.arrow_back),
               )

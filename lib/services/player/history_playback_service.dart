@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/modules/download/download_module.dart';
 import 'package:anikumo/modules/history/history_module.dart';
 import 'package:anikumo/pages/download/download_controller.dart';
@@ -44,13 +45,13 @@ class HistoryPlaybackService {
         HistoryEntryKind.offline) {
       final args = _offlineArgs(history);
       return args == null
-          ? const HistoryPlaybackUnavailable('未找到可用缓存')
+          ? HistoryPlaybackUnavailable(S.t('未找到可用缓存'))
           : HistoryPlaybackReady(args);
     }
 
     final args = await _onlineArgs(history, cancelToken);
     return args == null
-        ? const HistoryPlaybackUnavailable('在线源不可用，请重新选择播放源')
+        ? HistoryPlaybackUnavailable(S.t('在线源不可用，请重新选择播放源'))
         : HistoryPlaybackReady(args);
   }
 

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:anikumo/bean/dialog/dialog_helper.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/modules/my/watch_stats.dart';
 import 'package:anikumo/modules/danmaku/danmaku_shield_rule.dart';
 import 'package:anikumo/repositories/danmaku_shield_repository.dart';
@@ -126,8 +127,8 @@ abstract class _MyController with Store {
     if (error != null) {
       AnikumoDialog.showToast(
           message: switch (error) {
-        DanmakuShieldRuleError.empty => '请输入关键词',
-        DanmakuShieldRuleError.tooLong => '关键词过长',
+        DanmakuShieldRuleError.empty => S.t('请输入关键词'),
+        DanmakuShieldRuleError.tooLong => S.t('关键词过长'),
       });
       return false;
     }
@@ -141,13 +142,13 @@ abstract class _MyController with Store {
     try {
       final changed = await _shieldRepository.setRule(item, deleted: deleted);
       if (!changed && !deleted) {
-        AnikumoDialog.showToast(message: '已存在该关键词');
+        AnikumoDialog.showToast(message: S.t('已存在该关键词'));
         return false;
       }
       return true;
     } catch (e) {
       AnikumoLogger().e('Danmaku: failed to save shield rule', error: e);
-      AnikumoDialog.showToast(message: '屏蔽规则保存失败，请重试');
+      AnikumoDialog.showToast(message: S.t('屏蔽规则保存失败，请重试'));
       return false;
     }
   }
@@ -166,7 +167,7 @@ abstract class _MyController with Store {
     } catch (err) {
       AnikumoLogger().e('Update: check update failed', error: err);
       if (type == 'manual') {
-        AnikumoDialog.showToast(message: '检查更新失败，请稍后重试');
+        AnikumoDialog.showToast(message: S.t('检查更新失败，请稍后重试'));
       }
       return false;
     }

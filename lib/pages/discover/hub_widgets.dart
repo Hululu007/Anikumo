@@ -4,6 +4,7 @@ import 'package:anikumo/bean/glass/glass_surface.dart';
 import 'package:anikumo/modules/history/history_module.dart';
 import 'package:anikumo/services/library/user_library.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// Shared hub widgets for the discover family of tabs
 /// （发现 / 工具箱 / 时光）. Extracted in batch 37 when the
@@ -131,7 +132,7 @@ class ContinueWatchCard extends StatelessWidget {
   final VoidCallback onResume;
 
   String get _progressLabel {
-    final base = '看到第 ${history.lastWatchEpisode} 集';
+    final base = S.f('看到第 {} 集', [history.lastWatchEpisode]);
     final progress = history.progresses[history.lastWatchEpisode];
     if (progress == null || progress.progress == Duration.zero) return base;
     final duration = progress.progress;
@@ -169,7 +170,7 @@ class ContinueWatchCard extends StatelessWidget {
                 right: 6,
                 bottom: 6,
                 child: IconButton.filled(
-                  tooltip: '继续播放',
+                  tooltip: S.t('继续播放'),
                   onPressed: onResume,
                   icon: const Icon(AnikumoIcons.play_arrow_rounded, size: 20),
                   style: IconButton.styleFrom(

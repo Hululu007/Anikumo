@@ -1,12 +1,12 @@
 part of 'timeline_page.dart';
 
-const _timelineOptionsTitle = '排序与筛选';
+String get _timelineOptionsTitle => S.t('排序与筛选');
 
 extension _TimelineSortLabel on TimelineSort {
   String get label => switch (this) {
-        TimelineSort.popularity => '热度优先',
-        TimelineSort.rating => '评分优先',
-        TimelineSort.defaultOrder => '默认顺序',
+        TimelineSort.popularity => S.t('热度优先'),
+        TimelineSort.rating => S.t('评分优先'),
+        TimelineSort.defaultOrder => S.t('默认顺序'),
       };
 }
 
@@ -34,8 +34,10 @@ class _TimelineOptionsButton extends StatelessWidget {
         EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
     );
-    final summary = '${sort.label}，'
-        '${filterCount > 0 ? '已启用 $filterCount 项筛选' : '未启用筛选'}';
+    final summary = S.f('{}，{}', [
+      sort.label,
+      filterCount > 0 ? S.f('已启用 {} 项筛选', [filterCount]) : S.t('未启用筛选'),
+    ]);
     final icon = Badge(
       isLabelVisible: filterCount > 0,
       label: Text('$filterCount'),
@@ -48,7 +50,7 @@ class _TimelineOptionsButton extends StatelessWidget {
       onTap: onPressed,
       excludeSemantics: true,
       child: Tooltip(
-        message: '$_timelineOptionsTitle：$summary',
+        message: S.f('{}：{}', [_timelineOptionsTitle, summary]),
         child: compact
             ? FilledButton.tonal(
                 style: style,
@@ -87,7 +89,7 @@ class _TimelineOptionsSheet extends StatelessWidget {
               padding: materialBottomSheetContentPadding,
               children: [
                 ContentSection(
-                  title: '排序',
+                  title: S.t('排序'),
                   child: Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -103,20 +105,20 @@ class _TimelineOptionsSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 ContentSection.group(
-                  title: '显示范围',
+                  title: S.t('显示范围'),
                   children: [
                     SwitchListTile(
-                      title: const Text('隐藏看过的番剧'),
+                      title: Text(S.t('隐藏看过的番剧')),
                       value: controller.notShowWatchedBangumis,
                       onChanged: controller.setNotShowWatchedBangumis,
                     ),
                     SwitchListTile(
-                      title: const Text('隐藏抛弃的番剧'),
+                      title: Text(S.t('隐藏抛弃的番剧')),
                       value: controller.notShowAbandonedBangumis,
                       onChanged: controller.setNotShowAbandonedBangumis,
                     ),
                     SwitchListTile(
-                      title: const Text('只看正在追的番剧'),
+                      title: Text(S.t('只看正在追的番剧')),
                       value: controller.onlyShowWatchingBangumis,
                       onChanged: controller.setOnlyShowWatchingBangumis,
                     ),

@@ -2,18 +2,19 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:material_new_shapes/material_new_shapes.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class LoadingIndicator extends StatefulWidget {
   const LoadingIndicator({
     super.key,
     this.size = 48,
     this.color,
-    this.semanticsLabel = '加载中',
+    this.semanticsLabel,
   });
 
   final double size;
   final Color? color;
-  final String semanticsLabel;
+  final String? semanticsLabel;
 
   @override
   State<LoadingIndicator> createState() => _LoadingIndicatorState();
@@ -61,7 +62,7 @@ class _LoadingIndicatorState extends State<LoadingIndicator>
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: widget.semanticsLabel,
+      label: widget.semanticsLabel ?? S.t('加载中'),
       child: RepaintBoundary(
         child: SizedBox.square(
           dimension: widget.size,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -14,10 +15,13 @@ import 'package:anikumo/bean/widget/motion_kit.dart';
 import 'package:anikumo/modules/manga/manga_item.dart';
 import 'package:anikumo/repositories/history_repository.dart';
 import 'package:anikumo/services/anime/anime_features.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/manga/manga_downloads.dart';
+import 'package:anikumo/services/notifications/update_notification_service.dart';
 import 'package:anikumo/services/manga/manga_library.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/bean/settings/theme_provider.dart';
+import 'package:anikumo/services/privacy/app_lock.dart';
 import 'package:anikumo/services/ui/app_extras.dart';
 import 'package:anikumo/services/ui/custom_font.dart';
 import 'package:anikumo/services/ui/glass_style.dart';
@@ -73,7 +77,10 @@ class _ExtrasSettingsPageState extends State<ExtrasSettingsPage> {
       ClipboardData(text: '${animeFile.path}\n${mangaFile.path}'),
     );
     AnikumoDialog.showToast(
-      message: '已导出 ${histories.length} 条动漫 + ${manga.length} 条漫画记录，文件路径已复制',
+      message: S.f(
+        '已导出 {} 条动漫 + {} 条漫画记录，文件路径已复制',
+        [histories.length, manga.length],
+      ),
     );
   }
 
@@ -83,7 +90,7 @@ class _ExtrasSettingsPageState extends State<ExtrasSettingsPage> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(changing ? '修改 PIN' : '设置 PIN（4-6 位数字）'),
+        title: Text(changing ? S.t('修改 PIN') : S.t('设置 PIN（4-6 位数字）')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -92,24 +99,24 @@ class _ExtrasSettingsPageState extends State<ExtrasSettingsPage> {
                 controller: secondController,
                 keyboardType: TextInputType.number,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: '当前 PIN'),
+                decoration: InputDecoration(labelText: S.t('当前 PIN')),
               ),
             TextField(
               controller: firstController,
               keyboardType: TextInputType.number,
               obscureText: true,
-              decoration: const InputDecoration(labelText: '新 PIN'),
+              decoration: InputDecoration(labelText: S.t('新 PIN')),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('保存'),
+            child: Text(S.t('保存')),
           ),
         ],
       ),
@@ -117,16 +124,16 @@ class _ExtrasSettingsPageState extends State<ExtrasSettingsPage> {
     if (result != true) return;
     final pin = firstController.text.trim();
     if (pin.length < 4 || pin.length > 6 || int.tryParse(pin) == null) {
-      AnikumoDialog.showToast(message: 'PIN 需为 4-6 位数字');
+      AnikumoDialog.showToast(message: S.t('PIN 需为 4-6 位数字'));
       return;
     }
     if (changing && !PinLock.verify(secondController.text.trim())) {
-      AnikumoDialog.showToast(message: '当前 PIN 不对');
+      AnikumoDialog.showToast(message: S.t('当前 PIN 不对'));
       return;
     }
     await PinLock.setPin(pin);
     if (mounted) setState(() {});
-    AnikumoDialog.showToast(message: '应用锁已开启，下次打开 App 需要 PIN');
+    AnikumoDialog.showToast(message: S.t('应用锁已开启，下次打开 App 需要 PIN'));
   }
 
   /// Batch 84: pick a ttf/otf file and apply it app-wide.
@@ -150,9 +157,9 @@ class _ExtrasSettingsPageState extends State<ExtrasSettingsPage> {
         pickedPath: path,
         name: file.name,
       );
-      AnikumoDialog.showToast(message: '字体已应用：${file.name}');
+      AnikumoDialog.showToast(message: S.f('字体已应用：{}', [file.name]));
     } catch (_) {
-      AnikumoDialog.showToast(message: '这个字体文件用不了，换一个试试');
+      AnikumoDialog.showToast(message: S.t('这个字体文件用不了，换一个试试'));
     }
     if (mounted) setState(() {});
   }
@@ -163,19 +170,19 @@ class _ExtrasSettingsPageState extends State<ExtrasSettingsPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('恢复默认字体？'),
+        title: Text(S.t('恢复默认字体？')),
         content: Text(
-          '将移除自定义字体「${CustomFontService.displayName}」，'
-          '回到原来的字体。',
+          S.f('将移除自定义字体「{}」，回到原来的字体。',
+              [CustomFontService.displayName]),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('恢复'),
+            child: Text(S.t('恢复')),
           ),
         ],
       ),
@@ -184,7 +191,7 @@ class _ExtrasSettingsPageState extends State<ExtrasSettingsPage> {
       return;
     }
     await CustomFontService.clear(Provider.of<ThemeProvider>(context, listen: false));
-    AnikumoDialog.showToast(message: '已恢复默认字体');
+    AnikumoDialog.showToast(message: S.t('已恢复默认字体'));
     if (mounted) setState(() {});
   }
 
@@ -199,14 +206,14 @@ class _ExtrasSettingsPageState extends State<ExtrasSettingsPage> {
     // every other settings page. Controls and behavior are
     // unchanged, only the presentation layer moved.
     return SettingsDetailScaffold(
-      title: const Text('Anikumo 增强'),
+      title: Text(S.t('Anikumo 增强')),
       body: SettingsList(
         sections: [
-          SettingsSection(title: const Text('动漫扩展'), tiles: [
+          SettingsSection(title: Text(S.t('动漫扩展')), tiles: [
             SettingsTile(
               leading: AnikumoIcons.extension_rounded,
-              title: const Text('动漫功能仓库'),
-              description: const Text('可选功能包：装好立即生效，没装的不会出现在动漫区里'),
+              title: Text(S.t('动漫功能仓库')),
+              description: Text(S.t('可选功能包：装好立即生效，没装的不会出现在动漫区里')),
               onPressed: (context) => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const AnimeFeatureRepoPage(),
@@ -216,8 +223,8 @@ class _ExtrasSettingsPageState extends State<ExtrasSettingsPage> {
             if (AnimeFeatures.isInstalled(AnimeFeatures.statsId))
               SettingsTile(
                 leading: AnikumoIcons.bar_chart_rounded,
-                title: const Text('观影报告'),
-                description: const Text('累计时长、看过的番与集数、最近 7 天节奏'),
+                title: Text(S.t('观影报告')),
+                description: Text(S.t('累计时长、看过的番与集数、最近 7 天节奏')),
                 onPressed: (context) => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => const AnimeStatsPage(),
@@ -225,11 +232,11 @@ class _ExtrasSettingsPageState extends State<ExtrasSettingsPage> {
                 ),
               ),
           ]),
-          SettingsSection(title: const Text('显示'), tiles: [
+          SettingsSection(title: Text(S.t('显示')), tiles: [
             SettingsTile(
               leading: AnikumoIcons.format_size_rounded,
-              title: const Text('字体大小'),
-              description: const Text('全应用文字缩放'),
+              title: Text(S.t('字体大小')),
+              description: Text(S.t('全应用文字缩放')),
               // Batch 84: the four-segment switch is too
               // wide to share a row with the label — at
               // larger scales it crushed the label into a
@@ -239,11 +246,11 @@ class _ExtrasSettingsPageState extends State<ExtrasSettingsPage> {
               trailing: SizedBox(
                 width: double.infinity,
                 child: SegmentedButton<double>(
-                segments: const [
-                  ButtonSegment(value: 0.85, label: Text('小')),
-                  ButtonSegment(value: 1.0, label: Text('标准')),
-                  ButtonSegment(value: 1.15, label: Text('大')),
-                  ButtonSegment(value: 1.3, label: Text('特大')),
+                segments: [
+                  ButtonSegment(value: 0.85, label: Text(S.t('小'))),
+                  ButtonSegment(value: 1.0, label: Text(S.t('标准'))),
+                  ButtonSegment(value: 1.15, label: Text(S.t('大'))),
+                  ButtonSegment(value: 1.3, label: Text(S.t('特大'))),
                 ],
                 selected: {
                   _textScales.contains(textScale) ? textScale : 1.0,
@@ -263,28 +270,28 @@ class _ExtrasSettingsPageState extends State<ExtrasSettingsPage> {
             ),
             SettingsTile(
               leading: AnikumoIcons.font_download_outlined,
-              title: const Text('自定义字体'),
+              title: Text(S.t('自定义字体')),
               description: Text(
                 CustomFontService.hasCustomFont
-                    ? '当前：${CustomFontService.displayName}'
-                    : '导入 ttf / otf 字体文件，全应用生效',
+                    ? S.f('当前：{}', [CustomFontService.displayName])
+                    : S.t('导入 ttf / otf 字体文件，全应用生效'),
               ),
               value: Text(
-                CustomFontService.hasCustomFont ? '已启用' : '未设置',
+                CustomFontService.hasCustomFont ? S.t('已启用') : S.t('未设置'),
               ),
               onPressed: (_) => _importCustomFont(),
             ),
             SettingsTile(
               leading: AnikumoIcons.restart_alt_rounded,
-              title: const Text('恢复默认字体'),
-              description: const Text('移除自定义字体，回到原来的字体'),
+              title: Text(S.t('恢复默认字体')),
+              description: Text(S.t('移除自定义字体，回到原来的字体')),
               enabled: CustomFontService.hasCustomFont,
               onPressed: (_) => _restoreDefaultFont(),
             ),
             SettingsTile.switchTile(
               leading: AnikumoIcons.dark_mode_rounded,
-              title: const Text('定时深色模式'),
-              description: const Text('跟随系统时，21:00–06:00 自动深色'),
+              title: Text(S.t('定时深色模式')),
+              description: Text(S.t('跟随系统时，21:00–06:00 自动深色')),
               initialValue: scheduledDark,
               onToggle: (value) async {
                 await GStorage.putSetting(
@@ -296,11 +303,11 @@ class _ExtrasSettingsPageState extends State<ExtrasSettingsPage> {
             ),
             SettingsDropdownTile<int>(
               leading: AnikumoIcons.home_rounded,
-              title: const Text('默认启动页'),
-              description: const Text('打开 App 时先显示的页面'),
+              title: Text(S.t('默认启动页')),
+              description: Text(S.t('打开 App 时先显示的页面')),
               value: startTab.clamp(0, 7),
               options: {
-                for (var i = 0; i < _tabNames.length; i++) i: _tabNames[i],
+                for (var i = 0; i < _tabNames.length; i++) i: S.t(_tabNames[i]),
               },
               onChanged: (value) async {
                 await GStorage.putSetting(SettingsKeys.startTabIndex, value);
@@ -308,50 +315,123 @@ class _ExtrasSettingsPageState extends State<ExtrasSettingsPage> {
               },
             ),
           ]),
-          SettingsSection(title: const Text('流畅'), tiles: [
+          SettingsSection(title: Text(S.t('流畅')), tiles: [
             SettingsTile.switchTile(
               leading: AnikumoIcons.speed_rounded,
-              title: const Text('流畅模式'),
+              title: Text(S.t('流畅模式')),
               description:
-                  const Text('关玻璃效果、停大部分入场动画（榜单 3D 入场除外）、漫画图片省流，换取最大流畅'),
+                  Text(S.t('关玻璃效果、停大部分入场动画（榜单 3D 入场除外）、漫画图片省流，换取最大流畅')),
               initialValue: SmoothMode.enabled,
               onToggle: (value) =>
                   _setSmoothMode(value ?? !SmoothMode.enabled),
             ),
           ]),
-          SettingsSection(title: const Text('安全'), tiles: [
+          SettingsSection(title: Text(S.t('提醒')), tiles: [
+            SettingsTile.switchTile(
+              leading: Icons.notifications_rounded,
+              title: Text(S.t('追番更新通知')),
+              description: Text(S.t('打开 App 时检查在看的番剧，有新集就通知')),
+              initialValue:
+                  GStorage.getSetting(SettingsKeys.notifyAnimeUpdates),
+              onToggle: (value) async {
+                final enabled =
+                    value ?? !GStorage.getSetting(SettingsKeys.notifyAnimeUpdates);
+                await GStorage.putSetting(
+                  SettingsKeys.notifyAnimeUpdates,
+                  enabled,
+                );
+                if (enabled) {
+                  await UpdateNotificationService.requestPermission();
+                  unawaited(
+                    UpdateNotificationService.runChecksIfEnabled(force: true),
+                  );
+                }
+                if (mounted) setState(() {});
+              },
+            ),
+          ]),
+          SettingsSection(title: Text(S.t('安全')), tiles: [
             SettingsTile(
               leading: AnikumoIcons.lock_rounded,
-              title: const Text('应用锁（PIN）'),
-              description: Text(PinLock.isEnabled ? '已开启' : '未开启'),
+              title: Text(S.t('应用锁（PIN）')),
+              description: Text(PinLock.isEnabled ? S.t('已开启') : S.t('未开启')),
               trailing: PinLock.isEnabled
                   ? Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         TextButton(
                           onPressed: () => _pinDialog(changing: true),
-                          child: const Text('修改'),
+                          child: Text(S.t('修改')),
                         ),
                         TextButton(
                           onPressed: () async {
                             await PinLock.clear();
                             if (mounted) setState(() {});
                           },
-                          child: const Text('关闭'),
+                          child: Text(S.t('关闭')),
                         ),
                       ],
                     )
                   : TextButton(
                       onPressed: () => _pinDialog(changing: false),
-                      child: const Text('设置'),
+                      child: Text(S.t('设置')),
                     ),
             ),
+            // Batch 275 (#46): biometric lock — standalone
+            // when no PIN is set, a shortcut on the PIN pad
+            // when one is.
+            SettingsTile.switchTile(
+              leading: Icons.fingerprint,
+              title: Text(S.t('生物识别锁')),
+              description: Text(
+                S.t('用指纹 / 面容 / 设备密码解锁；已设 PIN 时作为 PIN 的快捷解锁'),
+              ),
+              initialValue:
+                  GStorage.getSetting(SettingsKeys.appLockEnabled),
+              onToggle: (value) async {
+                final enable = value ??
+                    !GStorage.getSetting(SettingsKeys.appLockEnabled);
+                if (enable) {
+                  if (!await PrivacyGate.canAuthenticate()) {
+                    if (mounted) {
+                      AnikumoDialog.showToast(
+                        context: context,
+                        message: S.t('这台设备没有可用的指纹 / 面容 / 锁屏密码'),
+                      );
+                    }
+                    return;
+                  }
+                  if (!await PrivacyGate.authenticate()) {
+                    return; // cancelled — stay off
+                  }
+                }
+                await GStorage.putSetting(
+                  SettingsKeys.appLockEnabled,
+                  enable,
+                );
+                if (mounted) setState(() {});
+              },
+            ),
+            // Batch 275 (#47): guest mode.
+            SettingsTile.switchTile(
+              leading: AnikumoIcons.visibility_off_rounded,
+              title: Text(S.t('访客模式')),
+              description: Text(S.t('临时隐藏历史、收藏总览与继续观看（只隐藏显示，不删数据）')),
+              initialValue: GStorage.getSetting(SettingsKeys.guestMode),
+              onToggle: (value) async {
+                await GStorage.putSetting(
+                  SettingsKeys.guestMode,
+                  value ?? !GStorage.getSetting(SettingsKeys.guestMode),
+                );
+                if (mounted) setState(() {});
+              },
+            ),
           ]),
-          SettingsSection(title: const Text('播放'), tiles: [
+          SettingsSection(title: Text(S.t('播放')), tiles: [
             SettingsTile(
               leading: AnikumoIcons.play_circle_rounded,
-              title: const Text('播放增强'),
-              description: const Text('24 项播放优化 + 12 项播放功能'),
+              title: Text(S.t('播放增强')),
+              description: Text(S.t('24 项播放优化 + 12 项播放功能')),
               onPressed: (context) => Navigator.of(context).push(
                 MaterialPageRoute<void>(
                   builder: (_) => const PlayerEnhancePage(),
@@ -359,11 +439,11 @@ class _ExtrasSettingsPageState extends State<ExtrasSettingsPage> {
               ),
             ),
           ]),
-          SettingsSection(title: const Text('内容'), tiles: [
+          SettingsSection(title: Text(S.t('内容')), tiles: [
             SettingsTile(
               leading: AnikumoIcons.filter_alt_rounded,
-              title: const Text('标题关键词过滤'),
-              description: const Text('含关键词的番剧不在热门/发现里出现'),
+              title: Text(S.t('标题关键词过滤')),
+              description: Text(S.t('含关键词的番剧不在热门/发现里出现')),
               onPressed: (context) => Navigator.of(context).push(
                 MaterialPageRoute<void>(
                   builder: (_) => const TitleFilterPage(),
@@ -371,11 +451,11 @@ class _ExtrasSettingsPageState extends State<ExtrasSettingsPage> {
               ),
             ),
           ]),
-          SettingsSection(title: const Text('数据'), tiles: [
+          SettingsSection(title: Text(S.t('数据')), tiles: [
             SettingsTile(
               leading: AnikumoIcons.storage_rounded,
-              title: const Text('存储管理'),
-              description: const Text('图片缓存、漫画下载、文档占用与清理'),
+              title: Text(S.t('存储管理')),
+              description: Text(S.t('图片缓存、漫画下载、文档占用与清理')),
               onPressed: (context) => Navigator.of(context).push(
                 MaterialPageRoute<void>(
                   builder: (_) => const StorageManagePage(),
@@ -384,8 +464,8 @@ class _ExtrasSettingsPageState extends State<ExtrasSettingsPage> {
             ),
             SettingsTile(
               leading: AnikumoIcons.history_rounded,
-              title: const Text('统一历史搜索'),
-              description: const Text('动漫观看 + 漫画阅读历史一起搜'),
+              title: Text(S.t('统一历史搜索')),
+              description: Text(S.t('动漫观看 + 漫画阅读历史一起搜')),
               onPressed: (context) => Navigator.of(context).push(
                 MaterialPageRoute<void>(
                   builder: (_) => const UnifiedHistoryPage(),
@@ -394,8 +474,8 @@ class _ExtrasSettingsPageState extends State<ExtrasSettingsPage> {
             ),
             SettingsTile(
               leading: AnikumoIcons.pie_chart_rounded,
-              title: const Text('追番进度总览'),
-              description: const Text('每部在看番剧看到第几话'),
+              title: Text(S.t('追番进度总览')),
+              description: Text(S.t('每部在看番剧看到第几话')),
               onPressed: (context) => Navigator.of(context).push(
                 MaterialPageRoute<void>(
                   builder: (_) => const WatchingProgressPage(),
@@ -404,8 +484,8 @@ class _ExtrasSettingsPageState extends State<ExtrasSettingsPage> {
             ),
             SettingsTile(
               leading: AnikumoIcons.file_download_outlined,
-              title: const Text('导出历史 CSV'),
-              description: const Text('动漫 + 漫画记录导出为表格文件'),
+              title: Text(S.t('导出历史 CSV')),
+              description: Text(S.t('动漫 + 漫画记录导出为表格文件')),
               onPressed: (_) => _exportHistory(),
             ),
           ]),
@@ -465,7 +545,7 @@ class _TitleFilterPageState extends State<TitleFilterPage> {
   Widget build(BuildContext context) {
     final keywords = TitleFilterStore.loadKeywords();
     return Scaffold(
-      appBar: AppBar(title: const Text('标题关键词过滤')),
+      appBar: AppBar(title: Text(S.t('标题关键词过滤'))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -474,21 +554,21 @@ class _TitleFilterPageState extends State<TitleFilterPage> {
               Expanded(
                 child: TextField(
                   controller: _controller,
-                  decoration: const InputDecoration(
-                    hintText: '输入要屏蔽的关键词，如：剧场版',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    hintText: S.t('输入要屏蔽的关键词，如：剧场版'),
+                    border: const OutlineInputBorder(),
                     isDense: true,
                   ),
                   onSubmitted: (_) => _add(),
                 ),
               ),
               const SizedBox(width: 8),
-              FilledButton(onPressed: _add, child: const Text('添加')),
+              FilledButton(onPressed: _add, child: Text(S.t('添加'))),
             ],
           ),
           const SizedBox(height: 16),
           if (keywords.isEmpty)
-            const Text('还没有关键词。添加后，标题含该词的番剧会从热门和发现里隐藏。'),
+            Text(S.t('还没有关键词。添加后，标题含该词的番剧会从热门和发现里隐藏。')),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -568,13 +648,13 @@ class _StorageManagePageState extends State<StorageManagePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('存储管理')),
+      appBar: AppBar(title: Text(S.t('存储管理'))),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               children: [
                 ListTile(
-                  title: const Text('图片缓存'),
+                  title: Text(S.t('图片缓存')),
                   subtitle: Text(_label(_imageBytes)),
                   trailing: TextButton(
                     onPressed: () async {
@@ -586,22 +666,22 @@ class _StorageManagePageState extends State<StorageManagePage> {
                       }
                       await _load();
                     },
-                    child: const Text('清理'),
+                    child: Text(S.t('清理')),
                   ),
                 ),
                 ListTile(
-                  title: const Text('漫画下载'),
+                  title: Text(S.t('漫画下载')),
                   subtitle: Text(_label(_downloadBytes)),
                   trailing: TextButton(
                     onPressed: () async {
                       await MangaDownloadStore.clearAll();
                       await _load();
                     },
-                    child: const Text('清理'),
+                    child: Text(S.t('清理')),
                   ),
                 ),
                 ListTile(
-                  title: const Text('应用文档总量'),
+                  title: Text(S.t('应用文档总量')),
                   subtitle: Text(_label(_docsBytes)),
                 ),
               ],
@@ -643,8 +723,8 @@ class _UnifiedHistoryPageState extends State<UnifiedHistoryPage> {
       appBar: AppBar(
         title: TextField(
           autofocus: true,
-          decoration: const InputDecoration(
-            hintText: '搜索全部历史',
+          decoration: InputDecoration(
+            hintText: S.t('搜索全部历史'),
             border: InputBorder.none,
           ),
           onChanged: (value) => setState(() => _query = value),
@@ -653,7 +733,7 @@ class _UnifiedHistoryPageState extends State<UnifiedHistoryPage> {
       body: ListView(
         children: [
           if (anime.isNotEmpty) ...[
-            const _SectionTitle('动漫历史'),
+            _SectionTitle(S.t('动漫历史')),
             for (var i = 0; i < anime.length; i++)
               SlideInX(
                 delay: Duration(milliseconds: i * 30),
@@ -664,7 +744,8 @@ class _UnifiedHistoryPageState extends State<UnifiedHistoryPage> {
                       : anime[i].bangumiItem.name,
                 ),
                 subtitle: Text(
-                  '看到第 ${anime[i].lastWatchEpisode} 话 · ${anime[i].adapterName}',
+                  S.f('看到第 {} 话 · {}',
+                      [anime[i].lastWatchEpisode, anime[i].adapterName]),
                 ),
                 trailing: const Icon(AnikumoIcons.chevron_right_rounded),
                 onTap: () => context.pushNamed(
@@ -675,12 +756,13 @@ class _UnifiedHistoryPageState extends State<UnifiedHistoryPage> {
               ),
           ],
           if (manga.isNotEmpty) ...[
-            const _SectionTitle('漫画历史'),
+            _SectionTitle(S.t('漫画历史')),
             for (final p in manga)
               ListTile(
                 title: Text(p.mangaTitle),
                 subtitle: Text(
-                  '${p.chapterLabel} · 第 ${p.page + 1} 页 · ${p.mangaSource}',
+                  S.f('{} · 第 {} 页 · {}',
+                      [p.chapterLabel, p.page + 1, p.mangaSource]),
                 ),
                 trailing: const Icon(AnikumoIcons.chevron_right_rounded),
                 onTap: () => context.pushNamed(
@@ -700,9 +782,9 @@ class _UnifiedHistoryPageState extends State<UnifiedHistoryPage> {
               ),
           ],
           if (anime.isEmpty && manga.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(32),
-              child: Center(child: Text('没有匹配的历史记录')),
+            Padding(
+              padding: const EdgeInsets.all(32),
+              child: Center(child: Text(S.t('没有匹配的历史记录'))),
             ),
         ],
       ),
@@ -719,9 +801,9 @@ class WatchingProgressPage extends StatelessWidget {
     final histories = inject<IHistoryRepository>().getAllHistories()
       ..sort((a, b) => b.lastWatchTime.compareTo(a.lastWatchTime));
     return Scaffold(
-      appBar: AppBar(title: const Text('追番进度总览')),
+      appBar: AppBar(title: Text(S.t('追番进度总览'))),
       body: histories.isEmpty
-          ? const Center(child: Text('还没有观看记录'))
+          ? Center(child: Text(S.t('还没有观看记录')))
           : ListView(
               children: [
                 for (final h in histories)
@@ -737,7 +819,8 @@ class WatchingProgressPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '已看 ${h.progresses.length} 集 · 最新第 ${h.lastWatchEpisode} 话',
+                          S.f('已看 {} 集 · 最新第 {} 话',
+                              [h.progresses.length, h.lastWatchEpisode]),
                         ),
                         const SizedBox(height: 4),
                         AnimatedBar(

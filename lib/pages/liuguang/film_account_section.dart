@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:anikumo/bean/dialog/dialog.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
 import 'package:anikumo/pages/liuguang/film_tmdb_login_page.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/liuguang/film_accounts.dart';
 
 /// Batch 254 built this section for the film zone's
@@ -88,7 +89,7 @@ class _FilmAccountSectionState extends State<FilmAccountSection> {
               if (verified == null) {
                 setDialogState(() {
                   busy = false;
-                  error = '令牌验证失败，请确认令牌无误、网络可用。';
+                  error = S.t('令牌验证失败，请确认令牌无误、网络可用。');
                 });
                 return;
               }
@@ -99,12 +100,12 @@ class _FilmAccountSectionState extends State<FilmAccountSection> {
             }
 
             return AlertDialog(
-              title: const Text('连接 Bangumi 账户'),
+              title: Text(S.t('连接 Bangumi 账户')),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('粘贴你的 Bangumi 访问令牌（与动漫区同步用的是同一个账号）。'),
+                  Text(S.t('粘贴你的 Bangumi 访问令牌（与动漫区同步用的是同一个账号）。')),
                   const SizedBox(height: 8),
                   InkWell(
                     onTap: () => launchUrl(
@@ -112,7 +113,7 @@ class _FilmAccountSectionState extends State<FilmAccountSection> {
                       mode: LaunchMode.externalApplication,
                     ),
                     child: Text(
-                      '点此打开 Bangumi 令牌页获取',
+                      S.t('点此打开 Bangumi 令牌页获取'),
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.primary,
                         decoration: TextDecoration.underline,
@@ -122,9 +123,9 @@ class _FilmAccountSectionState extends State<FilmAccountSection> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: controller,
-                    decoration: const InputDecoration(
-                      labelText: '访问令牌',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: S.t('访问令牌'),
+                      border: const OutlineInputBorder(),
                     ),
                     obscureText: true,
                     maxLines: 1,
@@ -145,11 +146,11 @@ class _FilmAccountSectionState extends State<FilmAccountSection> {
                   onPressed: busy
                       ? null
                       : () => Navigator.of(dialogContext).pop(),
-                  child: const Text('取消'),
+                  child: Text(S.t('取消')),
                 ),
                 FilledButton(
                   onPressed: busy ? null : submit,
-                  child: Text(busy ? '验证中…' : '验证并连接'),
+                  child: Text(busy ? S.t('验证中…') : S.t('验证并连接')),
                 ),
               ],
             );
@@ -163,7 +164,7 @@ class _FilmAccountSectionState extends State<FilmAccountSection> {
       setState(() {});
       AnikumoDialog.showToast(
         context: context,
-        message: '已连接 Bangumi 账户 @$name',
+        message: S.f('已连接 Bangumi 账户 @{}', [name]),
       );
     }
   }
@@ -175,41 +176,45 @@ class _FilmAccountSectionState extends State<FilmAccountSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionTitle(context, '账户'),
+        _sectionTitle(context, S.t('账户')),
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(AnikumoIcons.movie_rounded),
-          title: const Text('TMDB 账户'),
+          title: Text(S.t('TMDB 账户')),
           subtitle: Text(
             tmdbOn
-                ? '已连接 @${TmdbAccount.username}——详情页可同步收藏 / 想看'
-                : '未连接——连接后可把收藏、想看同步到你的 TMDB 账户',
+                ? S.f('已连接 @{}——详情页可同步收藏 / 想看', [TmdbAccount.username])
+                : S.t('未连接——连接后可把收藏、想看同步到你的 TMDB 账户'),
           ),
           trailing: TextButton(
             onPressed: tmdbOn ? _disconnectTmdb : _connectTmdb,
-            child: Text(tmdbOn ? '断开' : '连接'),
+            child: Text(tmdbOn ? S.t('断开') : S.t('连接')),
           ),
         ),
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(AnikumoIcons.collections_bookmark_rounded),
-          title: const Text('Bangumi 账户'),
+          title: Text(S.t('Bangumi 账户')),
           subtitle: Text(
             bgmOn
-                ? '已连接${BangumiAccount.username.isEmpty ? '' : ' @${BangumiAccount.username}'}——详情页可同步收藏状态（与动漫区共用账号）'
-                : '未连接——用访问令牌连接，详情页可同步收藏状态（与动漫区共用账号）',
+                ? S.f('已连接{}——详情页可同步收藏状态（与动漫区共用账号）', [
+                    BangumiAccount.username.isEmpty
+                        ? ''
+                        : ' @${BangumiAccount.username}',
+                  ])
+                : S.t('未连接——用访问令牌连接，详情页可同步收藏状态（与动漫区共用账号）'),
           ),
           trailing: TextButton(
             onPressed: bgmOn ? _disconnectBangumi : _connectBangumi,
-            child: Text(bgmOn ? '断开' : '连接'),
+            child: Text(bgmOn ? S.t('断开') : S.t('连接')),
           ),
         ),
         if (tmdbOn || bgmOn)
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(AnikumoIcons.cloud_rounded),
-            title: const Text('我的云端片单'),
-            subtitle: const Text('TMDB 想看 / 收藏与 Bangumi 收藏，点开即可在本应用里找源观看、下载'),
+            title: Text(S.t('我的云端片单')),
+            subtitle: Text(S.t('TMDB 想看 / 收藏与 Bangumi 收藏，点开即可在本应用里找源观看、下载')),
             trailing: const Icon(AnikumoIcons.chevron_right_rounded),
             onTap: () => context.pushNamed('/film/cloud'),
           ),

@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:anikumo/bean/widget/collect_button.dart';
@@ -34,7 +35,7 @@ class _BangumiInfoCardVState extends State<BangumiInfoCardV> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '  评分透视:',
+            S.t('  评分透视:'),
           ),
           SizedBox(height: 16),
           AspectRatio(
@@ -67,7 +68,7 @@ class _BangumiInfoCardVState extends State<BangumiInfoCardV> {
                               widget.bangumiItem.votes *
                               100;
                       return BarTooltipItem(
-                        '${percentage.toStringAsFixed(2)}% (${widget.bangumiItem.votesCount[groupIndex]}人)',
+                        S.f('{}% ({}人)', [percentage.toStringAsFixed(2), widget.bangumiItem.votesCount[groupIndex]]),
                         TextStyle(
                             color:
                                 Theme.of(context).colorScheme.onInverseSurface),
@@ -182,7 +183,7 @@ class _BangumiInfoCardVState extends State<BangumiInfoCardV> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    '放送开始:',
+                                    S.t('放送开始:'),
                                   ),
                                   Text(
                                     widget.bangumiItem.airDate == ''
@@ -198,8 +199,8 @@ class _BangumiInfoCardVState extends State<BangumiInfoCardV> {
                                   SizedBox(height: 8),
                                   Text(
                                     widget.showRating
-                                        ? '${widget.bangumiItem.votes} 人评分:'
-                                        : '*** 人评分:',
+                                        ? S.f('{} 人评分:', [widget.bangumiItem.votes])
+                                        : S.t('*** 人评分:'),
                                   ),
                                   if (widget.isLoading)
                                     // Skeleton Loader 占位符

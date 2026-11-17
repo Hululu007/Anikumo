@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:anikumo/bean/dialog/dialog.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/liuguang/film_features.dart';
 
 /// Batch 232: the film zone's feature repository — the
@@ -68,7 +69,7 @@ class _FilmFeatureRepoPageState extends State<FilmFeatureRepoPage> {
   Future<void> _install(FilmFeatureDef def) async {
     await FilmFeatures.setInstalled(def.id, true);
     if (mounted) {
-      AnikumoDialog.showToast(message: '已安装「${def.name}」');
+      AnikumoDialog.showToast(message: S.f('已安装「{}」', [def.name]));
     }
   }
 
@@ -78,7 +79,7 @@ class _FilmFeatureRepoPageState extends State<FilmFeatureRepoPage> {
     // of install (which toasts) — the button flipping
     // back was the only sign anything happened.
     if (mounted) {
-      AnikumoDialog.showToast(message: '已卸载「${def.name}」');
+      AnikumoDialog.showToast(message: S.f('已卸载「{}」', [def.name]));
     }
   }
 
@@ -87,23 +88,23 @@ class _FilmFeatureRepoPageState extends State<FilmFeatureRepoPage> {
     final url = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('添加仓库地址'),
+        title: Text(S.t('添加仓库地址')),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             hintText: 'https://…/catalog.json',
-            labelText: '目录文件地址（JSON）',
+            labelText: S.t('目录文件地址（JSON）'),
           ),
           keyboardType: TextInputType.url,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('添加'),
+            child: Text(S.t('添加')),
           ),
         ],
       ),
@@ -113,14 +114,14 @@ class _FilmFeatureRepoPageState extends State<FilmFeatureRepoPage> {
       await FilmFeatures.fetchCatalog(url);
     } catch (e) {
       if (mounted) {
-        AnikumoDialog.showToast(message: '仓库不可用：$e');
+        AnikumoDialog.showToast(message: S.f('仓库不可用：{}', [e]));
       }
       return;
     }
     await FilmFeatures.addRepo(url);
     await _refreshRemote();
     if (mounted) {
-      AnikumoDialog.showToast(message: '已添加仓库');
+      AnikumoDialog.showToast(message: S.t('已添加仓库'));
     }
   }
 
@@ -175,27 +176,27 @@ class _FilmFeatureRepoPageState extends State<FilmFeatureRepoPage> {
             ),
             const SizedBox(width: 8),
             if (!def.supported)
-              const Padding(
-                padding: EdgeInsets.only(top: 6),
-                child: Text('此版本暂不支持'),
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(S.t('此版本暂不支持')),
               )
             else if (installed)
               Column(
                 children: [
-                  const Chip(
-                    label: Text('已安装'),
+                  Chip(
+                    label: Text(S.t('已安装')),
                     visualDensity: VisualDensity.compact,
                   ),
                   TextButton(
                     onPressed: () => _uninstall(def),
-                    child: const Text('卸载'),
+                    child: Text(S.t('卸载')),
                   ),
                 ],
               )
             else
               FilledButton(
                 onPressed: () => _install(def),
-                child: const Text('安装'),
+                child: Text(S.t('安装')),
               ),
           ],
         ),
@@ -216,14 +217,14 @@ class _FilmFeatureRepoPageState extends State<FilmFeatureRepoPage> {
     ];
     final repos = FilmFeatures.repoUrls();
     return Scaffold(
-      appBar: AppBar(title: const Text('功能仓库')),
+      appBar: AppBar(title: Text(S.t('功能仓库'))),
       body: ListView(
         padding: const EdgeInsets.only(bottom: 24),
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
             child: Text(
-              '功能',
+              S.t('功能'),
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
@@ -239,7 +240,7 @@ class _FilmFeatureRepoPageState extends State<FilmFeatureRepoPage> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 18, 16, 6),
             child: Text(
-              '仓库地址',
+              S.t('仓库地址'),
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
@@ -248,8 +249,10 @@ class _FilmFeatureRepoPageState extends State<FilmFeatureRepoPage> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
-              '仓库地址指向一个功能目录文件（JSON 数组，每项含 id / name / description）。'
-              '只有当前版本已适配的功能可以安装，其余会标注暂不支持。',
+              S.t(
+                '仓库地址指向一个功能目录文件（JSON 数组，每项含 id / name / description）。'
+                '只有当前版本已适配的功能可以安装，其余会标注暂不支持。',
+              ),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.outline,
                 height: 1.45,
@@ -265,7 +268,7 @@ class _FilmFeatureRepoPageState extends State<FilmFeatureRepoPage> {
                 onPressed: () async {
                   await FilmFeatures.removeRepo(url);
                   if (mounted) {
-                    AnikumoDialog.showToast(message: '已移除仓库');
+                    AnikumoDialog.showToast(message: S.t('已移除仓库'));
                   }
                   await _refreshRemote();
                 },
@@ -276,7 +279,7 @@ class _FilmFeatureRepoPageState extends State<FilmFeatureRepoPage> {
             child: OutlinedButton.icon(
               onPressed: _addRepo,
               icon: const Icon(AnikumoIcons.add, size: 18),
-              label: const Text('添加仓库地址'),
+              label: Text(S.t('添加仓库地址')),
             ),
           ),
         ],

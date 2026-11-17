@@ -27,6 +27,7 @@ import 'package:anikumo/services/platform/desktop_window_config.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/utils/device.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class InfoPage extends StatefulWidget {
   const InfoPage({
@@ -190,13 +191,13 @@ class _InfoPageState extends State<InfoPage>
     final token =
         GStorage.getSetting(SettingsKeys.bangumiAccessToken).toString().trim();
     if (token.isEmpty) {
-      AnikumoDialog.showToast(message: '请先在同步设置中绑定 Bangumi');
+      AnikumoDialog.showToast(message: S.t('请先在同步设置中绑定 Bangumi'));
       return;
     }
     final localType = infoController.collectController
         .getCollectType(infoController.bangumiItem);
     if (localType == 0) {
-      AnikumoDialog.showToast(message: '请先追番');
+      AnikumoDialog.showToast(message: S.t('请先追番'));
       return;
     }
     final editing =
@@ -213,7 +214,7 @@ class _InfoPageState extends State<InfoPage>
       setState(() {});
       AnikumoDialog.showToast(
         context: context,
-        message: editing ? '吐槽已更新' : '吐槽已发表',
+        message: editing ? S.t('吐槽已更新') : S.t('吐槽已发表'),
       );
     }
   }
@@ -337,9 +338,9 @@ class _InfoPageState extends State<InfoPage>
   bool _ensurePlugins() {
     if (widget.pluginsController.pluginList.isNotEmpty) return true;
     AnikumoDialog.showToast(
-      message: '还没有规则，无法开始观看',
+      message: S.t('还没有规则，无法开始观看'),
       showActionButton: true,
-      actionLabel: '添加规则',
+      actionLabel: S.t('添加规则'),
       onActionPressed: () {
         if (mounted) context.pushNamed('/settings/plugin/');
       },
@@ -385,6 +386,7 @@ class _InfoPageState extends State<InfoPage>
                 scrolledUnderElevation: 0.0,
                 leading: EmbeddedNativeControlArea(
                   child: IconButton(
+                    tooltip: S.t('返回'),
                     onPressed: () {
                       context.maybePop();
                     },
@@ -462,7 +464,7 @@ class _InfoPageState extends State<InfoPage>
                   isScrollable: true,
                   tabAlignment: TabAlignment.center,
                   dividerHeight: 0,
-                  tabs: _infoTabs.map((name) => Tab(text: name)).toList(),
+                  tabs: _infoTabs.map((name) => Tab(text: S.t(name))).toList(),
                   // Batch 149: no onTap interception anymore —
                   // 选集 is a real tab whose content (the
                   // embedded episode picker) switches in place
@@ -506,9 +508,9 @@ class _InfoPageState extends State<InfoPage>
       // Batch 128: 选集 moved beside 概览 in the tab strip —
       // the floating button is back to just 开始观看.
       floatingActionButton: FloatingActionButton.extended(
-        tooltip: '开始观看',
+        tooltip: S.t('开始观看'),
         onPressed: _startWatching,
-        label: const Text('开始观看'),
+        label: Text(S.t('开始观看')),
         icon: const Icon(AnikumoIcons.play_arrow_rounded),
       ),
     );

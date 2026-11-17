@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/modules/history/history_module.dart';
 
 /// Batch 134: pure lookups over the stored watch history,
@@ -111,7 +112,7 @@ String episodeDurationLabel({
       : '';
   if (watched != null && watched > Duration.zero) {
     final seen = formatWatchClock(watched);
-    return total.isEmpty ? '已看 $seen' : '$seen / $total';
+    return total.isEmpty ? S.f('已看 {}', [seen]) : '$seen / $total';
   }
   return total;
 }

@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'dart:typed_data';
 import 'dart:io';
 import 'package:anikumo/utils/tap_debouncer.dart';
@@ -10,6 +11,7 @@ import 'package:anikumo/modules/manga/manga_item.dart';
 import 'package:anikumo/pages/manga/manga_widgets.dart';
 import 'package:anikumo/services/manga/manga_cbz_export.dart';
 import 'package:anikumo/services/manga/manga_features.dart';
+import 'package:anikumo/services/manga/manga_download_queue.dart';
 import 'package:anikumo/services/manga/manga_downloads.dart';
 import 'package:anikumo/services/manga/manga_extras.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
@@ -59,7 +61,7 @@ class _MangaDownloadsPageState extends State<MangaDownloadsPage> {
     );
     if (pages == null || pages.isEmpty) {
       if (mounted) {
-        AnikumoDialog.showToast(message: '这一话的本地文件不完整，无法导出');
+        AnikumoDialog.showToast(message: S.t('这一话的本地文件不完整，无法导出'));
       }
       return;
     }
@@ -70,12 +72,12 @@ class _MangaDownloadsPageState extends State<MangaDownloadsPage> {
     }
     final cbz = buildCbzBytes(bytesList);
     final saved = await FilePicker.platform.saveFile(
-      dialogTitle: '保存 CBZ',
+      dialogTitle: S.t('保存 CBZ'),
       fileName: cbzFileName(entry.mangaTitle, entry.chapterLabel),
       bytes: cbz,
     );
     if (mounted && saved != null) {
-      AnikumoDialog.showToast(message: '已导出 ${bytesList.length} 页');
+      AnikumoDialog.showToast(message: S.f('已导出 {} 页', [bytesList.length]));
     }
   }
 
@@ -84,17 +86,17 @@ class _MangaDownloadsPageState extends State<MangaDownloadsPage> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('下载管理'),
+        title: Text(S.t('下载管理')),
         actions: [
           if (_entries.isNotEmpty)
             IconButton(
               icon: const Icon(AnikumoIcons.delete_sweep_outlined),
-              tooltip: '清空全部下载',
+              tooltip: S.t('清空全部下载'),
               onPressed: () async {
                 await MangaDownloadStore.clearAll();
                 await _load();
                 if (context.mounted) {
-                  AnikumoDialog.showToast(message: '已清空全部下载');
+                  AnikumoDialog.showToast(message: S.t('已清空全部下载'));
                 }
               },
             ),
@@ -102,14 +104,22 @@ class _MangaDownloadsPageState extends State<MangaDownloadsPage> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : _entries.isEmpty
-              ? const Center(child: Text('还没有下载的章节\n在漫画详情页点章节旁的下载按钮', textAlign: TextAlign.center))
-              : ListView(
-                  children: [
+          : ListView(
+              children: [
+                _buildQueueSection(context),
+                if (_entries.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 48, 16, 16),
+                    child: Text(
+                      S.t('还没有下载的章节\n在漫画详情页点章节旁的下载按钮'),
+                      textAlign: TextAlign.center,
+                    ),
+                  )
+                else ...[
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                       child: Text(
-                        '共 ${_entries.length} 话 · 占用 $_sizeLabel',
+                        S.f('共 {} 话 · 占用 {}', [_entries.length, _sizeLabel]),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -130,7 +140,7 @@ class _MangaDownloadsPageState extends State<MangaDownloadsPage> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         subtitle: Text(
-                          '${_entries[i].pageCount} 页 · ${_entries[i].source}',
+                          S.f('{} 页 · {}', [_entries[i].pageCount, _entries[i].source]),
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -141,12 +151,12 @@ class _MangaDownloadsPageState extends State<MangaDownloadsPage> {
                               IconButton(
                                 icon: const Icon(
                                     AnikumoIcons.folder_zip_outlined),
-                                tooltip: '导出 CBZ',
+                                tooltip: S.t('导出 CBZ'),
                                 onPressed: () => _exportEntry(_entries[i]),
                               ),
                             IconButton(
                               icon: const Icon(AnikumoIcons.delete_outline),
-                              tooltip: '删除这一话',
+                              tooltip: S.t('删除这一话'),
                               onPressed: () async {
                                 await MangaDownloadStore.deleteEntry(
                                     _entries[i]);
@@ -177,8 +187,92 @@ class _MangaDownloadsPageState extends State<MangaDownloadsPage> {
                         ),
                       ),
                   ],
-                ),
+                ],
+              ),
     );
+  }
+
+  /// Batch 271: the live download queue — progress for
+  /// running chapters, cancel for waiting ones, and a
+  /// pause switch that stops new chapters from starting
+  /// (a chapter already downloading finishes; its pages
+  /// resume cheaply if retried).
+  Widget _buildQueueSection(BuildContext context) {
+    final queue = MangaDownloadQueue.instance;
+    return AnimatedBuilder(
+      animation: queue,
+      builder: (context, _) {
+        final jobs = queue.jobs;
+        if (jobs.isEmpty) return const SizedBox.shrink();
+        final theme = Theme.of(context);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      S.t('下载队列'),
+                      style: theme.textTheme.titleSmall,
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () => queue.setPaused(!queue.paused),
+                    icon: Icon(
+                      queue.paused
+                          ? AnikumoIcons.play_arrow_rounded
+                          : AnikumoIcons.pause_rounded,
+                      size: 18,
+                    ),
+                    label: Text(queue.paused ? S.t('继续') : S.t('暂停队列')),
+                  ),
+                  if (jobs.any((job) => job.isFinished))
+                    TextButton(
+                      onPressed: () {
+                        queue.clearFinished();
+                        _load();
+                      },
+                      child: Text(S.t('清除已完成')),
+                    ),
+                ],
+              ),
+            ),
+            for (final job in jobs)
+              ListTile(
+                dense: true,
+                title: Text(
+                  '${job.manga.title} · ${job.chapter.displayLabel}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: job.status == MangaDownloadJobStatus.downloading
+                    ? LinearProgressIndicator(value: job.progress)
+                    : Text(_jobStatusLabel(job.status)),
+                trailing: job.status == MangaDownloadJobStatus.queued
+                    ? IconButton(
+                        icon: const Icon(AnikumoIcons.close_rounded),
+                        tooltip: S.t('取消'),
+                        onPressed: () => queue.cancelQueued(job),
+                      )
+                    : null,
+              ),
+            const Divider(height: 1),
+          ],
+        );
+      },
+    );
+  }
+
+  String _jobStatusLabel(MangaDownloadJobStatus status) {
+    return switch (status) {
+      MangaDownloadJobStatus.queued => S.t('排队中'),
+      MangaDownloadJobStatus.downloading => S.t('下载中'),
+      MangaDownloadJobStatus.done => S.t('已完成'),
+      MangaDownloadJobStatus.failed => S.t('下载失败'),
+      MangaDownloadJobStatus.cancelled => S.t('已取消'),
+    };
   }
 }
 
@@ -189,9 +283,9 @@ class MangaStatsPage extends StatelessWidget {
   String _duration(int seconds) {
     final hours = seconds ~/ 3600;
     final minutes = (seconds % 3600) ~/ 60;
-    if (hours > 0) return '$hours 小时 $minutes 分';
-    if (minutes > 0) return '$minutes 分钟';
-    return '$seconds 秒';
+    if (hours > 0) return S.f('{} 小时 {} 分', [hours, minutes]);
+    if (minutes > 0) return S.f('{} 分钟', [minutes]);
+    return S.f('{} 秒', [seconds]);
   }
 
   @override
@@ -216,14 +310,14 @@ class MangaStatsPage extends StatelessWidget {
           ),
         );
     return Scaffold(
-      appBar: AppBar(title: const Text('阅读数据')),
+      appBar: AppBar(title: Text(S.t('阅读数据'))),
       body: ListView(
         children: [
-          textRow('累计阅读时长', _duration(stats.secondsRead)),
-          textRow('今日阅读', _duration(stats.secondsOn(now))),
-          textRow('近 7 天阅读', _duration(stats.secondsInLastWeek(now))),
-          countRow('读完话数', stats.chaptersFinished, ' 话'),
-          countRow('翻页总数', stats.pagesRead, ' 页'),
+          textRow(S.t('累计阅读时长'), _duration(stats.secondsRead)),
+          textRow(S.t('今日阅读'), _duration(stats.secondsOn(now))),
+          textRow(S.t('近 7 天阅读'), _duration(stats.secondsInLastWeek(now))),
+          countRow(S.t('读完话数'), stats.chaptersFinished, S.t(' 话')),
+          countRow(S.t('翻页总数'), stats.pagesRead, S.t(' 页')),
         ],
       ),
     );

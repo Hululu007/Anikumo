@@ -8,7 +8,7 @@ publish_to: "none"
 # legacy Kazumi-line numbers (last: 20405), so overwrite
 # installs keep working. patch must stay <= 9 in this
 # scheme; if it would reach 10, bump minor instead.
-version: 1.0.3+100321
+version: 1.1.0+101003
 
 environment:
   sdk: ">=3.10.0 <4.0.0"
@@ -42,6 +42,7 @@ dependencies:
 
   flutter_volume_controller: ^2.0.1
   audio_service: ^0.18.15
+  flutter_local_notifications: ^19.4.0
   audio_service_mpris:
     git:
       url: https://github.com/Predidit/audio-service-mpris.git
@@ -131,6 +132,10 @@ dependencies:
     path: ./packages/liuguang_network
   liuguang_download:
     path: ./packages/liuguang_download
+  local_auth: ^3.0.2
+  qr_flutter: ^4.1.0
+  quick_actions: ^1.1.1
+  home_widget: ^0.10.0
 
 dev_dependencies:
   path_provider_platform_interface: ^2.1.2

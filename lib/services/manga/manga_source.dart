@@ -110,6 +110,29 @@ abstract class MangaSource {
   /// implementations return null.
   Future<MangaAccountInfo?> accountInfo() async => null;
 
+  /// Batch 271: comments for a comic (subId = the comic
+  /// itself) or a chapter (subId = the chapter id), one
+  /// page at a time; [replyTo] loads one comment's
+  /// replies. Null when the source has no comment surface.
+  Future<MangaCommentsPage?> loadComments(
+    MangaItem manga, {
+    String? subId,
+    int page = 1,
+    String? replyTo,
+  }) async =>
+      null;
+
+  /// Posts a comment (or a reply when [replyTo] names the
+  /// parent comment). Throws with the source's own error
+  /// (not logged in, rate limited…) when it refuses.
+  Future<void> sendComment(
+    MangaItem manga, {
+    String? subId,
+    required String content,
+    String? replyTo,
+  }) async =>
+      throw StateError('该源不支持发表评论');
+
   /// Signs in through the source's own login function.
   /// Only call when [accountInfo] reported a login.
   Future<void> login(String username, String password) async =>
@@ -118,6 +141,46 @@ abstract class MangaSource {
   /// Signs out: the source's logout when it has one, plus
   /// clearing the session the host tracks.
   Future<void> logout() async {}
+}
+
+/// One comment as sources report it (batch 271).
+class MangaComment {
+  const MangaComment({
+    required this.userName,
+    required this.avatar,
+    required this.content,
+    required this.time,
+    required this.replyCount,
+    required this.id,
+  });
+
+  final String userName;
+  final String avatar;
+  final String content;
+  final String time;
+  final int replyCount;
+  final String id;
+
+  factory MangaComment.fromMap(Map<String, dynamic> map) {
+    return MangaComment(
+      userName: map['userName']?.toString() ?? '',
+      avatar: map['avatar']?.toString() ?? '',
+      content: map['content']?.toString() ?? '',
+      time: map['time']?.toString() ?? '',
+      replyCount: map['replyCount'] is num
+          ? (map['replyCount'] as num).toInt()
+          : 0,
+      id: map['id']?.toString() ?? '',
+    );
+  }
+}
+
+/// One page of comments plus the page count (batch 271).
+class MangaCommentsPage {
+  const MangaCommentsPage({required this.comments, required this.maxPage});
+
+  final List<MangaComment> comments;
+  final int maxPage;
 }
 
 /// A snapshot of a source's account surface (batch 74).

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:anikumo/pages/menu/menu.dart';
 import 'package:anikumo/services/deep_links/app_deep_links.dart';
+import 'package:anikumo/services/platform/app_shortcuts.dart';
 
 class IndexPage extends StatefulWidget {
   const IndexPage({super.key, required this.location});
@@ -18,6 +19,8 @@ class _IndexPageState extends State<IndexPage> with WidgetsBindingObserver {
     // Startup and onboarding both end here; earlier pushes would be cleared.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       AppDeepLinks().markReady();
+      // Batch 276 (#62): honor a cold-launch shortcut.
+      AppShortcuts.markReady();
     });
   }
 

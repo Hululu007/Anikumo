@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'dart:convert';
 
 import 'package:json_path/json_path.dart';
@@ -21,7 +22,7 @@ class RestrictedJsonPath {
 
   static void validate(String expression) {
     if (expression.isEmpty || !expression.startsWith(r'$')) {
-      throw ApiRuleFormatException('JSONPath 必须以 \$ 开头: $expression');
+      throw ApiRuleFormatException(S.f('JSONPath 必须以 \$ 开头: {}', [expression]));
     }
     var index = 1;
     while (index < expression.length) {
@@ -34,7 +35,7 @@ class RestrictedJsonPath {
           index++;
         }
         if (index == start) {
-          throw ApiRuleFormatException('不支持的 JSONPath: $expression');
+          throw ApiRuleFormatException(S.f('不支持的 JSONPath: {}', [expression]));
         }
         continue;
       }
@@ -47,12 +48,12 @@ class RestrictedJsonPath {
             ((content.startsWith("'") && content.endsWith("'")) ||
                 (content.startsWith('"') && content.endsWith('"')));
         if (!isIndex && !isWildcard && !isQuoted) {
-          throw ApiRuleFormatException('不支持的 JSONPath 片段: [$content]');
+          throw ApiRuleFormatException(S.f('不支持的 JSONPath 片段: [{}]', [content]));
         }
         index = end + 1;
         continue;
       }
-      throw ApiRuleFormatException('不支持的 JSONPath: $expression');
+      throw ApiRuleFormatException(S.f('不支持的 JSONPath: {}', [expression]));
     }
   }
 
@@ -79,7 +80,7 @@ class RestrictedJsonPath {
       }
       if (char == ']') return i;
     }
-    throw ApiRuleFormatException('JSONPath 缺少 ]: $expression');
+    throw ApiRuleFormatException(S.f('JSONPath 缺少 ]: {}', [expression]));
   }
 
   static List<Object?> read(dynamic document, String expression) {
@@ -87,7 +88,7 @@ class RestrictedJsonPath {
     try {
       return JsonPath(expression).readValues(document).toList();
     } catch (error) {
-      throw ApiRuleFormatException('JSONPath 解析失败 $expression: $error');
+      throw ApiRuleFormatException(S.f('JSONPath 解析失败 {}: {}', [expression, error]));
     }
   }
 
@@ -105,7 +106,7 @@ class ApiRuleStrategy {
     try {
       return jsonDecode(raw);
     } on FormatException catch (error) {
-      throw ApiRuleFormatException('API 响应不是有效 JSON: ${error.message}');
+      throw ApiRuleFormatException(S.f('API 响应不是有效 JSON: {}', [error.message]));
     }
   }
 
@@ -115,15 +116,15 @@ class ApiRuleStrategy {
   ) {
     final method = config.method.toUpperCase();
     if (method != 'GET' && method != 'POST') {
-      throw ApiRuleFormatException('仅支持 GET/POST，当前为 $method');
+      throw ApiRuleFormatException(S.f('仅支持 GET/POST，当前为 {}', [method]));
     }
     if (config.url.trim().isEmpty) {
-      throw const ApiRuleFormatException('API 请求 URL 不能为空');
+      throw ApiRuleFormatException(S.t('API 请求 URL 不能为空'));
     }
     final url = _renderTemplate(config.url.trim(), variables, encode: true);
     final uri = Uri.tryParse(url);
     if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
-      throw ApiRuleFormatException('API 请求 URL 无效: $url');
+      throw ApiRuleFormatException(S.f('API 请求 URL 无效: {}', [url]));
     }
     final hasBody = method == 'POST' && config.bodyType != ApiBodyType.none;
     return PreparedRuleRequest(
@@ -145,7 +146,7 @@ class ApiRuleStrategy {
     RestrictedJsonPath.validate(config.sourcePath);
     final template = config.sourceTemplate;
     if (template.isNotEmpty && !template.contains('@source')) {
-      throw const ApiRuleFormatException('详情页地址模板必须引用 @source');
+      throw ApiRuleFormatException(S.t('详情页地址模板必须引用 @source'));
     }
   }
 
@@ -167,7 +168,7 @@ class ApiRuleStrategy {
           RestrictedJsonPath.readFirst(node, config.sourcePath),
         );
         if (name.isEmpty || source.isEmpty) {
-          diagnostics.add('搜索节点 $index 缺少名称或来源，已跳过');
+          diagnostics.add(S.f('搜索节点 {} 缺少名称或来源，已跳过', [index]));
           continue;
         }
         // Plain replacement so @source may follow a letter (`/GV@source`).
@@ -179,7 +180,7 @@ class ApiRuleStrategy {
       } on ApiRuleFormatException {
         rethrow;
       } catch (error) {
-        diagnostics.add('搜索节点 $index 解析失败: $error');
+        diagnostics.add(S.f('搜索节点 {} 解析失败: {}', [index, error]));
       }
     }
     return RuleSearchParseResult(
@@ -202,7 +203,7 @@ class ApiRuleStrategy {
       final value = RestrictedJsonPath.readFirst(document, entry.value);
       if (value == null) {
         throw ApiRuleFormatException(
-          '章节响应变量 ${entry.key} 未匹配到值: ${entry.value}',
+          S.f('章节响应变量 {} 未匹配到值: {}', [entry.key, entry.value]),
         );
       }
       rootVariables[entry.key] = value;
@@ -284,30 +285,30 @@ class ApiRuleStrategy {
             );
             if (pageUrl.isEmpty) {
               diagnostics.add(
-                '线路 $roadIndex 的剧集节点 $episodeIndex 缺少 URL，已跳过',
+                S.f('线路 {} 的剧集节点 {} 缺少 URL，已跳过', [roadIndex, episodeIndex]),
               );
               continue;
             }
             urls.add(pageUrl);
             names.add(
-              episodeName.isEmpty ? '第${episodeIndex + 1}集' : episodeName,
+              episodeName.isEmpty ? S.f('第{}集', [episodeIndex + 1]) : episodeName,
             );
           } on ApiRuleFormatException {
             rethrow;
           } catch (error) {
             diagnostics.add(
-              '线路 $roadIndex 的剧集节点 $episodeIndex 解析失败: $error',
+              S.f('线路 {} 的剧集节点 {} 解析失败: {}', [roadIndex, episodeIndex, error]),
             );
           }
         }
         if (urls.isEmpty) {
-          diagnostics.add('线路节点 $roadIndex 没有有效剧集，已跳过');
+          diagnostics.add(S.f('线路节点 {} 没有有效剧集，已跳过', [roadIndex]));
           continue;
         }
         roads.add(
           Road(
             name: roadName.isEmpty
-                ? '播放线路${roads.length + 1}'
+                ? S.f('播放线路{}', [roads.length + 1])
                 : roadName,
             data: urls,
             identifier: names,
@@ -316,7 +317,7 @@ class ApiRuleStrategy {
       } on ApiRuleFormatException {
         rethrow;
       } catch (error) {
-        diagnostics.add('线路节点 $roadIndex 解析失败: $error');
+        diagnostics.add(S.f('线路节点 {} 解析失败: {}', [roadIndex, error]));
       }
     }
     return roads;
@@ -351,7 +352,7 @@ class ApiRuleStrategy {
         final separatorIndex = entry.indexOf(config.fieldSeparator);
         if (separatorIndex < 0) {
           diagnostics.add(
-            '线路 $roadIndex 的剧集条目 $episodeIndex 缺少字段分隔符，已跳过',
+            S.f('线路 {} 的剧集条目 {} 缺少字段分隔符，已跳过', [roadIndex, episodeIndex]),
           );
           continue;
         }
@@ -370,22 +371,22 @@ class ApiRuleStrategy {
           );
           if (pageUrl.isEmpty) {
             diagnostics.add(
-              '线路 $roadIndex 的剧集条目 $episodeIndex 缺少 URL，已跳过',
+              S.f('线路 {} 的剧集条目 {} 缺少 URL，已跳过', [roadIndex, episodeIndex]),
             );
             continue;
           }
           urls.add(pageUrl);
-          names.add(name.isEmpty ? '第${episodeIndex + 1}集' : name);
+          names.add(name.isEmpty ? S.f('第{}集', [episodeIndex + 1]) : name);
         } on ApiRuleFormatException {
           rethrow;
         } catch (error) {
           diagnostics.add(
-            '线路 $roadIndex 的剧集条目 $episodeIndex 解析失败: $error',
+            S.f('线路 {} 的剧集条目 {} 解析失败: {}', [roadIndex, episodeIndex, error]),
           );
         }
       }
       if (urls.isEmpty) {
-        diagnostics.add('线路 $roadIndex 没有有效剧集，已跳过');
+        diagnostics.add(S.f('线路 {} 没有有效剧集，已跳过', [roadIndex]));
         continue;
       }
       final configuredName =
@@ -393,7 +394,7 @@ class ApiRuleStrategy {
       roads.add(
         Road(
           name: configuredName.isEmpty
-              ? '播放线路${roads.length + 1}'
+              ? S.f('播放线路{}', [roads.length + 1])
               : configuredName,
           data: urls,
           identifier: names,
@@ -414,7 +415,7 @@ class ApiRuleStrategy {
     final page = config.episodePage;
     if (page == null) return normalizeEpisodeUrl(baseUrl, rawUrl);
     if (page.url.trim().isEmpty) {
-      throw const ApiRuleFormatException('播放页地址模板不能为空');
+      throw ApiRuleFormatException(S.t('播放页地址模板不能为空'));
     }
     // The template language has no arithmetic, so both 0-based and 1-based
     // indices must be provided; @episodeUrl carries the raw value extracted
@@ -430,7 +431,7 @@ class ApiRuleStrategy {
     final path = _renderTemplate(page.url, variables, encode: true);
     final uri = Uri.tryParse(path);
     if (uri == null) {
-      throw ApiRuleFormatException('剧集页面 URL 无效: $path');
+      throw ApiRuleFormatException(S.f('剧集页面 URL 无效: {}', [path]));
     }
     final renderedQuery = _renderMap(page.query, variables).map(
       (key, value) => MapEntry(key, value.toString()),
@@ -458,7 +459,7 @@ class ApiRuleStrategy {
       if (config.roadSeparator.isEmpty ||
           config.episodeSeparator.isEmpty ||
           config.fieldSeparator.isEmpty) {
-        throw const ApiRuleFormatException('章节分隔符不能为空');
+        throw ApiRuleFormatException(S.t('章节分隔符不能为空'));
       }
       return;
     }
@@ -474,12 +475,12 @@ class ApiRuleStrategy {
     if (config.episodeUrlPath.trim().isNotEmpty) {
       RestrictedJsonPath.validate(config.episodeUrlPath);
     } else if (config.episodePage == null) {
-      throw const ApiRuleFormatException(
-        '必须配置播放入口地址路径或播放页地址模板',
+      throw ApiRuleFormatException(
+        S.t('必须配置播放入口地址路径或播放页地址模板'),
       );
     }
     if (config.episodePage != null && config.episodePage!.url.trim().isEmpty) {
-      throw const ApiRuleFormatException('播放页地址模板不能为空');
+      throw ApiRuleFormatException(S.t('播放页地址模板不能为空'));
     }
   }
 
@@ -501,7 +502,7 @@ class ApiRuleStrategy {
       if (exact != null) {
         final name = exact.group(1)!;
         if (!variables.containsKey(name)) {
-          throw ApiRuleFormatException('缺少模板变量 @$name');
+          throw ApiRuleFormatException(S.f('缺少模板变量 @{}', [name]));
         }
         return variables[name];
       }
@@ -531,7 +532,7 @@ class ApiRuleStrategy {
       (match) {
         final name = match.group(1)!;
         if (!variables.containsKey(name)) {
-          throw ApiRuleFormatException('缺少模板变量 @$name');
+          throw ApiRuleFormatException(S.f('缺少模板变量 @{}', [name]));
         }
         final value = variables[name]?.toString() ?? '';
         return encode ? Uri.encodeComponent(value) : value;

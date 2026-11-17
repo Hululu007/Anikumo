@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/logging/logger.dart';
 import 'package:anikumo/request/config/api_endpoints.dart';
 import 'package:anikumo/request/clients/bangumi_client.dart';
@@ -784,7 +785,7 @@ class BangumiApi {
         );
       }
       progressTotal = total;
-      onProgress?.call('正在拉取 Bangumi 收藏', progressCurrent, progressTotal);
+      onProgress?.call(S.t('正在拉取 Bangumi 收藏'), progressCurrent, progressTotal);
 
       if (total == 0 || firstPageReceivedCount >= total) {
         AnikumoLogger().d(
@@ -812,7 +813,7 @@ class BangumiApi {
 
           progressCurrent += jsonList.length;
           onProgress?.call(
-            '正在拉取 Bangumi 收藏',
+            S.t('正在拉取 Bangumi 收藏'),
             progressCurrent > progressTotal ? progressTotal : progressCurrent,
             progressTotal,
           );

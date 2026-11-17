@@ -7,6 +7,7 @@ import 'package:anikumo/request/apis/bangumi_api.dart';
 import 'package:anikumo/services/browse/feed_builder.dart';
 import 'package:anikumo/services/network/bangumi_acceleration.dart';
 import 'package:anikumo/utils/constants.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// 精选「更多」page (batch 37): one featured section as a
 /// full grid. Rebuilds the section from deeper fetches,
@@ -91,12 +92,12 @@ class _FeaturedMorePageState extends State<FeaturedMorePage> {
       crossCount = 6;
     }
     return Scaffold(
-      appBar: AppBar(title: Text(_title)),
+      appBar: AppBar(title: Text(S.t(_title))),
       body: _loading
           ? const Center(child: LoadingIndicator())
           : _failed || _items.isEmpty
               ? GeneralErrorWidget(
-                  errMsg: '这一组暂时没有拉到内容，请重试。',
+                  errMsg: S.t('这一组暂时没有拉到内容，请重试。'),
                   onRetry: _load,
                 )
               : CustomScrollView(

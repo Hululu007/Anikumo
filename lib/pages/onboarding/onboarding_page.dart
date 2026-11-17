@@ -16,6 +16,7 @@ import 'package:anikumo/services/platform/app_exit.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/services/update/startup_update_check.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({
@@ -91,15 +92,15 @@ class _OnboardingPageState extends State<OnboardingPage> {
       };
 
   String get _primaryLabel {
-    if (!_agreed) return '同意并继续';
-    if (_isLastStep) return '开始使用';
+    if (!_agreed) return S.t('同意并继续');
+    if (_isLastStep) return S.t('开始使用');
     // Batch 59: the source URL steps are skippable — the
     // primary button is the user's 「下一步」.
     final step = _steps[_currentIndex];
     if (step == _OnboardingStep.anime || step == _OnboardingStep.manga) {
-      return '下一步';
+      return S.t('下一步');
     }
-    return '继续';
+    return S.t('继续');
   }
 
   Future<void> _navigate({required bool forward}) async {
@@ -160,7 +161,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
         ),
         onPressed:
             _currentIndex == 0 ? AppExit.quit : () => _navigate(forward: false),
-        child: Text(_currentIndex == 0 ? '退出' : '上一步'),
+        child: Text(_currentIndex == 0 ? S.t('退出') : S.t('上一步')),
       );
       final primary = FilledButton.icon(
         style: FilledButton.styleFrom(
@@ -213,7 +214,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   child: Column(
                     children: [
                       _OnboardingProgress(
-                        labels: _steps.map((step) => step.label).toList(),
+                        labels: _steps.map((step) => S.t(step.label)).toList(),
                         currentIndex: _currentIndex,
                       ),
                       Expanded(
@@ -247,19 +248,19 @@ class _SkipRulesDialog extends StatelessWidget {
         scrollable: true,
         constraints: const BoxConstraints(maxWidth: 560),
         icon: const Icon(AnikumoIcons.warning_amber_rounded),
-        title: const Text('暂不添加规则？'),
-        content: const Text(
-          '没有规则时无法搜索和播放番剧。之后也可以在规则管理中添加。',
+        title: Text(S.t('暂不添加规则？')),
+        content: Text(
+          S.t('没有规则时无法搜索和播放番剧。之后也可以在规则管理中添加。'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('仍然继续'),
+            child: Text(S.t('仍然继续')),
           ),
           FilledButton(
             autofocus: true,
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('返回添加'),
+            child: Text(S.t('返回添加')),
           ),
         ],
       );
@@ -279,8 +280,8 @@ class _OnboardingProgress extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     return Semantics(
-      label:
-          '第 ${currentIndex + 1} 步，共 ${labels.length} 步，${labels[currentIndex]}',
+      label: S.f('第 {} 步，共 {} 步，{}',
+          [currentIndex + 1, labels.length, labels[currentIndex]]),
       liveRegion: true,
       child: ExcludeSemantics(
         child: Padding(

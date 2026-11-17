@@ -5,6 +5,7 @@ import 'package:anikumo/bean/widget/content_section.dart';
 import 'package:anikumo/pages/about/about_widgets.dart';
 import 'package:anikumo/request/config/api_endpoints.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key, required this.onCheckUpdate});
@@ -13,7 +14,7 @@ class AboutPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SettingsDetailScaffold(
-        title: const Text('关于'),
+        title: Text(S.t('关于')),
         body: AboutContent(
           children: [
             _ProjectHeader(onCheckUpdate: onCheckUpdate),
@@ -27,8 +28,8 @@ class AboutPage extends StatelessWidget {
             // Batch 60: the project's OWN official site and
             // open-source repository join the group (user
             // links, not upstream's).
-            const ContentSection.group(
-              title: '开源',
+            ContentSection.group(
+              title: S.t('开源'),
               children: [
                 AboutLinkTile(
                   icon: AnikumoIcons.language_rounded,
@@ -41,6 +42,17 @@ class AboutPage extends StatelessWidget {
                   title: '开源仓库',
                   subtitle: 'GitHub · GPL-3.0',
                   url: 'https://github.com/xyu3032-commits/Anikumo',
+                ),
+                AboutLinkTile(
+                  icon: AnikumoIcons.forum_rounded,
+                  title: '官方社区',
+                  subtitle: 'Discord · discord.gg/dBwruBWyKE',
+                  url: 'https://discord.gg/dBwruBWyKE',
+                ),
+                AboutLinkTile.route(
+                  icon: Icons.help_outline_rounded,
+                  title: '帮助',
+                  route: '/settings/about/help',
                 ),
                 AboutLinkTile.route(
                   icon: AnikumoIcons.favorite_outline_rounded,
@@ -92,7 +104,7 @@ class _ProjectHeader extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            '基于自定义规则的开源番剧应用',
+            S.t('基于自定义规则的开源番剧应用'),
             style: theme.textTheme.bodyLarge,
           ),
           const SizedBox(height: 20),

@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'dart:convert';
 
 import 'package:flutter_modular/flutter_modular.dart';
@@ -80,7 +81,7 @@ abstract final class AnimeAutoUpdate {
         final name = item.bangumiItem.nameCn.isNotEmpty
             ? item.bangumiItem.nameCn
             : item.bangumiItem.name;
-        fresh.add('《$name》更新到第 $count 集');
+        fresh.add(S.f('《{}》更新到第 {} 集', [name, count]));
       }
     }
     state['stamps'] = stamps;

@@ -24,6 +24,7 @@ import 'package:anikumo/pages/settings/super_resolution_settings.dart';
 import 'package:anikumo/pages/settings/sync/bangumi_sync_page.dart';
 import 'package:anikumo/pages/settings/sync/sync_settings_page.dart';
 import 'package:anikumo/pages/settings/sync/webdav_server_page.dart';
+import 'package:anikumo/pages/settings/sync/sync_conflicts_page.dart';
 import 'package:anikumo/pages/settings/sync/webdav_sync_page.dart';
 import 'package:anikumo/pages/settings/theme_settings_page.dart';
 import 'package:anikumo/pages/discover/backup_page.dart';
@@ -52,6 +53,8 @@ final settingsModule = createModule(
                   ))
           ..route('/webdav/editor',
               child: (context, state) => const WebDavServerPage())
+          ..route('/webdav/conflicts',
+              child: (context, state) => const SyncConflictsPage())
           ..route(
             '/update',
             child: (context, state) => const UpdateSettingsPage(),

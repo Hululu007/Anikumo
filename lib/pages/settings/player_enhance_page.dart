@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:anikumo/bean/settings/settings_detail_scaffold.dart';
 import 'package:anikumo/bean/settings/settings_list.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/player/player_enhance.dart';
 
 /// Batch 16: the playback enhancement profile UI — switches
@@ -49,8 +50,8 @@ class _PlayerEnhancePageState extends State<PlayerEnhancePage> {
   // Controls, keys and storage behavior are unchanged.
   Widget _flagTile(String key, String title, String subtitle) {
     return SettingsTile.switchTile(
-      title: Text(title),
-      description: Text(subtitle),
+      title: Text(S.t(title)),
+      description: Text(S.t(subtitle)),
       initialValue: _flags[key] ?? false,
       onToggle: (value) {
         final next = value ?? !(_flags[key] ?? false);
@@ -66,7 +67,7 @@ class _PlayerEnhancePageState extends State<PlayerEnhancePage> {
     List<(String, String)> options,
   ) {
     return SettingsTile(
-      title: Text(title),
+      title: Text(S.t(title)),
       description: Padding(
         padding: const EdgeInsets.only(top: 6),
         child: Wrap(
@@ -75,7 +76,7 @@ class _PlayerEnhancePageState extends State<PlayerEnhancePage> {
           children: [
             for (final (value, label) in options)
               ChoiceChip(
-                label: Text(label),
+                label: Text(S.t(label)),
                 selected: _strs[key] == value,
                 onSelected: (_) {
                   setState(() => _strs[key] = value);
@@ -100,7 +101,7 @@ class _PlayerEnhancePageState extends State<PlayerEnhancePage> {
     return SettingsTile(
       title: Row(
         children: [
-          Expanded(child: Text(title)),
+          Expanded(child: Text(S.t(title))),
           Text(
             format(value),
             style: Theme.of(context).textTheme.bodySmall,
@@ -123,20 +124,20 @@ class _PlayerEnhancePageState extends State<PlayerEnhancePage> {
   @override
   Widget build(BuildContext context) {
     return SettingsDetailScaffold(
-      title: const Text('播放增强'),
+      title: Text(S.t('播放增强')),
       body: SettingsList(
         sections: [
           SettingsSection(tiles: [
             SettingsTile(
-              title: const Text('全部设置在下次开始播放时生效'),
-              description: const Text('默认全关 = 原版行为'),
+              title: Text(S.t('全部设置在下次开始播放时生效')),
+              description: Text(S.t('默认全关 = 原版行为')),
             ),
           ]),
-          SettingsSection(title: const Text('智能调优'), tiles: [
+          SettingsSection(title: Text(S.t('智能调优')), tiles: [
             SettingsTile.switchTile(
-              title: const Text('自适应预读'),
+              title: Text(S.t('自适应预读')),
               description:
-                  const Text('播放中按缓冲余量自动加深/回收预读（30–240 秒）'),
+                  Text(S.t('播放中按缓冲余量自动加深/回收预读（30–240 秒）')),
               initialValue: PlayerEnhance.flagDefault(
                   PlayerEnhanceKeys.autoCacheSecs, true),
               onToggle: (value) async {
@@ -146,9 +147,9 @@ class _PlayerEnhancePageState extends State<PlayerEnhancePage> {
               },
             ),
             SettingsTile.switchTile(
-              title: const Text('掉帧守护'),
-              description: const Text(
-                  '持续掉帧时自动分级降负：关插帧 → 降超分 → 关滤镜 → 快速解码'),
+              title: Text(S.t('掉帧守护')),
+              description: Text(
+                  S.t('持续掉帧时自动分级降负：关插帧 → 降超分 → 关滤镜 → 快速解码')),
               initialValue: PlayerEnhance.flagDefault(
                   PlayerEnhanceKeys.autoDropGuard, true),
               onToggle: (value) async {
@@ -158,7 +159,7 @@ class _PlayerEnhancePageState extends State<PlayerEnhancePage> {
               },
             ),
           ]),
-          SettingsSection(title: const Text('播放优化（21）'), tiles: [
+          SettingsSection(title: Text(S.t('播放优化（21）')), tiles: [
             _flagTile(PlayerEnhanceKeys.optDisplaySync, '显示器帧率同步',
                 '按屏幕刷新率重采样，60/90/120Hz 上更顺滑'),
             _flagTile(PlayerEnhanceKeys.optInterpolation, '运动插帧',
@@ -202,7 +203,7 @@ class _PlayerEnhancePageState extends State<PlayerEnhancePage> {
             _flagTile(PlayerEnhanceKeys.optHrSeek, '精确拖动',
                 '逐帧定位而不是跳关键帧（稍慢）'),
           ]),
-          SettingsSection(title: const Text('播放功能（12）'), tiles: [
+          SettingsSection(title: Text(S.t('播放功能（12）')), tiles: [
             _chips(PlayerEnhanceKeys.featAspect, '画面比例', const [
               ('auto', '自动'),
               ('16:9', '16:9'),

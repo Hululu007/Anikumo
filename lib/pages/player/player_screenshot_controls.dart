@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:anikumo/pages/player/controller/player_screenshot_controller.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class PlayerScreenshotControls extends StatelessWidget {
   const PlayerScreenshotControls({
@@ -20,7 +21,7 @@ class PlayerScreenshotControls extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          tooltip: '截取当前画面',
+          tooltip: S.t('截取当前画面'),
           style: IconButton.styleFrom(
             foregroundColor: Colors.white,
             minimumSize: const Size(48, 48),
@@ -38,7 +39,7 @@ class PlayerScreenshotControls extends StatelessWidget {
         ),
         if (controller.candidates.isNotEmpty)
           IconButton(
-            tooltip: '挑选截图 · ${controller.candidates.length} 张',
+            tooltip: S.f('挑选截图 · {} 张', [controller.candidates.length]),
             style: IconButton.styleFrom(
               foregroundColor: Colors.white,
               minimumSize: const Size(48, 48),

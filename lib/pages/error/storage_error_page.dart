@@ -8,6 +8,7 @@ import 'package:anikumo/bean/widget/loading_indicator.dart';
 import 'package:anikumo/bean/widget/state_presentation.dart';
 import 'package:anikumo/services/platform/app_exit.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class StorageErrorPage extends StatelessWidget {
   const StorageErrorPage({super.key});
@@ -16,21 +17,21 @@ class StorageErrorPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('内部错误'),
+        title: Text(S.t('内部错误')),
       ),
       body: FutureBuilder<Directory>(
         future: getApplicationSupportDirectory(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            final path = snapshot.data?.path ?? '未知路径';
+            final path = snapshot.data?.path ?? S.t('未知路径');
             return GeneralErrorWidget(
-              title: '无法初始化本地存储',
+              title: S.t('无法初始化本地存储'),
               icon: AnikumoIcons.storage_rounded,
-              errMsg: '当前存储位置：\n$path\n\n可在退出后删除该目录以重置本地存储，此操作会清除本地数据。',
+              errMsg: S.f('当前存储位置：\n{}\n\n可在退出后删除该目录以重置本地存储，此操作会清除本地数据。', [path]),
               actions: [
                 StateActionButton(
                   onPressed: AppExit.quit,
-                  text: '退出程序',
+                  text: S.t('退出程序'),
                   icon: AnikumoIcons.close_rounded,
                 ),
               ],

@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/utils/tap_debouncer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollCacheExtent;
@@ -123,7 +124,7 @@ class _MangaFavoritesTabState extends State<MangaFavoritesTab> {
     );
     if (!mounted) return;
     setState(() => _selection = null);
-    AnikumoDialog.showToast(message: '已删除 ${selection.length} 本');
+    AnikumoDialog.showToast(message: S.f('已删除 {} 本', [selection.length]));
   }
 
   Future<void> _pinSelected() async {
@@ -139,7 +140,7 @@ class _MangaFavoritesTabState extends State<MangaFavoritesTab> {
     await MangaExtrasStore.savePinned(pinned);
     if (!mounted) return;
     setState(() => _selection = null);
-    AnikumoDialog.showToast(message: allPinned ? '已取消置顶' : '已置顶');
+    AnikumoDialog.showToast(message: allPinned ? S.t('已取消置顶') : S.t('已置顶'));
   }
 
   @override
@@ -167,7 +168,7 @@ class _MangaFavoritesTabState extends State<MangaFavoritesTab> {
                 ? Row(
                     children: [
                       Text(
-                        '已选 ${_selection!.length} 本',
+                        S.f('已选 {} 本', [_selection!.length]),
                         style: theme.textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.w800),
                       ),
@@ -178,21 +179,21 @@ class _MangaFavoritesTabState extends State<MangaFavoritesTab> {
                             for (final f in sorted) f.key,
                           };
                         }),
-                        child: const Text('全选'),
+                        child: Text(S.t('全选')),
                       ),
                       IconButton(
                         icon: const Icon(AnikumoIcons.push_pin_outlined),
-                        tooltip: '置顶/取消置顶',
+                        tooltip: S.t('置顶/取消置顶'),
                         onPressed: _pinSelected,
                       ),
                       IconButton(
                         icon: const Icon(AnikumoIcons.delete_outline),
-                        tooltip: '删除所选',
+                        tooltip: S.t('删除所选'),
                         onPressed: _deleteSelected,
                       ),
                       IconButton(
                         icon: const Icon(AnikumoIcons.close),
-                        tooltip: '取消',
+                        tooltip: S.t('取消'),
                         onPressed: () => setState(() => _selection = null),
                       ),
                     ],
@@ -209,20 +210,20 @@ class _MangaFavoritesTabState extends State<MangaFavoritesTab> {
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        '收藏',
+                        S.t('收藏'),
                         style: theme.textTheme.titleLarge
                             ?.copyWith(fontWeight: FontWeight.w800),
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        '${favorites.length} 本',
+                        S.f('{} 本', [favorites.length]),
                         style: theme.textTheme.bodyMedium
                             ?.copyWith(color: theme.colorScheme.outline),
                       ),
                       if (_updates.isNotEmpty) ...[
                         const SizedBox(width: 8),
                         Chip(
-                          label: Text('${_updates.length} 部有更新'),
+                          label: Text(S.f('{} 部有更新', [_updates.length])),
                           visualDensity: VisualDensity.compact,
                           side: BorderSide.none,
                           backgroundColor:
@@ -244,30 +245,30 @@ class _MangaFavoritesTabState extends State<MangaFavoritesTab> {
                       else
                         IconButton(
                           icon: const Icon(AnikumoIcons.update_rounded),
-                          tooltip: '检查更新',
+                          tooltip: S.t('检查更新'),
                           onPressed: _checkUpdates,
                         ),
                       PopupMenuButton<MangaFavoriteSort>(
                         icon: const Icon(AnikumoIcons.sort_rounded),
-                        tooltip: '排序',
+                        tooltip: S.t('排序'),
                         initialValue: _sort,
                         onSelected: (mode) => setState(() => _sort = mode),
-                        itemBuilder: (context) => const [
+                        itemBuilder: (context) => [
                           PopupMenuItem(
                             value: MangaFavoriteSort.recentRead,
-                            child: Text('最近在读'),
+                            child: Text(S.t('最近在读')),
                           ),
                           PopupMenuItem(
                             value: MangaFavoriteSort.title,
-                            child: Text('标题'),
+                            child: Text(S.t('标题')),
                           ),
                           PopupMenuItem(
                             value: MangaFavoriteSort.rating,
-                            child: Text('我的评分'),
+                            child: Text(S.t('我的评分')),
                           ),
                           PopupMenuItem(
                             value: MangaFavoriteSort.addedOrder,
-                            child: Text('收藏顺序'),
+                            child: Text(S.t('收藏顺序')),
                           ),
                         ],
                       ),
@@ -276,9 +277,9 @@ class _MangaFavoritesTabState extends State<MangaFavoritesTab> {
           ),
           Expanded(
             child: favorites.isEmpty
-                ? const GeneralEmptyState(
+                ? GeneralEmptyState(
                     icon: AnikumoIcons.collections_bookmark_outlined,
-                    title: '还没有收藏，在详情页点 ♥ 就会出现在这里',
+                    title: S.t('还没有收藏，在详情页点 ♥ 就会出现在这里'),
                   )
                 : GridView.builder(
                     scrollCacheExtent: const ScrollCacheExtent.pixels(500),
@@ -381,7 +382,7 @@ class _MangaFavoritesTabState extends State<MangaFavoritesTab> {
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
-                                    '+$newChapters 话',
+                                    S.f('+{} 话', [newChapters]),
                                     style: theme.textTheme.labelSmall
                                         ?.copyWith(
                                       color: theme.colorScheme.onPrimary,

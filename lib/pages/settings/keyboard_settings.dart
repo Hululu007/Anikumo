@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:anikumo/bean/dialog/dialog_helper.dart';
 import 'package:anikumo/bean/settings/settings_detail_scaffold.dart';
 import 'package:anikumo/bean/widget/content_section.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/utils/constants.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
@@ -120,7 +121,8 @@ class _KeyboardSettingsPageState extends State<KeyboardSettingsPage> {
         if (otherFunc == func && i == index) continue;
         if (otherKeys[i] == rawKey) {
           final name = shortcutsChineseName[otherFunc] ?? otherFunc;
-          AnikumoDialog.showToast(message: "按键已被【$name】占用，请重新输入");
+          AnikumoDialog.showToast(
+              message: S.f('按键已被【{}】占用，请重新输入', [name]));
           return true;
         }
       }
@@ -182,7 +184,7 @@ class _KeyboardSettingsPageState extends State<KeyboardSettingsPage> {
         GStorage.putStringListSettingByName('shortcut_$func', shortcuts[func]!);
       }
     });
-    AnikumoDialog.showToast(message: '已恢复默认快捷键');
+    AnikumoDialog.showToast(message: S.t('已恢复默认快捷键'));
   }
 
   List<_ShortcutGroup> get displayGroups {
@@ -198,7 +200,7 @@ class _KeyboardSettingsPageState extends State<KeyboardSettingsPage> {
     final leftovers =
         shortcuts.keys.where((func) => !covered.contains(func)).toList();
     if (leftovers.isNotEmpty) {
-      groups.add(_ShortcutGroup('其他', leftovers));
+      groups.add(_ShortcutGroup(S.t('其他'), leftovers));
     }
     return groups;
   }
@@ -209,11 +211,11 @@ class _KeyboardSettingsPageState extends State<KeyboardSettingsPage> {
     final textTheme = Theme.of(context).textTheme;
 
     return SettingsDetailScaffold(
-      title: const Text('操作设置'),
+      title: Text(S.t('操作设置')),
       actions: [
         IconButton(
           icon: const Icon(AnikumoIcons.settings_backup_restore_rounded),
-          tooltip: '恢复默认',
+          tooltip: S.t('恢复默认'),
           onPressed: restoreDefaults,
         ),
       ],
@@ -245,7 +247,7 @@ class _KeyboardSettingsPageState extends State<KeyboardSettingsPage> {
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Text(
-                      '点按按键标签，再按下新按键完成修改',
+                      S.t('点按按键标签，再按下新按键完成修改'),
                       style: textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),
@@ -270,7 +272,7 @@ class _KeyboardSettingsPageState extends State<KeyboardSettingsPage> {
   Widget _buildGroupCard(_ShortcutGroup group) => Padding(
         padding: const EdgeInsets.only(bottom: 24),
         child: ContentSection(
-          title: group.title,
+          title: S.t(group.title),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -288,7 +290,8 @@ class _KeyboardSettingsPageState extends State<KeyboardSettingsPage> {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Text(shortcutsChineseName[func] ?? func, style: textTheme.bodyMedium),
+          Text(S.t(shortcutsChineseName[func] ?? func),
+              style: textTheme.bodyMedium),
           const SizedBox(width: 12),
           Expanded(
             child: Wrap(
@@ -313,7 +316,11 @@ class _KeyboardSettingsPageState extends State<KeyboardSettingsPage> {
     // Pending placeholders must not count toward the last-binding safeguard.
     final realCount = keys.where((value) => value != '...').length;
     return _KeyCap(
-      label: listening ? '按任意键' : keyAliases[keys[i]] ?? keys[i],
+      label: listening
+          ? S.t('按任意键')
+          : (keyAliases[keys[i]] != null
+              ? S.t(keyAliases[keys[i]]!)
+              : keys[i]),
       listening: listening,
       onTap: () => onKeyCapTap(func, i),
       onDelete:
@@ -396,7 +403,7 @@ class _AddKeyButton extends StatelessWidget {
     );
 
     return Tooltip(
-      message: '添加按键',
+      message: S.t('添加按键'),
       child: Material(
         color: Colors.transparent,
         shape: shape,

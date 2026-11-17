@@ -1,13 +1,17 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_modular/flutter_modular.dart';
 import 'package:flutter_inappwebview_platform_interface/flutter_inappwebview_platform_interface.dart';
 
 import '../../bean/dialog/dialog.dart';
 import '../../models/novel_item.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import '../../services/novel/legado_http.dart';
 import '../../services/novel/legado_parse.dart';
 import '../../services/novel/moyuan_host.dart';
@@ -15,7 +19,9 @@ import '../../services/novel/novel_api.dart';
 import '../../services/reader_chrome_prefs.dart';
 import '../../services/novel/novel_features.dart';
 import '../../services/novel/novel_reader_themes.dart';
+import '../../services/novel/novel_bookmarks.dart';
 import '../../services/novel/tts_service.dart';
+import '../../services/player/audio_controller.dart';
 import '../../services/novel/novel_sources.dart';
 import '../../services/novel/novel_downloads.dart';
 import '../../services/novel/novel_library.dart';
@@ -207,12 +213,17 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
     }
     _ttsSleepTimer?.cancel();
     _tts.stop();
+    if (_ttsMediaBound) {
+      _ttsMediaBound = false;
+      unawaited(_deactivateTtsMedia());
+    }
     _scrollController.dispose();
     _webView?.dispose();
     super.dispose();
   }
 
   void _onTtsChanged() {
+    _onTtsMediaChanged();
     if (mounted) setState(() {});
   }
 
@@ -237,10 +248,95 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
         if (block is NovelTextBlock) block.text,
     ];
     if (paragraphs.isEmpty) {
-      AnikumoDialog.showToast(message: '这一章没有可朗读的文字');
+      AnikumoDialog.showToast(message: S.t('这一章没有可朗读的文字'));
       return;
     }
+    unawaited(() async {
+      await _tts.applySettings();
+      // Batch 270: a rate remembered for this book wins
+      // over the global one.
+      final bookRate = TtsPlayer.rateForBook(_item.storageKey);
+      if (bookRate != null && bookRate != _tts.rate) {
+        await _tts.setRate(bookRate);
+      }
+    }());
     _tts.speakParagraphs(paragraphs);
+  }
+
+  // Batch 270: media-session bridge for listening —
+  // lock-screen / headset controls drive the TTS through
+  // the shared audio handler while it speaks.
+  bool _ttsMediaBound = false;
+
+  void _onTtsMediaChanged() {
+    if (_tts.speaking && !_ttsMediaBound) {
+      _ttsMediaBound = true;
+      unawaited(_bindTtsMedia());
+    } else if (_tts.speaking && _ttsMediaBound) {
+      unawaited(_pushTtsMediaState());
+    } else if (!_tts.speaking && _ttsMediaBound) {
+      _ttsMediaBound = false;
+      unawaited(_deactivateTtsMedia());
+    }
+  }
+
+  Future<void> _deactivateTtsMedia() async {
+    try {
+      await context.read<AudioController>().deactivate();
+    } catch (_) {
+      // Already unmounted or never initialized.
+    }
+  }
+
+  Future<void> _bindTtsMedia() async {
+    try {
+      final audio = context.read<AudioController>();
+      await audio.bindCallbacks(
+        onPlay: () async => _tts.resume(),
+        onPause: () async => _tts.pause(),
+        onSkipToNext: () async => _ttsSkipChapter(1),
+        onSkipToPrevious: () async => _ttsSkipChapter(-1),
+        onSeek: (_) async {},
+        artworkUrl: null,
+      );
+      await _pushTtsMediaState();
+    } catch (_) {
+      // Media controls are an enhancement; listening itself
+      // must never fail because the bridge did.
+    }
+  }
+
+  Future<void> _pushTtsMediaState() async {
+    try {
+      await context.read<AudioController>().updateSession(
+        mediaId: 'novel-tts:${_item.storageKey}',
+        title: _chapter.title,
+        album: _item.title,
+        artist: _item.author,
+        duration: null,
+        playing: _tts.speaking && !_tts.paused,
+        loading: false,
+        buffering: false,
+        completed: false,
+        updatePosition: Duration.zero,
+        bufferedPosition: Duration.zero,
+        speed: _tts.rate,
+        queueIndex: _index,
+        canSkipToNext: _index < _chapters.length - 1,
+        canSkipToPrevious: _index > 0,
+      );
+    } catch (_) {}
+  }
+
+  /// Headset "next/previous track" while listening: move a
+  /// chapter and keep reading there.
+  void _ttsSkipChapter(int delta) {
+    final target = _index + delta;
+    if (target < 0 || target >= _chapters.length) return;
+    _stopTts();
+    _ttsContinue = true;
+    setState(() => _index = target);
+    _load();
   }
 
   void _stopTts() {
@@ -257,14 +353,14 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
     final choice = await showDialog<String>(
       context: context,
       builder: (ctx) => SimpleDialog(
-        title: const Text('定时关闭朗读'),
+        title: Text(S.t('定时关闭朗读')),
         children: [
-          for (final (value, label) in const [
-            ('off', '关闭定时'),
-            ('chapter', '读完本章停'),
-            ('15', '15 分钟后停'),
-            ('30', '30 分钟后停'),
-            ('60', '60 分钟后停'),
+          for (final (value, label) in [
+            ('off', S.t('关闭定时')),
+            ('chapter', S.t('读完本章停')),
+            ('15', S.t('15 分钟后停')),
+            ('30', S.t('30 分钟后停')),
+            ('60', S.t('60 分钟后停')),
           ])
             SimpleDialogOption(
               onPressed: () => Navigator.pop(ctx, value),
@@ -286,9 +382,9 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
     setState(() {});
     AnikumoDialog.showToast(
       message: switch (choice) {
-        'off' => '已关闭定时',
-        'chapter' => '将读完本章后停止',
-        _ => '将在 $minutes 分钟后停止朗读',
+        'off' => S.t('已关闭定时'),
+        'chapter' => S.t('将读完本章后停止'),
+        _ => S.f('将在 {} 分钟后停止朗读', [minutes]),
       },
     );
   }
@@ -334,7 +430,7 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
     if (_finishingVerification) return;
     _finishingVerification = true;
     setState(() => _forcedWebViewIndex = null);
-    AnikumoDialog.showToast(message: '正在用正常模式重新打开本章');
+    AnikumoDialog.showToast(message: S.t('正在用正常模式重新打开本章'));
     _load().whenComplete(() => _finishingVerification = false);
   }
 
@@ -358,7 +454,9 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
       // came back read as "nothing happened at all".
       if (!mounted) return;
       AnikumoDialog.showToast(
-        message: _verificationRequired ? '验证未通过，源站仍要求验证' : '验证已通过',
+        message: _verificationRequired
+            ? S.t('验证未通过，源站仍要求验证')
+            : S.t('验证已通过'),
       );
     }
   }
@@ -533,8 +631,8 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
         // (its buttons already offer the web view).
         if (!novelBlocksHaveContent(blocks)) {
           _errorText = result.verificationRequired
-              ? '源站要求完成验证后才能阅读全文'
-              : '这一章没有取到内容（源站可能需要网页渲染或暂时不可用）';
+              ? S.t('源站要求完成验证后才能阅读全文')
+              : S.t('这一章没有取到内容（源站可能需要网页渲染或暂时不可用）');
         }
       });
       await NovelLibraryStore.recordProgress(
@@ -574,7 +672,8 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
       setState(() {
         _loading = false;
         _errorText = e is StackOverflowError
-            ? 'Stack Overflow（Dart 阅读器层）— 源：${_item.sourceName}，章节：${_chapter.title}'
+            ? S.f('Stack Overflow（Dart 阅读器层）— 源：{}，章节：{}',
+                [_item.sourceName, _chapter.title])
             : e.toString();
       });
     }
@@ -592,13 +691,13 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
       final found = await NovelApi.findReadableEdition(_item);
       if (!mounted) return;
       if (found == null) {
-        AnikumoDialog.showToast(message: '没有找到可用的其他书源');
+        AnikumoDialog.showToast(message: S.t('没有找到可用的其他书源'));
         return;
       }
       final chapters = await NovelApi.chapters(found);
       if (!mounted) return;
       if (chapters.isEmpty) {
-        AnikumoDialog.showToast(message: '没有找到可用的其他书源');
+        AnikumoDialog.showToast(message: S.t('没有找到可用的其他书源'));
         return;
       }
       final currentTitle = _chapter.title;
@@ -615,12 +714,13 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
         _errorText = null;
       });
       AnikumoDialog.showToast(
-        message: '已切换到 ${NovelApi.sourceFor(found).name} 继续阅读',
+        message:
+            S.f('已切换到 {} 继续阅读', [NovelApi.sourceFor(found).name]),
       );
       _load();
     } catch (_) {
       if (mounted) {
-        AnikumoDialog.showToast(message: '换源失败，请稍后重试');
+        AnikumoDialog.showToast(message: S.t('换源失败，请稍后重试'));
       }
     } finally {
       if (mounted) setState(() => _switchingSource = false);
@@ -681,6 +781,11 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
                 style: theme.textTheme.titleMedium,
               ),
               actions: [
+                IconButton(
+                  icon: const Icon(AnikumoIcons.bookmark_outline),
+                  tooltip: S.t('书签与批注'),
+                  onPressed: _loading ? null : _showBookmarks,
+                ),
                 if (NovelFeatures.isInstalled(NovelFeatures.ttsId))
                   IconButton(
                     icon: Icon(
@@ -688,7 +793,7 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
                           ? AnikumoIcons.stop_rounded
                           : AnikumoIcons.volume_up_rounded,
                     ),
-                    tooltip: _tts.speaking ? '停止朗读' : '朗读本章',
+                    tooltip: _tts.speaking ? S.t('停止朗读') : S.t('朗读本章'),
                     onPressed: _loading
                         ? null
                         : () => _tts.speaking ? _stopTts() : _speakChapter(),
@@ -704,7 +809,7 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
                           ? theme.colorScheme.primary
                           : null,
                     ),
-                    tooltip: '定时关闭朗读',
+                    tooltip: S.t('定时关闭朗读'),
                     onPressed: _tts.speaking ? _pickTtsSleep : null,
                   ),
               ],
@@ -729,7 +834,7 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
                     TextButton.icon(
                       onPressed: _promptVerification,
                       icon: const Icon(AnikumoIcons.password_rounded, size: 18),
-                      label: const Text('输入验证码'),
+                      label: Text(S.t('输入验证码')),
                     ),
                   TextButton.icon(
                     onPressed: () {
@@ -737,12 +842,13 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
                       _load();
                     },
                     icon: const Icon(AnikumoIcons.public, size: 18),
-                    label: const Text('用网页模式打开本章（图片章常用）'),
+                    label: Text(S.t('用网页模式打开本章（图片章常用）')),
                   ),
                   TextButton.icon(
                     onPressed: _switchingSource ? null : _switchSource,
                     icon: const Icon(AnikumoIcons.swap_horiz, size: 18),
-                    label: Text(_switchingSource ? '正在换源…' : '换个书源继续读'),
+                    label: Text(
+                        _switchingSource ? S.t('正在换源…') : S.t('换个书源继续读')),
                   ),
                 ],
               )
@@ -791,7 +897,7 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
                             child: Column(
                               children: [
                                 Text(
-                                  '— 源站要求完成验证后才能阅读全文 · 以上只是开头预览 —',
+                                  S.t('— 源站要求完成验证后才能阅读全文 · 以上只是开头预览 —'),
                                   textAlign: TextAlign.center,
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: theme.colorScheme.error,
@@ -809,7 +915,7 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
                                       AnikumoIcons.password_rounded,
                                       size: 18,
                                     ),
-                                    label: const Text('输入验证码'),
+                                    label: Text(S.t('输入验证码')),
                                   ),
                                 TextButton.icon(
                                   onPressed: () {
@@ -820,7 +926,7 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
                                     AnikumoIcons.public,
                                     size: 18,
                                   ),
-                                  label: const Text('在网页中打开本章完成验证'),
+                                  label: Text(S.t('在网页中打开本章完成验证')),
                                 ),
                               ],
                             ),
@@ -834,10 +940,10 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
                               Center(
                                 child: Text(
                                   truncated
-                                      ? '— 内容可能不完整 · 源站分页未取完 —'
+                                      ? S.t('— 内容可能不完整 · 源站分页未取完 —')
                                       : novelChapterIsImageOnly(_blocks)
-                                      ? '— 本章由源站以图片形式提供 —'
-                                      : '— 本章完 —',
+                                      ? S.t('— 本章由源站以图片形式提供 —')
+                                      : S.t('— 本章完 —'),
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: truncated
                                         ? theme.colorScheme.error
@@ -863,7 +969,7 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
                                     AnikumoIcons.public,
                                     size: 18,
                                   ),
-                                  label: const Text('在网页中打开本章'),
+                                  label: Text(S.t('在网页中打开本章')),
                                 ),
                               ],
                             ],
@@ -962,7 +1068,7 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
                     TextButton.icon(
                       onPressed: _index > 0 ? () => _go(-1) : null,
                       icon: const Icon(AnikumoIcons.arrow_back_ios, size: 16),
-                      label: const Text('上一章'),
+                      label: Text(S.t('上一章')),
                     ),
                     TextButton.icon(
                       onPressed: _showChapterList,
@@ -977,7 +1083,7 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
                         AnikumoIcons.arrow_forward_ios,
                         size: 16,
                       ),
-                      label: const Text('下一章'),
+                      label: Text(S.t('下一章')),
                     ),
                   ],
                 ),
@@ -1000,15 +1106,15 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
           children: [
             const Icon(AnikumoIcons.check_circle, size: 20),
             const SizedBox(width: 8),
-            const Expanded(
+            Expanded(
               child: Text(
-                '在网页里完成验证后，点右边按钮用正常模式打开',
+                S.t('在网页里完成验证后，点右边按钮用正常模式打开'),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             TextButton(
               onPressed: _finishingVerification ? null : _finishVerification,
-              child: const Text('已完成验证'),
+              child: Text(S.t('已完成验证')),
             ),
           ],
         ),
@@ -1034,30 +1140,330 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
                     ? AnikumoIcons.play_arrow_rounded
                     : AnikumoIcons.pause_rounded,
               ),
-              tooltip: _tts.paused ? '继续朗读' : '暂停朗读',
+              tooltip: _tts.paused ? S.t('继续朗读') : S.t('暂停朗读'),
               onPressed: () => _tts.paused ? _tts.resume() : _tts.pause(),
             ),
             IconButton(
               icon: const Icon(AnikumoIcons.stop_rounded),
-              tooltip: '停止朗读',
+              tooltip: S.t('停止朗读'),
               onPressed: _stopTts,
             ),
             Expanded(
               child: Text(
                 _tts.paused
-                    ? '朗读已暂停'
-                    : '朗读中 · 第 ${_tts.currentChunk + 1}/${_tts.totalChunks} 段',
+                    ? S.t('朗读已暂停')
+                    : S.f('朗读中 · 第 {}/{} 段',
+                        [_tts.currentChunk + 1, _tts.totalChunks]),
                 style: theme.textTheme.bodySmall,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             TextButton(
-              onPressed: () => _tts.setRate(nextRate),
-              child: Text('语速 ${_tts.rate}x'),
+              onPressed: () =>
+                  _tts.setRateForBook(_item.storageKey, nextRate),
+              child: Text(S.f('语速 {}x', [_tts.rate])),
+            ),
+            IconButton(
+              icon: const Icon(AnikumoIcons.tune_rounded),
+              tooltip: S.t('朗读设置'),
+              onPressed: _showTtsSettings,
             ),
           ],
         ),
       ),
     );
+  }
+
+  /// Batch 270: TTS tuning sheet — rate + pitch sliders
+  /// and the engine voice picker. All values persist.
+  void _showTtsSettings() {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          void refresh() {
+            setSheetState(() {});
+            if (mounted) setState(() {});
+          }
+
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    S.t('朗读设置'),
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(S.f('语速 {}x', [_tts.rate.toStringAsFixed(2)])),
+                  Slider(
+                    value: _tts.rate,
+                    min: 0.5,
+                    max: 2.0,
+                    divisions: 30,
+                    onChanged: (value) async {
+                      await _tts.setRateForBook(_item.storageKey, value);
+                      refresh();
+                    },
+                  ),
+                  Text(S.f('音调 {}x', [_tts.pitch.toStringAsFixed(2)])),
+                  Slider(
+                    value: _tts.pitch,
+                    min: 0.5,
+                    max: 2.0,
+                    divisions: 30,
+                    onChanged: (value) async {
+                      await _tts.setPitch(value);
+                      refresh();
+                    },
+                  ),
+                  const SizedBox(height: 4),
+                  Text(S.t('音色')),
+                  FutureBuilder<List<Map<String, String>>>(
+                    future: _tts.fetchVoices(),
+                    builder: (context, snapshot) {
+                      final voices = snapshot.data ?? const [];
+                      if (voices.isEmpty) {
+                        return ListTile(
+                          dense: true,
+                          title: Text(S.t('默认音色')),
+                          subtitle: Text(S.t('当前引擎没有列出可选音色')),
+                        );
+                      }
+                      return SizedBox(
+                        height: 180,
+                        child: ListView(
+                          children: [
+                            RadioListTile<String>(
+                              dense: true,
+                              value: '',
+                              groupValue: _tts.voiceName,
+                              title: Text(S.t('默认音色')),
+                              onChanged: (value) async {
+                                await _tts.setVoice('');
+                                refresh();
+                              },
+                            ),
+                            for (final voice in voices)
+                              RadioListTile<String>(
+                                dense: true,
+                                value: voice['name']!,
+                                groupValue: _tts.voiceName,
+                                title: Text(voice['name']!),
+                                subtitle: Text(voice['locale']!),
+                                onChanged: (value) async {
+                                  await _tts.setVoice(value ?? '');
+                                  refresh();
+                                },
+                              ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// Batch 270: this book's bookmarks + notes. Add the
+  /// current chapter, jump, annotate, delete, export.
+  void _showBookmarks() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final bookmarks = NovelBookmarks.forBook(_item.storageKey);
+          final hasCurrent =
+              bookmarks.any((b) => b.chapterIndex == _index);
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        S.t('书签与批注'),
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const Spacer(),
+                      if (bookmarks.isNotEmpty)
+                        TextButton.icon(
+                          icon: const Icon(AnikumoIcons.ios_share_rounded,
+                              size: 18),
+                          label: Text(S.t('导出')),
+                          onPressed: _exportBookmarks,
+                        ),
+                    ],
+                  ),
+                  ListTile(
+                    leading: const Icon(AnikumoIcons.bookmark_outline),
+                    title: Text(
+                      hasCurrent ? S.t('更新本章书签') : S.t('给本章加书签'),
+                    ),
+                    subtitle: Text(_chapter.title),
+                    onTap: () async {
+                      final excerpt = _blocks
+                          .whereType<NovelTextBlock>()
+                          .map((b) => b.text.trim())
+                          .where((t) => t.isNotEmpty)
+                          .firstOrNull;
+                      await NovelBookmarks.add(
+                        _item.storageKey,
+                        NovelBookmark(
+                          chapterIndex: _index,
+                          chapterTitle: _chapter.title,
+                          excerpt: (excerpt ?? '').length > 80
+                              ? '${(excerpt ?? '').substring(0, 80)}…'
+                              : excerpt ?? '',
+                          note: bookmarks
+                                  .where((b) => b.chapterIndex == _index)
+                                  .firstOrNull
+                                  ?.note ??
+                              '',
+                          createdAtMs:
+                              DateTime.now().millisecondsSinceEpoch,
+                        ),
+                      );
+                      setSheetState(() {});
+                    },
+                  ),
+                  const Divider(height: 1),
+                  if (bookmarks.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      child: Text(S.t('还没有书签')),
+                    )
+                  else
+                    Flexible(
+                      child: ListView(
+                        shrinkWrap: true,
+                        children: [
+                          for (final bookmark in bookmarks)
+                            ListTile(
+                              title: Text(
+                                S.f('第 {} 章 · {}', [
+                                  bookmark.chapterIndex + 1,
+                                  bookmark.chapterTitle,
+                                ]),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              subtitle: Text(
+                                [
+                                  if (bookmark.note.isNotEmpty) bookmark.note,
+                                  if (bookmark.excerpt.isNotEmpty)
+                                    bookmark.excerpt,
+                                ].join('\n'),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              trailing: PopupMenuButton<String>(
+                                onSelected: (value) async {
+                                  if (value == 'note') {
+                                    await _editBookmarkNote(bookmark);
+                                  } else if (value == 'delete') {
+                                    await NovelBookmarks.remove(
+                                      _item.storageKey,
+                                      bookmark.chapterIndex,
+                                    );
+                                  }
+                                  setSheetState(() {});
+                                },
+                                itemBuilder: (context) => [
+                                  PopupMenuItem(
+                                    value: 'note',
+                                    child: Text(S.t('编辑批注')),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'delete',
+                                    child: Text(S.t('删除书签')),
+                                  ),
+                                ],
+                              ),
+                              onTap: () {
+                                Navigator.pop(sheetContext);
+                                if (bookmark.chapterIndex != _index &&
+                                    bookmark.chapterIndex >= 0 &&
+                                    bookmark.chapterIndex <
+                                        _chapters.length) {
+                                  _stopTts();
+                                  setState(
+                                    () => _index = bookmark.chapterIndex,
+                                  );
+                                  _load();
+                                }
+                              },
+                            ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _editBookmarkNote(NovelBookmark bookmark) async {
+    final controller = TextEditingController(text: bookmark.note);
+    final note = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(S.t('批注')),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLines: 4,
+          decoration: InputDecoration(hintText: S.t('写点想法…')),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(S.t('取消')),
+          ),
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, controller.text.trim()),
+            child: Text(S.t('保存')),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (note == null) return;
+    await NovelBookmarks.setNote(_item.storageKey, bookmark.chapterIndex, note);
+  }
+
+  Future<void> _exportBookmarks() async {
+    final bookmarks = NovelBookmarks.forBook(_item.storageKey);
+    if (bookmarks.isEmpty) return;
+    final markdown = NovelBookmarks.buildExportMarkdown(
+      bookTitle: _item.title,
+      bookmarks: bookmarks,
+    );
+    try {
+      await FilePicker.platform.saveFile(
+        dialogTitle: S.t('导出书签与批注'),
+        fileName: '${_item.title}-书签.md',
+        bytes: utf8.encode(markdown),
+      );
+    } catch (_) {
+      if (mounted) {
+        AnikumoDialog.showToast(message: S.t('导出失败'));
+      }
+    }
   }
 }

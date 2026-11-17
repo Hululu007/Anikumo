@@ -19,6 +19,7 @@ import 'package:anikumo/services/anime/anime_auto_update.dart';
 import 'package:anikumo/services/anime/anime_features.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class CollectPage extends StatefulWidget {
   const CollectPage({
@@ -77,7 +78,7 @@ class _CollectPageState extends State<CollectPage> with AnikumoDialogOwner {
     try {
       await collectController.addCollect(item, type: type.value);
     } catch (_) {
-      AnikumoDialog.showToast(message: '修改收藏状态失败，请稍后重试');
+      AnikumoDialog.showToast(message: S.t('修改收藏状态失败，请稍后重试'));
     } finally {
       if (mounted) setState(() => _pendingIds.remove(item.id));
     }
@@ -105,7 +106,7 @@ class _CollectPageState extends State<CollectPage> with AnikumoDialogOwner {
             CollectSyncDestination.webDavSettings => '/settings/webdav/',
             CollectSyncDestination.bangumiSettings => '/settings/bangumi/',
           }));
-    }, errorMessage: '同步未完成，请稍后重试');
+    }, errorMessage: S.t('同步未完成，请稍后重试'));
   }
 
   @override
@@ -133,7 +134,7 @@ class _CollectPageState extends State<CollectPage> with AnikumoDialogOwner {
                         await AnimeAutoUpdate.clearPending();
                         AnimeFeatures.revision.value++;
                       },
-                      child: const Text('知道了'),
+                      child: Text(S.t('知道了')),
                     ),
                   ],
                 );
@@ -147,7 +148,7 @@ class _CollectPageState extends State<CollectPage> with AnikumoDialogOwner {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'COLLECTION · 我的追番',
+                    S.t('COLLECTION · 我的追番'),
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.outline,
                       fontWeight: FontWeight.w700,
@@ -158,15 +159,15 @@ class _CollectPageState extends State<CollectPage> with AnikumoDialogOwner {
                   Row(
                     children: [
                       Text(
-                        '追番',
+                        S.t('追番'),
                         style: theme.textTheme.headlineMedium
                             ?.copyWith(fontWeight: FontWeight.w800),
                       ),
                       const Spacer(),
                       Tooltip(
-                        message: '同步收藏',
+                        message: S.t('同步收藏'),
                         child: StateActionButton.tonal(
-                          text: '同步',
+                          text: S.t('同步'),
                           onPressed: _syncDialogOpen ||
                                   _pendingIds.isNotEmpty
                               ? null

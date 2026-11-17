@@ -11,6 +11,7 @@ import 'package:anikumo/services/player/mini_player_session.dart';
 import 'package:anikumo/services/player/pip_utils.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// The picture-in-picture settings, shared by the player settings
 /// page, the long-press shortcut on the player's PiP button, and a
@@ -130,12 +131,12 @@ class _PipSettingsSheetState extends State<PipSettingsSheet> {
       MiniPlayerSession.instance.refreshFromSettings();
       AnikumoDialog.showToast(
         message: saved.length > 1
-            ? '已设置 ${saved.length} 张自定义图片（会轮播）'
-            : '已设置自定义图片',
+            ? S.f('已设置 {} 张自定义图片（会轮播）', [saved.length])
+            : S.t('已设置自定义图片'),
       );
     } catch (_) {
       if (mounted) {
-        AnikumoDialog.showToast(message: '图片保存失败，请重试');
+        AnikumoDialog.showToast(message: S.t('图片保存失败，请重试'));
       }
     }
   }
@@ -210,7 +211,7 @@ class _PipSettingsSheetState extends State<PipSettingsSheet> {
   Widget _sectionLabel(BuildContext context, String text) {
     return Padding(
       padding: const EdgeInsets.only(top: 18, bottom: 8),
-      child: Text(text, style: Theme.of(context).textTheme.labelLarge),
+      child: Text(S.t(text), style: Theme.of(context).textTheme.labelLarge),
     );
   }
 
@@ -225,7 +226,7 @@ class _PipSettingsSheetState extends State<PipSettingsSheet> {
       children: [
         for (final (value, label) in options)
           ChoiceChip(
-            label: Text(label),
+            label: Text(S.t(label)),
             selected: selected == value,
             onSelected: (_) => onSelected(value),
           ),
@@ -244,26 +245,26 @@ class _PipSettingsSheetState extends State<PipSettingsSheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              '画中画设置',
+              S.t('画中画设置'),
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 16),
             Text(
-              '画中画模式',
+              S.t('画中画模式'),
               style: Theme.of(context).textTheme.labelLarge,
             ),
             const SizedBox(height: 8),
             SegmentedButton<bool>(
-              segments: const [
+              segments: [
                 ButtonSegment<bool>(
                   value: true,
-                  icon: Icon(AnikumoIcons.web_asset_rounded),
-                  label: Text('应用内小窗'),
+                  icon: const Icon(AnikumoIcons.web_asset_rounded),
+                  label: Text(S.t('应用内小窗')),
                 ),
                 ButtonSegment<bool>(
                   value: false,
-                  icon: Icon(AnikumoIcons.picture_in_picture_alt_rounded),
-                  label: Text('应用外'),
+                  icon: const Icon(AnikumoIcons.picture_in_picture_alt_rounded),
+                  label: Text(S.t('应用外')),
                 ),
               ],
               selected: {_inAppMode},
@@ -276,8 +277,8 @@ class _PipSettingsSheetState extends State<PipSettingsSheet> {
             const SizedBox(height: 6),
             Text(
               _inAppMode
-                  ? '退出播放页后回到应用主页，视频在应用内小窗继续播放。'
-                  : '使用系统画中画：切到桌面或其他应用时，视频悬浮在最上层。',
+                  ? S.t('退出播放页后回到应用主页，视频在应用内小窗继续播放。')
+                  : S.t('使用系统画中画：切到桌面或其他应用时，视频悬浮在最上层。'),
               style: Theme.of(context)
                   .textTheme
                   .bodySmall
@@ -285,24 +286,24 @@ class _PipSettingsSheetState extends State<PipSettingsSheet> {
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('进入漫画 / 小说时隐藏小窗'),
-              subtitle: const Text('退出漫画 / 小说后，小窗自动恢复显示'),
+              title: Text(S.t('进入漫画 / 小说时隐藏小窗')),
+              subtitle: Text(S.t('退出漫画 / 小说后，小窗自动恢复显示')),
               value: _hideInOtherZones,
               onChanged: _setHideInOtherZones,
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('隐藏小窗时静音'),
-              subtitle: const Text('小窗隐藏期间不播放声音，恢复显示后还原音量'),
+              title: Text(S.t('隐藏小窗时静音')),
+              subtitle: Text(S.t('小窗隐藏期间不播放声音，恢复显示后还原音量')),
               value: _muteWhenHidden,
               onChanged: _hideInOtherZones ? _setMuteWhenHidden : null,
             ),
             if (_inAppMode) ...[
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('退出软件时切到系统画中画'),
-                subtitle: const Text(
-                    '小窗播放时按 Home 离开软件，自动把视频送到系统画中画继续播放，而不是留在后台'),
+                title: Text(S.t('退出软件时切到系统画中画')),
+                subtitle: Text(
+                    S.t('小窗播放时按 Home 离开软件，自动把视频送到系统画中画继续播放，而不是留在后台')),
                 value: _autoSystemOnLeave,
                 onChanged: _setAutoSystemOnLeave,
               ),
@@ -320,7 +321,7 @@ class _PipSettingsSheetState extends State<PipSettingsSheet> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  const Text('控制栏透明度'),
+                  Text(S.t('控制栏透明度')),
                   Expanded(
                     child: Slider(
                       value: _controlsOpacity,
@@ -339,7 +340,7 @@ class _PipSettingsSheetState extends State<PipSettingsSheet> {
               ),
               _sectionLabel(context, '控制'),
               Text(
-                '控制栏模式',
+                S.t('控制栏模式'),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 6),
@@ -351,7 +352,7 @@ class _PipSettingsSheetState extends State<PipSettingsSheet> {
               ),
               const SizedBox(height: 12),
               Text(
-                '控制栏自动隐藏',
+                S.t('控制栏自动隐藏'),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 6),
@@ -363,7 +364,7 @@ class _PipSettingsSheetState extends State<PipSettingsSheet> {
               ),
               const SizedBox(height: 12),
               Text(
-                '快退 / 快进秒数',
+                S.t('快退 / 快进秒数'),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 6),
@@ -375,7 +376,7 @@ class _PipSettingsSheetState extends State<PipSettingsSheet> {
               ),
               const SizedBox(height: 12),
               Text(
-                '默认窗口大小',
+                S.t('默认窗口大小'),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 6),
@@ -396,7 +397,7 @@ class _PipSettingsSheetState extends State<PipSettingsSheet> {
               ),
               _sectionLabel(context, '手势'),
               Text(
-                '双击操作',
+                S.t('双击操作'),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 6),
@@ -408,31 +409,31 @@ class _PipSettingsSheetState extends State<PipSettingsSheet> {
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('侧边滑动调节'),
-                subtitle: const Text('在小窗左侧上下滑调亮度、右侧上下滑调音量'),
+                title: Text(S.t('侧边滑动调节')),
+                subtitle: Text(S.t('在小窗左侧上下滑调亮度、右侧上下滑调音量')),
                 value: _sideGestures,
                 onChanged: (v) => _setBool(
                     SettingsKeys.pipSideGestures, v, (x) => _sideGestures = x),
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('触觉反馈'),
-                subtitle: const Text('点按小窗按钮与快进快退时轻震'),
+                title: Text(S.t('触觉反馈')),
+                subtitle: Text(S.t('点按小窗按钮与快进快退时轻震')),
                 value: _haptics,
                 onChanged: (v) => _setBool(
                     SettingsKeys.pipHaptics, v, (x) => _haptics = x),
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('动画'),
-                subtitle: const Text('小窗出现、隐藏与控制栏的过渡动画'),
+                title: Text(S.t('动画')),
+                subtitle: Text(S.t('小窗出现、隐藏与控制栏的过渡动画')),
                 value: _animations,
                 onChanged: (v) => _setBool(
                     SettingsKeys.pipAnimations, v, (x) => _animations = x),
               ),
               _sectionLabel(context, '停靠小猫'),
               Text(
-                '小窗缩小停靠后的样子',
+                S.t('小窗缩小停靠后的样子'),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 6),
@@ -448,23 +449,23 @@ class _PipSettingsSheetState extends State<PipSettingsSheet> {
                   FilledButton.tonalIcon(
                     onPressed: _uploadCatImages,
                     icon: const Icon(AnikumoIcons.upload_rounded, size: 18),
-                    label: const Text('上传图片'),
+                    label: Text(S.t('上传图片')),
                   ),
                   const SizedBox(width: 10),
                   if (_catCount > 0) ...[
                     Text(
-                      _catCount > 1 ? '已存 $_catCount 张（轮播）' : '已存 1 张',
+                      _catCount > 1 ? S.f('已存 {} 张（轮播）', [_catCount]) : S.t('已存 1 张'),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     const SizedBox(width: 6),
                     TextButton(
                       onPressed: _clearCatImages,
-                      child: const Text('清除'),
+                      child: Text(S.t('清除')),
                     ),
                   ] else
                     Expanded(
                       child: Text(
-                        '可一次选多张，小猫会轮流播放',
+                        S.t('可一次选多张，小猫会轮流播放'),
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ),

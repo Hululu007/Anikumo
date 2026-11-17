@@ -3,6 +3,7 @@ import 'package:flutter_modular/flutter_modular.dart';
 
 import 'package:anikumo/repositories/history_repository.dart';
 import 'package:anikumo/services/anime/anime_stats.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// Batch 233 （观影报告 pack): the watch report page —
 /// exists only while the pack is installed (the entry in
@@ -22,31 +23,35 @@ class AnimeStatsPage extends StatelessWidget {
       (a, b) => b > a ? b : a,
     );
     return Scaffold(
-      appBar: AppBar(title: const Text('观影报告')),
+      appBar: AppBar(title: Text(S.t('观影报告'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
         children: [
           Text(
-            '累计观看 ${formatWatchDuration(stats.totalWatchTime)}',
+            S.f('累计观看 {}', [formatWatchDuration(stats.totalWatchTime)]),
             style: theme.textTheme.headlineSmall,
           ),
           const SizedBox(height: 6),
           Text(
-            '共 ${stats.titlesWatched} 部番 · ${stats.episodesWatched} 集'
-            '（按本机历史里每集的最远进度统计）',
+            S.f(
+              '共 {} 部番 · {} 集（按本机历史里每集的最远进度统计）',
+              [stats.titlesWatched, stats.episodesWatched],
+            ),
             style: theme.textTheme.bodySmall,
           ),
           if (stats.mostWatchedTitle.isNotEmpty) ...[
             const SizedBox(height: 24),
-            Text('看得最多', style: theme.textTheme.titleMedium),
+            Text(S.t('看得最多'), style: theme.textTheme.titleMedium),
             const SizedBox(height: 6),
             Text(
-              '《${stats.mostWatchedTitle}》 · '
-              '${formatWatchDuration(stats.mostWatchedTime)}',
+              S.f('《{}》 · {}', [
+                stats.mostWatchedTitle,
+                formatWatchDuration(stats.mostWatchedTime),
+              ]),
             ),
           ],
           const SizedBox(height: 24),
-          Text('最近 7 天', style: theme.textTheme.titleMedium),
+          Text(S.t('最近 7 天'), style: theme.textTheme.titleMedium),
           const SizedBox(height: 12),
           SizedBox(
             height: 120,
@@ -76,7 +81,7 @@ class AnimeStatsPage extends StatelessWidget {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            i == 6 ? '今天' : '${6 - i}天前',
+                            i == 6 ? S.t('今天') : S.f('{}天前', [6 - i]),
                             style: theme.textTheme.labelSmall,
                           ),
                         ],
@@ -88,7 +93,7 @@ class AnimeStatsPage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '柱子按每集最后更新的那天归集，是大致节奏，不是精确账单。',
+            S.t('柱子按每集最后更新的那天归集，是大致节奏，不是精确账单。'),
             style: theme.textTheme.bodySmall,
           ),
         ],

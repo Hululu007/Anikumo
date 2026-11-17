@@ -15,6 +15,7 @@ import 'package:anikumo/bean/widget/anikumo_icons.dart';
 import 'package:liuguang_core/liuguang_core.dart';
 import 'package:anikumo/pages/liuguang/film_widgets.dart';
 import 'package:anikumo/services/liuguang/video_engine.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// The animated 全部 / 动漫 / 漫画 segmented switch shared by the
 /// anime search page and the manga search page. Selection slides
@@ -53,7 +54,7 @@ class CrossSearchModeSwitch extends StatelessWidget {
         for (final option in modes ?? CrossSearchMode.values)
           PillSwitchOption(
             value: option,
-            label: option.label,
+            label: S.t(option.label),
             icon: _icons[option],
           ),
       ],
@@ -150,7 +151,7 @@ class _FilmCrossSearchPaneState extends State<FilmCrossSearchPane> {
               children: [
                 for (final filter in FilmCrossFilter.values) ...[
                   ChoiceChip(
-                    label: Text(filter.label),
+                    label: Text(S.t(filter.label)),
                     selected: _filter == filter,
                     onSelected: (_) => setState(() => _filter = filter),
                   ),
@@ -164,14 +165,14 @@ class _FilmCrossSearchPaneState extends State<FilmCrossSearchPane> {
           child: _loading
               ? const Center(child: CircularProgressIndicator())
               : _noSources
-              ? const Center(
+              ? Center(
                   child: Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Text('影视区还没有数据源，先到影视区的「片源」页添加。'),
+                    padding: const EdgeInsets.all(24),
+                    child: Text(S.t('影视区还没有数据源，先到影视区的「片源」页添加。')),
                   ),
                 )
               : filtered.isEmpty
-              ? const Center(child: Text('没有找到影视结果'))
+              ? Center(child: Text(S.t('没有找到影视结果')))
               : GridView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

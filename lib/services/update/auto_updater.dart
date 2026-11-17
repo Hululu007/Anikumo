@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -238,10 +239,10 @@ class AutoUpdater {
       if (updateInfo != null) {
         _showUpdateDialog(updateInfo, isAutoCheck: false);
       } else {
-        AnikumoDialog.showToast(message: '当前已经是最新版本！');
+        AnikumoDialog.showToast(message: S.t('当前已经是最新版本！'));
       }
     } catch (e) {
-      AnikumoDialog.showToast(message: '检查更新失败');
+      AnikumoDialog.showToast(message: S.t('检查更新失败'));
     }
   }
 
@@ -257,7 +258,7 @@ class AutoUpdater {
     );
     if (disableAutoUpdate) {
       GStorage.putSetting(SettingsKeys.autoUpdate, false);
-      AnikumoDialog.showToast(message: '已关闭自动更新');
+      AnikumoDialog.showToast(message: S.t('已关闭自动更新'));
     }
     if (choice != null) {
       _downloadUpdateWithType(updateInfo, choice.type, choice.source);
@@ -285,7 +286,7 @@ class AutoUpdater {
       final asset = getUpdateAssetForType(updateInfo.assets, selectedType);
       final downloadUrl = getUpdateDownloadUrlFromAsset(asset, source);
       if (asset == null || downloadUrl.isEmpty) {
-        AnikumoDialog.showToast(message: '没有找到 ${selectedType.label} 的下载链接');
+        AnikumoDialog.showToast(message: S.f('没有找到 {} 的下载链接', [S.t(selectedType.label)]));
         return;
       }
 
@@ -303,7 +304,7 @@ class AutoUpdater {
 
       _downloadUpdate(downloadInfo, expectedHash);
     } catch (e) {
-      AnikumoDialog.showToast(message: '下载失败: ${e.toString()}');
+      AnikumoDialog.showToast(message: S.f('下载失败: {}', [e.toString()]));
       AnikumoLogger().e('Update: download update failed', error: e);
     }
   }
@@ -320,7 +321,7 @@ class AutoUpdater {
         onCancel: cancelToken.cancel,
         builder: (context) {
           return AlertDialog(
-            title: const Text('正在下载更新'),
+            title: Text(S.t('正在下载更新')),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -341,7 +342,7 @@ class AutoUpdater {
             actions: [
               TextButton(
                 onPressed: () => AnikumoDialog.dismiss(context: context),
-                child: const Text('取消'),
+                child: Text(S.t('取消')),
               ),
             ],
           );
@@ -355,12 +356,12 @@ class AutoUpdater {
       AnikumoDialog.show(
         builder: (context) {
           return AlertDialog(
-            title: const Text('下载失败'),
+            title: Text(S.t('下载失败')),
             content: Text(errorMessage),
             actions: [
               TextButton(
                 onPressed: () => AnikumoDialog.dismiss(context: context),
-                child: const Text('确定'),
+                child: Text(S.t('确定')),
               ),
             ],
           );
@@ -381,7 +382,7 @@ class AutoUpdater {
     AnikumoDialog.show(
       builder: (context) {
         return AlertDialog(
-          title: const Text('下载完成'),
+          title: Text(S.t('下载完成')),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -395,13 +396,13 @@ class AutoUpdater {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text('新版本 ${updateInfo.version} 已下载完成'),
+                    child: Text(S.f('新版本 {} 已下载完成', [updateInfo.version])),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
               Text(
-                '安装过程中应用将会退出',
+                S.t('安装过程中应用将会退出'),
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.error,
                   fontSize: 12,
@@ -418,7 +419,7 @@ class AutoUpdater {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '文件位置:',
+                      S.t('文件位置:'),
                       style: Theme.of(context).textTheme.labelSmall,
                     ),
                     const SizedBox(height: 4),
@@ -437,7 +438,7 @@ class AutoUpdater {
             TextButton(
               onPressed: () => AnikumoDialog.dismiss(),
               child: Text(
-                '稍后安装',
+                S.t('稍后安装'),
                 style: TextStyle(color: Theme.of(context).colorScheme.outline),
               ),
             ),
@@ -447,7 +448,7 @@ class AutoUpdater {
                   AnikumoDialog.dismiss(context: context);
                   _revealInFileManager(filePath);
                 },
-                child: const Text('打开文件夹'),
+                child: Text(S.t('打开文件夹')),
               ),
             TextButton(
               onPressed: () {
@@ -455,7 +456,7 @@ class AutoUpdater {
                 _installUpdate(
                     filePath, updateInfo.recommendedInstallationType);
               },
-              child: const Text('立即安装'),
+              child: Text(S.t('立即安装')),
             ),
           ],
         );
@@ -480,7 +481,7 @@ class AutoUpdater {
   void _installUpdate(
       String filePath, InstallationType installationType) async {
     try {
-      AnikumoDialog.showToast(message: '准备安装更新，应用即将退出...');
+      AnikumoDialog.showToast(message: S.t('准备安装更新，应用即将退出...'));
 
       await Future.delayed(const Duration(seconds: 2));
 
@@ -505,12 +506,12 @@ class AutoUpdater {
       } else if (Platform.isAndroid) {
         final result = await OpenFilex.open(filePath);
         if (result.type != ResultType.done) {
-          AnikumoDialog.showToast(message: '无法打开安装文件: ${result.message}');
+          AnikumoDialog.showToast(message: S.f('无法打开安装文件: {}', [result.message]));
           return;
         }
       }
     } catch (e) {
-      AnikumoDialog.showToast(message: '启动安装程序失败: ${e.toString()}');
+      AnikumoDialog.showToast(message: S.f('启动安装程序失败: {}', [e.toString()]));
       AnikumoLogger().e('Update: launch installer failed', error: e);
     }
   }
@@ -520,7 +521,7 @@ class AutoUpdater {
       final type = await FileSystemEntity.type(filePath);
       String targetDirOrFile;
       if (type == FileSystemEntityType.notFound) {
-        AnikumoDialog.showToast(message: '文件或目录不存在');
+        AnikumoDialog.showToast(message: S.t('文件或目录不存在'));
         return;
       } else if (type == FileSystemEntityType.directory) {
         targetDirOrFile = filePath;
@@ -546,10 +547,10 @@ class AutoUpdater {
       } else if (Platform.isLinux) {
         await Process.start('xdg-open', [targetDirOrFile]);
       } else {
-        AnikumoDialog.showToast(message: '此平台不支持通过此方法打开文件管理器');
+        AnikumoDialog.showToast(message: S.t('此平台不支持通过此方法打开文件管理器'));
       }
     } catch (e) {
-      AnikumoDialog.showToast(message: '无法打开文件管理器');
+      AnikumoDialog.showToast(message: S.t('无法打开文件管理器'));
       AnikumoLogger().w('Update: reveal in file manager failed', error: e);
     }
   }

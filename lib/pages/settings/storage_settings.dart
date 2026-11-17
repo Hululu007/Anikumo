@@ -4,6 +4,7 @@ import 'package:flutter_modular/flutter_modular.dart';
 import 'package:anikumo/bean/dialog/dialog_helper.dart';
 import 'package:anikumo/bean/settings/settings_detail_scaffold.dart';
 import 'package:anikumo/bean/settings/settings_list.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/storage/image_cache_service.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
 
@@ -31,16 +32,16 @@ class _StorageSettingsPageState extends State<StorageSettingsPage> {
       context: context,
       builder: (context) => AlertDialog(
         icon: const Icon(AnikumoIcons.cleaning_services_rounded),
-        title: const Text('清除图片缓存？'),
-        content: const Text('图片会在下次加载时重新下载。视频、记录和设置不会删除。'),
+        title: Text(S.t('清除图片缓存？')),
+        content: Text(S.t('图片会在下次加载时重新下载。视频、记录和设置不会删除。')),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('清除缓存'),
+            child: Text(S.t('清除缓存')),
           ),
         ],
       ),
@@ -50,35 +51,35 @@ class _StorageSettingsPageState extends State<StorageSettingsPage> {
     try {
       await _cache.clear();
       if (!mounted) return;
-      _message('图片缓存已清除');
+      _message(S.t('图片缓存已清除'));
       _refreshSize();
     } catch (_) {
-      if (mounted) _message('清除失败，请稍后重试');
+      if (mounted) _message(S.t('清除失败，请稍后重试'));
     } finally {
       if (mounted) setState(() => _clearing = false);
     }
   }
 
   String _cacheDescription(AsyncSnapshot<int> snapshot) {
-    if (_clearing) return '正在清除…';
-    if (snapshot.connectionState != ConnectionState.done) return '正在统计…';
-    if (snapshot.hasError) return '统计失败';
+    if (_clearing) return S.t('正在清除…');
+    if (snapshot.connectionState != ConnectionState.done) return S.t('正在统计…');
+    if (snapshot.hasError) return S.t('统计失败');
     return '${(snapshot.requireData / (1024 * 1024)).toStringAsFixed(2)} MB';
   }
 
   @override
   Widget build(BuildContext context) => SettingsDetailScaffold(
-        title: const Text('存储与日志'),
+        title: Text(S.t('存储与日志')),
         body: FutureBuilder<int>(
           future: _cacheSize,
           builder: (context, snapshot) => SettingsList(
             sections: [
               SettingsSection(
-                title: const Text('缓存'),
+                title: Text(S.t('缓存')),
                 tiles: [
                   SettingsTile(
                     leading: AnikumoIcons.image_outlined,
-                    title: const Text('清除图片缓存'),
+                    title: Text(S.t('清除图片缓存')),
                     description: Text(_cacheDescription(snapshot)),
                     enabled: snapshot.connectionState == ConnectionState.done &&
                         !_clearing,
@@ -88,7 +89,7 @@ class _StorageSettingsPageState extends State<StorageSettingsPage> {
                                 snapshot.hasError &&
                                 !_clearing
                             ? IconButton(
-                                tooltip: '重新统计',
+                                tooltip: S.t('重新统计'),
                                 onPressed: _refreshSize,
                                 icon: const Icon(AnikumoIcons.refresh_rounded),
                               )
@@ -97,11 +98,11 @@ class _StorageSettingsPageState extends State<StorageSettingsPage> {
                 ],
               ),
               SettingsSection(
-                title: const Text('诊断'),
+                title: Text(S.t('诊断')),
                 tiles: [
                   SettingsTile(
                     leading: AnikumoIcons.receipt_long_rounded,
-                    title: const Text('错误日志'),
+                    title: Text(S.t('错误日志')),
                     trailing: const Icon(AnikumoIcons.chevron_right_rounded),
                     onPressed: (_) =>
                         context.pushNamed('/settings/storage/logs'),

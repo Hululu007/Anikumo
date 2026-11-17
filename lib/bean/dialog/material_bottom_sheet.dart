@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 const EdgeInsets materialBottomSheetContentPadding =
     EdgeInsets.fromLTRB(24, 0, 24, 24);
@@ -62,7 +63,7 @@ class MaterialBottomSheetHeader extends StatelessWidget {
                 const SizedBox(width: 12),
                 IconButton(
                   onPressed: onClose,
-                  tooltip: '关闭',
+                  tooltip: S.t('关闭'),
                   icon: const Icon(AnikumoIcons.close_rounded),
                 ),
               ],

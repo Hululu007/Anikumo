@@ -12,6 +12,7 @@ import 'package:anikumo/utils/constants.dart';
 import 'package:anikumo/services/logging/logger.dart';
 import 'package:anikumo/services/network/proxy_utils.dart';
 import 'package:anikumo/services/network/system_proxy_service.dart';
+import 'package:anikumo/services/player/audio_eq.dart';
 import 'package:anikumo/services/player/playback_cache_policy.dart';
 import 'package:anikumo/services/player/playback_tuner.dart';
 import 'package:anikumo/services/player/player_enhance.dart';
@@ -25,6 +26,7 @@ import 'package:mobx/mobx.dart';
 import 'package:anikumo/utils/device.dart';
 import 'package:anikumo/utils/media.dart';
 import 'package:anikumo/services/platform/platform_environment_service.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 part 'player_playback_controller.g.dart';
 
@@ -330,7 +332,12 @@ abstract class _PlayerPlaybackController with Store {
       if (!isCurrentPlayer(player)) {
         return await _discardIfNotCurrent(candidate);
       }
-      await pp.setProperty("af", "scaletempo2=max-speed=8");
+      // Batch 273 (#52): the chain keeps the baseline
+      // tempo filter and adds the saved equalizer.
+      await pp.setProperty(
+        "af",
+        buildMpvAudioFilterChain(AudioEqSettings.load()),
+      );
       if (!isCurrentPlayer(player)) {
         return await _discardIfNotCurrent(candidate);
       }
@@ -481,7 +488,7 @@ abstract class _PlayerPlaybackController with Store {
                 message: actionableMessage, showActionButton: true);
           } else if (showPlayerError) {
             AnikumoDialog.showToast(
-                message: '播放器内部错误 ${event.toString()} ${videoUrl()}',
+                message: S.f('播放器内部错误 {} {}', [event.toString(), videoUrl()]),
                 duration: const Duration(seconds: 5),
                 showActionButton: true);
           }
@@ -514,7 +521,7 @@ abstract class _PlayerPlaybackController with Store {
       }
 
       if (cachePolicy.networkAutomatic) {
-        AnikumoDialog.showToast(message: '移动数据下已自动开启低内存模式，可在播放设置中改为始终关闭');
+        AnikumoDialog.showToast(message: S.t('移动数据下已自动开启低内存模式，可在播放设置中改为始终关闭'));
       }
 
       return player;

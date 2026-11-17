@@ -245,6 +245,52 @@ class JsMangaSource extends JsBackedMangaSource {
   }
 
   @override
+  Future<MangaCommentsPage?> loadComments(
+    MangaItem manga, {
+    String? subId,
+    int page = 1,
+    String? replyTo,
+  }) async {
+    try {
+      final result = await engine.call('loadComments', {
+        'id': manga.id,
+        'subId': subId ?? manga.id,
+        'page': page,
+        'replyTo': replyTo,
+      });
+      if (result is! Map) return null;
+      final raw = result['comments'];
+      if (raw is! List) return null;
+      return MangaCommentsPage(
+        comments: [
+          for (final entry in raw)
+            if (entry is Map)
+              MangaComment.fromMap(entry.cast<String, dynamic>()),
+        ],
+        maxPage:
+            result['maxPage'] is num ? (result['maxPage'] as num).toInt() : 1,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Future<void> sendComment(
+    MangaItem manga, {
+    String? subId,
+    required String content,
+    String? replyTo,
+  }) async {
+    await engine.call('sendComment', {
+      'id': manga.id,
+      'subId': subId ?? manga.id,
+      'content': content,
+      'replyTo': replyTo,
+    });
+  }
+
+  @override
   Future<List<MangaPage>> pages(
     MangaItem manga,
     MangaChapter chapter,

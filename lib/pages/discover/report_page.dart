@@ -8,6 +8,8 @@ import 'package:anikumo/services/stats/watch_stats.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/utils/constants.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/pages/discover/report_share_card.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 const _weekdayNames = ['', '周一', '周二', '周三', '周四', '周五', '周六', '周日'];
 const _goalOptions = [3, 5, 7, 10, 15, 20, 30];
@@ -25,6 +27,9 @@ class ReportPage extends StatefulWidget {
 class _ReportPageState extends State<ReportPage> {
   late int _year;
   late int _month;
+
+  /// Batch 273 (#9): month report vs year report.
+  bool _yearMode = false;
 
   @override
   void initState() {
@@ -54,13 +59,13 @@ class _ReportPageState extends State<ReportPage> {
   Future<void> _editGoal(int currentGoal, int weekEpisodes) async {
     final picked = await AnikumoDialog.show<int>(
       builder: (dialogContext) => SimpleDialog(
-        title: const Text('每周观看目标'),
+        title: Text(S.t('每周观看目标')),
         children: [
           for (final option in _goalOptions)
             SimpleDialogOption(
               onPressed: () =>
                   AnikumoDialog.dismiss(context: dialogContext, popWith: option),
-              child: Text('每周 $option 集'),
+              child: Text(S.f('每周 {} 集', [option])),
             ),
         ],
       ),
@@ -76,6 +81,14 @@ class _ReportPageState extends State<ReportPage> {
     final histories = inject<IHistoryRepository>().getAllHistories();
     final report =
         computeMonthlyReport(histories, year: _year, month: _month);
+    final yearReport = _yearMode
+        ? computeYearlyReport(histories, year: _year)
+        : YearlyReport.empty;
+    // Unified numbers for the shared tiles below.
+    final periodEpisodes = _yearMode ? yearReport.episodes : report.episodes;
+    final periodMinutes = _yearMode ? yearReport.minutes : report.minutes;
+    final periodDays = _yearMode ? yearReport.activeDays : report.activeDays;
+    final periodTags = _yearMode ? yearReport.topTags : report.topTags;
     final stats = computeWatchStats(histories);
     final weekEpisodes =
         stats.last7DaysEpisodes.fold<int>(0, (sum, count) => sum + count);
@@ -84,7 +97,26 @@ class _ReportPageState extends State<ReportPage> {
     final maxHeat = heatmap.values.fold<int>(0, (a, b) => a > b ? a : b);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('观看报告')),
+      appBar: AppBar(
+        title: Text(S.t('观看报告')),
+        actions: [
+          // Batch 276 (#59): share card for this period.
+          IconButton(
+            tooltip: S.t('分享卡'),
+            icon: const Icon(AnikumoIcons.ios_share_rounded),
+            onPressed: () => showReportShareCard(
+              context,
+              periodLabel: _yearMode
+                  ? S.f('{} 年观看报告', [_year])
+                  : S.f('{} 年 {} 月观看报告', [_year, _month]),
+              episodes: periodEpisodes,
+              minutes: periodMinutes,
+              activeDays: periodDays,
+              topTags: [for (final tag in periodTags) tag.name],
+            ),
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(
           StyleString.pagePadding,
@@ -93,20 +125,36 @@ class _ReportPageState extends State<ReportPage> {
           StyleString.sectionSpace,
         ),
         children: [
+          Center(
+            child: SegmentedButton<bool>(
+              segments: [
+                ButtonSegment(value: false, label: Text(S.t('月报'))),
+                ButtonSegment(value: true, label: Text(S.t('年报'))),
+              ],
+              selected: {_yearMode},
+              onSelectionChanged: (selection) =>
+                  setState(() => _yearMode = selection.first),
+            ),
+          ),
+          const SizedBox(height: 4),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
-                onPressed: () => _shiftMonth(-1),
+                onPressed: () =>
+                    _yearMode ? setState(() => _year -= 1) : _shiftMonth(-1),
                 icon: const Icon(AnikumoIcons.chevron_left_rounded),
               ),
               Text(
-                '$_year 年 $_month 月',
+                _yearMode
+                    ? S.f('{} 年', [_year])
+                    : S.f('{} 年 {} 月', [_year, _month]),
                 style: theme.textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.w700),
               ),
               IconButton(
-                onPressed: () => _shiftMonth(1),
+                onPressed: () =>
+                    _yearMode ? setState(() => _year += 1) : _shiftMonth(1),
                 icon: const Icon(AnikumoIcons.chevron_right_rounded),
               ),
             ],
@@ -121,8 +169,8 @@ class _ReportPageState extends State<ReportPage> {
                     vertical: 12,
                   ),
                   child: _StatTile(
-                    label: '本月集数',
-                    value: '${report.episodes}',
+                    label: _yearMode ? S.t('本年集数') : S.t('本月集数'),
+                    value: '$periodEpisodes',
                   ),
                 ),
               ),
@@ -134,10 +182,10 @@ class _ReportPageState extends State<ReportPage> {
                     vertical: 12,
                   ),
                   child: _StatTile(
-                    label: '本月时长',
-                    value: report.minutes >= 60
-                        ? '${(report.minutes / 60).toStringAsFixed(1)} 小时'
-                        : '${report.minutes} 分钟',
+                    label: _yearMode ? S.t('本年时长') : S.t('本月时长'),
+                    value: periodMinutes >= 60
+                        ? S.f('{} 小时', [(periodMinutes / 60).toStringAsFixed(1)])
+                        : S.f('{} 分钟', [periodMinutes]),
                   ),
                 ),
               ),
@@ -149,8 +197,8 @@ class _ReportPageState extends State<ReportPage> {
                     vertical: 12,
                   ),
                   child: _StatTile(
-                    label: '活跃天数',
-                    value: '${report.activeDays}',
+                    label: S.t('活跃天数'),
+                    value: '$periodDays',
                   ),
                 ),
               ),
@@ -169,13 +217,13 @@ class _ReportPageState extends State<ReportPage> {
                         size: 18, color: theme.colorScheme.primary),
                     const SizedBox(width: 8),
                     Text(
-                      '本周目标：$weekEpisodes / $goal 集',
+                      S.f('本周目标：{} / {} 集', [weekEpisodes, goal]),
                       style: theme.textTheme.titleSmall
                           ?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     const Spacer(),
                     Text(
-                      weekEpisodes >= goal ? '已达成' : '点此修改',
+                      weekEpisodes >= goal ? S.t('已达成') : S.t('点此修改'),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.outline,
                       ),
@@ -191,7 +239,41 @@ class _ReportPageState extends State<ReportPage> {
               ],
             ),
           ),
-          if (report.topTags.isNotEmpty) ...[
+          if (_yearMode && yearReport.episodes > 0) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: GlassSurface(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
+                    child: _StatTile(
+                      label: S.t('追番部数'),
+                      value: '${yearReport.titles}',
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: GlassSurface(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
+                    child: _StatTile(
+                      label: S.t('最忙的月份'),
+                      value: yearReport.busiestMonth > 0
+                          ? S.f('{} 月', [yearReport.busiestMonth])
+                          : '—',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          if (periodTags.isNotEmpty) ...[
             const SizedBox(height: 12),
             GlassSurface(
               padding: const EdgeInsets.all(14),
@@ -199,7 +281,7 @@ class _ReportPageState extends State<ReportPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '本月最常看的类型',
+                    _yearMode ? S.t('本年最常看的类型') : S.t('本月最常看的类型'),
                     style: theme.textTheme.titleSmall
                         ?.copyWith(fontWeight: FontWeight.w600),
                   ),
@@ -207,17 +289,17 @@ class _ReportPageState extends State<ReportPage> {
                   Wrap(
                     spacing: 8,
                     children: [
-                      for (final tag in report.topTags)
+                      for (final tag in periodTags)
                         Chip(
                           label: Text('${tag.name} · ${tag.count}'),
                           visualDensity: VisualDensity.compact,
                         ),
                     ],
                   ),
-                  if (report.busiestWeekday > 0) ...[
+                  if (!_yearMode && report.busiestWeekday > 0) ...[
                     const SizedBox(height: 6),
                     Text(
-                      '最爱在${_weekdayNames[report.busiestWeekday]}看番',
+                      S.f('最爱在{}看番', [S.t(_weekdayNames[report.busiestWeekday])]),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.outline,
                       ),
@@ -229,7 +311,7 @@ class _ReportPageState extends State<ReportPage> {
           ],
           const SizedBox(height: 20),
           Text(
-            '近 12 周观看热力',
+            S.t('近 12 周观看热力'),
             style: theme.textTheme.titleSmall
                 ?.copyWith(fontWeight: FontWeight.w700),
           ),
@@ -260,7 +342,7 @@ class _ReportPageState extends State<ReportPage> {
           ),
           const SizedBox(height: 6),
           Text(
-            '颜色越深，那天看得越多',
+            S.t('颜色越深，那天看得越多'),
             style: theme.textTheme.bodySmall
                 ?.copyWith(color: theme.colorScheme.outline),
           ),

@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -8,7 +9,7 @@ class ScreenshotExportService {
   const ScreenshotExportService();
 
   Future<String?> chooseDestination() => FilePicker.platform.getDirectoryPath(
-    dialogTitle: '选择截图保存文件夹',
+    dialogTitle: S.t('选择截图保存文件夹'),
     lockParentWindow: true,
   );
 

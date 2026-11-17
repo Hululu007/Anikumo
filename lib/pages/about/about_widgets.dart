@@ -6,6 +6,7 @@ import 'package:anikumo/bean/dialog/dialog_helper.dart';
 import 'package:anikumo/bean/widget/split_list_row.dart';
 import 'package:anikumo/bean/widget/state_presentation.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 void _showMessage(BuildContext context, String message) {
   AnikumoDialog.showToast(context: context, message: message);
@@ -17,7 +18,7 @@ Future<void> openAboutLink(BuildContext context, String url) async {
       return;
     }
   } catch (_) {}
-  if (context.mounted) _showMessage(context, '无法打开链接，请稍后重试');
+  if (context.mounted) _showMessage(context, S.t('无法打开链接，请稍后重试'));
 }
 
 class AboutContent extends StatelessWidget {
@@ -95,11 +96,11 @@ class AboutLinkTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: theme.textTheme.titleMedium),
+                    Text(S.t(title), style: theme.textTheme.titleMedium),
                     if (subtitle != null) ...[
                       const SizedBox(height: 4),
                       Text(
-                        subtitle!,
+                        S.t(subtitle!),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: colors.onSurfaceVariant,
                         ),
@@ -142,7 +143,7 @@ class _CheckUpdateButtonState extends State<CheckUpdateButton> {
     try {
       await widget.onCheckUpdate();
     } catch (_) {
-      if (mounted) _showMessage(context, '检查更新失败，请稍后重试');
+      if (mounted) _showMessage(context, S.t('检查更新失败，请稍后重试'));
     } finally {
       if (mounted) setState(() => _checking = false);
     }
@@ -151,8 +152,8 @@ class _CheckUpdateButtonState extends State<CheckUpdateButton> {
   @override
   Widget build(BuildContext context) => StateActionButton(
         onPressed: _checking ? null : _check,
-        text: _checking ? '正在检查…' : '检查更新',
-        reserveText: '正在检查…',
+        text: _checking ? S.t('正在检查…') : S.t('检查更新'),
+        reserveText: S.t('正在检查…'),
         icon: AnikumoIcons.update_rounded,
       );
 }

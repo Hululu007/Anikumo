@@ -1,7 +1,14 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_modular/flutter_modular.dart';
 import 'package:liuguang_core/liuguang_core.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
 import 'package:anikumo/pages/liuguang/film_widgets.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
+import 'package:anikumo/services/liuguang/film_favorites_io.dart';
 import 'package:anikumo/services/liuguang/film_prefs.dart';
 import 'package:anikumo/services/liuguang/film_auto_update.dart';
 import 'package:anikumo/services/liuguang/video_engine.dart';
@@ -53,6 +60,112 @@ class _FilmFavoritesTabState extends State<FilmFavoritesTab> {
     await _reload();
   }
 
+  bool _importing = false;
+
+  /// Batch 272 (#32): export the favorites as one JSON
+  /// file (snapshots included, restores exactly).
+  Future<void> _exportFavorites() async {
+    try {
+      final engine = await VideoEngineService.instance.engine();
+      final favorites = await engine.favorites.list();
+      final snapshots = [
+        for (final f in favorites)
+          if (f.mediaSnapshot.isNotEmpty) f.mediaSnapshot,
+      ];
+      if (snapshots.isEmpty) {
+        _toast(S.t('还没有收藏'));
+        return;
+      }
+      final bytes = utf8.encode(buildFilmFavoritesExport(snapshots));
+      final path = await FilePicker.platform.saveFile(
+        dialogTitle: S.t('导出片单'),
+        fileName: 'anikumo-film-favorites.json',
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+        bytes: bytes,
+      );
+      if (path != null && !Platform.isAndroid && !Platform.isIOS) {
+        await File(path).writeAsBytes(bytes);
+      }
+      if (path != null) _toast(S.f('已导出 {} 部', [snapshots.length]));
+    } catch (e) {
+      _toast(S.f('导出失败：{}', [e]));
+    }
+  }
+
+  /// Batch 272 (#32): import a favorites file — an
+  /// exported JSON restores directly; a plain-text
+  /// title list is matched against the enabled sources
+  /// by search (first 30 titles).
+  Future<void> _importFavorites() async {
+    final picked = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['json', 'txt'],
+      withData: true,
+    );
+    final file = picked?.files.singleOrNull;
+    if (file?.bytes == null) return;
+    final parsed = parseFilmFavoritesImport(utf8.decode(file!.bytes!));
+    if (parsed == null) {
+      _toast(S.t('这个文件里没有可导入的内容'));
+      return;
+    }
+    setState(() => _importing = true);
+    try {
+      final engine = await VideoEngineService.instance.engine();
+      var added = 0;
+      var skipped = 0;
+      if (parsed is FilmFavoritesSnapshots) {
+        for (final snapshot in parsed.snapshots) {
+          try {
+            final item = TVSeries.mediaFromJson(snapshot);
+            if (await engine.favorites.isFavorite(item.id)) {
+              skipped++;
+            } else {
+              await engine.favorites.add(item);
+              added++;
+            }
+          } catch (_) {
+            skipped++;
+          }
+        }
+      } else if (parsed is FilmFavoritesTitles) {
+        final titles = parsed.titles.take(30).toList();
+        skipped = parsed.titles.length - titles.length;
+        for (final title in titles) {
+          try {
+            final page = await engine.search(SearchRequest(keyword: title));
+            final match = page.items
+                .where((it) => it.title == title)
+                .firstOrNull ??
+                page.items.firstOrNull;
+            if (match == null ||
+                await engine.favorites.isFavorite(match.id)) {
+              skipped++;
+            } else {
+              await engine.favorites.add(match);
+              added++;
+            }
+          } catch (_) {
+            skipped++;
+          }
+        }
+      }
+      _toast(S.f('导入完成：新增 {} 部，跳过 {} 条', [added, skipped]));
+      await _reload();
+    } catch (e) {
+      _toast(S.f('导入失败：{}', [e]));
+    } finally {
+      if (mounted) setState(() => _importing = false);
+    }
+  }
+
+  void _toast(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
   bool _checking = false;
 
   /// Batch 207 （自选功能）: 追剧更新检查 — compares each
@@ -85,19 +198,19 @@ class _FilmFavoritesTabState extends State<FilmFavoritesTab> {
       await FilmPrefs.setFavoriteStamps(stamps);
       if (!mounted) return;
       final message = updated.isNotEmpty
-          ? '有更新：\n${updated.join('\n')}'
+          ? S.f('有更新：\n{}', [updated.join('\n')])
           : seeded == _items.length && stamps.length <= _items.length
-          ? '已记录当前进度，下次检查会对比是否有更新。'
-          : '收藏的剧集暂时没有更新。';
+          ? S.t('已记录当前进度，下次检查会对比是否有更新。')
+          : S.t('收藏的剧集暂时没有更新。');
       await showDialog<void>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: const Text('追剧更新检查'),
+          title: Text(S.t('追剧更新检查')),
           content: Text(message),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('知道了'),
+              child: Text(S.t('知道了')),
             ),
           ],
         ),
@@ -106,7 +219,7 @@ class _FilmFavoritesTabState extends State<FilmFavoritesTab> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('检查失败：$e')));
+        ).showSnackBar(SnackBar(content: Text(S.f('检查失败：{}', [e]))));
       }
     } finally {
       if (mounted) setState(() => _checking = false);
@@ -119,30 +232,47 @@ class _FilmFavoritesTabState extends State<FilmFavoritesTab> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_items.isEmpty) {
-      return const FilmEmptyState(
+      return FilmEmptyState(
         icon: AnikumoIcons.favorite_rounded,
-        title: '还没有收藏',
-        message: '在影片详情页点收藏后，会出现在这里。',
+        title: S.t('还没有收藏'),
+        message: S.t('在影片详情页点收藏后，会出现在这里。'),
+        actionLabel: S.t('导入片单'),
+        onAction: _importing ? null : _importFavorites,
       );
     }
     return Column(
       children: [
         // Batch 221: editorial title bar.
         FilmEditorialTitle(
-          eyebrow: 'COLLECTION · 收藏',
-          title: filmHeadline(context, '收藏'),
+          eyebrow: S.t('COLLECTION · 收藏'),
+          title: filmHeadline(context, S.t('收藏')),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 6, 8, 0),
           child: Row(
             children: [
               Text(
-                '共 ${_items.length} 部',
+                S.f('共 {} 部', [_items.length]),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const Spacer(),
+              IconButton(
+                tooltip: S.t('追剧日历'),
+                onPressed: () => context.pushNamed('/film/calendar'),
+                icon: const Icon(AnikumoIcons.date_range_outlined, size: 20),
+              ),
+              IconButton(
+                tooltip: S.t('导入片单'),
+                onPressed: _importing ? null : _importFavorites,
+                icon: const Icon(AnikumoIcons.upload_outlined, size: 20),
+              ),
+              IconButton(
+                tooltip: S.t('导出片单'),
+                onPressed: _exportFavorites,
+                icon: const Icon(AnikumoIcons.file_download_outlined, size: 20),
+              ),
               TextButton.icon(
                 onPressed: _checking ? null : _checkUpdates,
                 icon: _checking
@@ -152,7 +282,7 @@ class _FilmFavoritesTabState extends State<FilmFavoritesTab> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(AnikumoIcons.system_update_rounded, size: 18),
-                label: const Text('检查更新'),
+                label: Text(S.t('检查更新')),
               ),
             ],
           ),
@@ -169,7 +299,9 @@ class _FilmFavoritesTabState extends State<FilmFavoritesTab> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        '有更新：${FilmAutoUpdate.pendingUpdates().join('；')}',
+                        S.f('有更新：{}', [
+                          FilmAutoUpdate.pendingUpdates().join('；'),
+                        ]),
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ),
@@ -178,7 +310,7 @@ class _FilmFavoritesTabState extends State<FilmFavoritesTab> {
                         await FilmAutoUpdate.clearPending();
                         if (mounted) setState(() {});
                       },
-                      child: const Text('知道了'),
+                      child: Text(S.t('知道了')),
                     ),
                   ],
                 ),
@@ -207,16 +339,16 @@ class _FilmFavoritesTabState extends State<FilmFavoritesTab> {
             final ok = await showDialog<bool>(
               context: context,
               builder: (dialogContext) => AlertDialog(
-                title: const Text('取消收藏'),
-                content: Text('不再收藏「${item.title}」？'),
+                title: Text(S.t('取消收藏')),
+                content: Text(S.f('不再收藏「{}」？', [item.title])),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.of(dialogContext).pop(false),
-                    child: const Text('保留'),
+                    child: Text(S.t('保留')),
                   ),
                   FilledButton(
                     onPressed: () => Navigator.of(dialogContext).pop(true),
-                    child: const Text('取消收藏'),
+                    child: Text(S.t('取消收藏')),
                   ),
                 ],
               ),

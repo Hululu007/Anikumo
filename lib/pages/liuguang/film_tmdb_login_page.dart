@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview_platform_interface/flutter_inappwebview_platform_interface.dart';
 
 import '../../bean/dialog/dialog.dart';
+import '../../services/i18n/app_strings.dart';
 import '../../services/liuguang/film_accounts.dart';
 
 /// Batch 254: TMDB account sign-in. Creates a v3 request
@@ -34,7 +35,7 @@ class _FilmTmdbLoginPageState extends State<FilmTmdbLoginPage> {
     final token = await TmdbAccount.createRequestToken();
     if (!mounted) return;
     if (token == null) {
-      setState(() => _error = '无法连接 TMDB，请检查网络后重试。');
+      setState(() => _error = S.t('无法连接 TMDB，请检查网络后重试。'));
       return;
     }
     _token = token;
@@ -64,13 +65,13 @@ class _FilmTmdbLoginPageState extends State<FilmTmdbLoginPage> {
     if (ok) {
       AnikumoDialog.showToast(
         context: context,
-        message: '已连接 TMDB 账户 @${TmdbAccount.username}',
+        message: S.f('已连接 TMDB 账户 @{}', [TmdbAccount.username]),
       );
       Navigator.of(context).pop(true);
     } else {
       AnikumoDialog.showToast(
         context: context,
-        message: '还没有检测到授权——请先在网页上登录并点「允许」，再点完成授权。',
+        message: S.t('还没有检测到授权——请先在网页上登录并点「允许」，再点完成授权。'),
       );
     }
   }
@@ -79,11 +80,11 @@ class _FilmTmdbLoginPageState extends State<FilmTmdbLoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('连接 TMDB 账户'),
+        title: Text(S.t('连接 TMDB 账户')),
         actions: [
           TextButton(
             onPressed: (_token == null || _completing) ? null : _complete,
-            child: Text(_completing ? '连接中…' : '完成授权'),
+            child: Text(_completing ? S.t('连接中…') : S.t('完成授权')),
           ),
         ],
       ),
@@ -92,9 +93,11 @@ class _FilmTmdbLoginPageState extends State<FilmTmdbLoginPage> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
             child: Text(
-              '在 TMDB 官网登录并允许授权后，点右上角「完成授权」。'
-              '连接后可以在详情页把作品同步到 TMDB 的收藏 / 想看，'
-              '也能在「我的云端片单」里打开它们。',
+              S.t(
+                '在 TMDB 官网登录并允许授权后，点右上角「完成授权」。'
+                '连接后可以在详情页把作品同步到 TMDB 的收藏 / 想看，'
+                '也能在「我的云端片单」里打开它们。',
+              ),
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ),

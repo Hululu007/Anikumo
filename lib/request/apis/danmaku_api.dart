@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/modules/danmaku/danmaku_ch_convert.dart';
 import 'package:anikumo/modules/danmaku/danmaku_episode_response.dart';
 import 'package:anikumo/modules/danmaku/danmaku_module.dart';
@@ -87,7 +88,7 @@ class DanmakuApi {
       }
     }
     if (hasResult) return lastResult as T;
-    throw firstError ?? StateError('弹幕服务暂时不可用');
+    throw firstError ?? StateError(S.t('弹幕服务暂时不可用'));
   }
 
   static Future<int> getDanDanBangumiIDByBgmBangumiID(int bgmBangumiID) async {
@@ -172,7 +173,7 @@ class DanmakuApi {
       _sheetServedByBuiltin = lastWasBuiltin;
       return lastResult;
     }
-    throw firstError ?? StateError('弹幕服务暂时不可用');
+    throw firstError ?? StateError(S.t('弹幕服务暂时不可用'));
   }
 
   /// Automatic danmaku for one episode. The official line
@@ -200,7 +201,7 @@ class DanmakuApi {
       }
     }
     if (lastResult != null) return lastResult;
-    throw firstError ?? StateError('弹幕服务暂时不可用');
+    throw firstError ?? StateError(S.t('弹幕服务暂时不可用'));
   }
 
   /// The official auto flow: map the Bangumi id across and

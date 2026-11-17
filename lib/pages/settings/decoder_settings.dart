@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:anikumo/bean/settings/settings_detail_scaffold.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/utils/constants.dart';
 import 'package:anikumo/bean/settings/settings_list.dart';
@@ -17,11 +18,11 @@ class _DecoderSettingsState extends State<DecoderSettings> {
   @override
   Widget build(BuildContext context) {
     return SettingsDetailScaffold(
-      title: const Text('硬件解码器'),
+      title: Text(S.t('硬件解码器')),
       body: SettingsList(
         sections: [
           SettingsRadioSection<String>(
-            title: Text('选择不受支持的解码器将回退到软件解码'),
+            title: Text(S.t('选择不受支持的解码器将回退到软件解码')),
             groupValue: _decoder,
             onChanged: (String? value) {
               if (value != null) {
@@ -35,7 +36,7 @@ class _DecoderSettingsState extends State<DecoderSettings> {
             tiles: hardwareDecodersList.entries
                 .map((e) => SettingsTile<String>.radioTile(
                       title: Text(e.key),
-                      description: Text(e.value),
+                      description: Text(S.t(e.value)),
                       radioValue: e.key,
                     ))
                 .toList(),

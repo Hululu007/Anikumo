@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:anikumo/bean/dialog/dialog_helper.dart';
 import 'package:anikumo/bean/settings/settings_detail_scaffold.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/services/network/proxy_utils.dart';
 import 'package:anikumo/services/network/proxy_manager.dart';
@@ -41,7 +42,7 @@ class _ProxyEditorPageState extends State<ProxyEditorPage> {
 
     final url = urlController.text.trim();
     if (url.isEmpty) {
-      AnikumoDialog.showToast(message: '请输入代理地址');
+      AnikumoDialog.showToast(message: S.t('请输入代理地址'));
       return;
     }
 
@@ -78,18 +79,18 @@ class _ProxyEditorPageState extends State<ProxyEditorPage> {
           )
           .timeout(const Duration(seconds: 15));
       await GStorage.putSetting(SettingsKeys.proxyConfigured, true);
-      AnikumoDialog.showToast(message: '测试成功');
+      AnikumoDialog.showToast(message: S.t('测试成功'));
     } catch (e) {
       await GStorage.putSetting(SettingsKeys.proxyEnable, false);
       ProxyManager.clearProxy();
-      AnikumoDialog.showToast(message: '代理连接失败');
+      AnikumoDialog.showToast(message: S.t('代理连接失败'));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return SettingsDetailScaffold(
-      title: const Text('代理配置'),
+      title: Text(S.t('代理配置')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Center(
@@ -101,17 +102,17 @@ class _ProxyEditorPageState extends State<ProxyEditorPage> {
                 children: [
                   TextFormField(
                     controller: urlController,
-                    decoration: const InputDecoration(
-                      labelText: '代理地址',
+                    decoration: InputDecoration(
+                      labelText: S.t('代理地址'),
                       hintText: 'http://127.0.0.1:7890',
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return '请输入代理地址';
+                        return S.t('请输入代理地址');
                       }
                       if (!ProxyUtils.isValidProxyUrl(value)) {
-                        return '格式错误，请使用 http://host:port 格式';
+                        return S.t('格式错误，请使用 http://host:port 格式');
                       }
                       return null;
                     },
@@ -119,10 +120,10 @@ class _ProxyEditorPageState extends State<ProxyEditorPage> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: testUrlController,
-                    decoration: const InputDecoration(
-                      labelText: '测试地址',
+                    decoration: InputDecoration(
+                      labelText: S.t('测试地址'),
                       hintText: 'https://www.google.com',
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ],
@@ -134,7 +135,7 @@ class _ProxyEditorPageState extends State<ProxyEditorPage> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: saveAndTest,
         icon: const Icon(AnikumoIcons.save),
-        label: const Text('保存并测试'),
+        label: Text(S.t('保存并测试')),
       ),
     );
   }

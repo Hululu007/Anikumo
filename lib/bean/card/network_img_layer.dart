@@ -173,7 +173,15 @@ class _NetworkImgLayerState extends State<NetworkImgLayer> {
             widget.fadeOutDuration ?? const Duration(milliseconds: 120),
         fadeInDuration:
             widget.fadeInDuration ?? const Duration(milliseconds: 120),
-        filterQuality: widget.filterQuality,
+        // Batch 268: small covers (rails, list rows) resample
+        // at medium quality — high-quality resampling of
+        // hundreds of tiny bitmaps is a real scroll cost on
+        // mid-range GPUs and indistinguishable at this size.
+        // Large surfaces (detail headers, previews) decode
+        // bigger and keep the caller's quality.
+        filterQuality: (memCacheWidth != null && memCacheWidth <= 480)
+            ? FilterQuality.medium
+            : widget.filterQuality,
         color: widget.color,
         colorBlendMode: widget.colorBlendMode,
         errorListener: _handleError,

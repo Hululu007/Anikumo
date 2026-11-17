@@ -5,6 +5,7 @@ import 'package:anikumo/bean/widget/state_presentation.dart';
 import 'package:anikumo/modules/history/history_module.dart';
 import 'package:anikumo/pages/history/history_list_query.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class HistoryListView extends StatefulWidget {
   const HistoryListView({
@@ -122,12 +123,12 @@ class _HistoryListViewState extends State<HistoryListView> {
                             focusNode: _searchFocus,
                             textInputAction: TextInputAction.search,
                             decoration: InputDecoration(
-                              hintText: '搜索番剧、别名或来源',
+                              hintText: S.t('搜索番剧、别名或来源'),
                               prefixIcon: const Icon(AnikumoIcons.search_rounded),
                               suffixIcon: _query.isEmpty
                                   ? null
                                   : IconButton(
-                                      tooltip: '清除搜索',
+                                      tooltip: S.t('清除搜索'),
                                       onPressed: _clearSearch,
                                       icon: const Icon(AnikumoIcons.close_rounded),
                                     ),
@@ -161,10 +162,10 @@ class _HistoryListViewState extends State<HistoryListView> {
                             liveRegion: true,
                             child: Text(
                               widget.editing
-                                  ? '共 $count 条记录 · 点按删除按钮移除'
+                                  ? S.f('共 {} 条记录 · 点按删除按钮移除', [count])
                                   : filtered
-                                      ? '找到 $count 条记录 · 最近观看优先'
-                                      : '共 $count 条记录 · 最近观看优先',
+                                      ? S.f('找到 {} 条记录 · 最近观看优先', [count])
+                                      : S.f('共 {} 条记录 · 最近观看优先', [count]),
                               style: theme.textTheme.bodyMedium
                                   ?.copyWith(color: colors.onSurfaceVariant),
                             ),
@@ -214,7 +215,7 @@ class _HistoryListViewState extends State<HistoryListView> {
                     style: theme.textTheme.titleLarge
                         ?.copyWith(fontWeight: FontWeight.w700)),
               ),
-              Text('${group.entries.length} 条',
+              Text(S.f('{} 条', [group.entries.length]),
                   style: theme.textTheme.labelLarge
                       ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
             ],
@@ -270,7 +271,7 @@ class _HistoryListViewState extends State<HistoryListView> {
                           size: 18, color: colors.onSecondaryContainer),
                       const SizedBox(width: 8),
                     ],
-                    Text(source.label,
+                    Text(S.t(source.label),
                         style: theme.textTheme.labelLarge?.copyWith(
                           fontWeight:
                               selected ? FontWeight.w700 : FontWeight.w500,
@@ -291,12 +292,12 @@ class _HistoryListViewState extends State<HistoryListView> {
   Widget _emptyState(bool filtered) {
     return GeneralEmptyState(
       icon: filtered ? AnikumoIcons.search_off_rounded : AnikumoIcons.history_rounded,
-      title: filtered ? '没有找到相关记录' : '还没有观看记录',
+      title: filtered ? S.t('没有找到相关记录') : S.t('还没有观看记录'),
       actions: [
         if (filtered)
           StateActionButton.tonal(
             onPressed: _resetFilters,
-            text: '查看全部记录',
+            text: S.t('查看全部记录'),
           ),
       ],
     );

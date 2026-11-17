@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/novel/novel_api.dart';
 import 'package:anikumo/pages/novel/novel_widgets.dart';
 import 'package:anikumo/models/novel_item.dart';
@@ -13,11 +14,13 @@ import 'package:anikumo/modules/manga/manga_item.dart';
 import 'package:anikumo/pages/manga/manga_categories_page.dart';
 import 'package:anikumo/pages/manga/manga_search_page.dart';
 import 'package:anikumo/pages/manga/manga_verification_page.dart';
+import 'package:anikumo/pages/manga/manga_comments_page.dart';
 import 'package:anikumo/services/manga/js/js_manga_source.dart';
 import 'package:anikumo/pages/manga/manga_widgets.dart';
 import 'package:anikumo/request/apis/bangumi_api.dart';
 import 'package:anikumo/services/manga/cross_media.dart';
 import 'package:anikumo/services/manga/local_manga_source.dart';
+import 'package:anikumo/services/manga/manga_download_queue.dart';
 import 'package:anikumo/services/manga/manga_downloads.dart';
 import 'package:anikumo/services/manga/manga_search_utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -248,38 +251,35 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
   }
 
   Future<void> _downloadChapter(MangaChapter chapter) async {
+    // Batch 271: downloads go through the shared queue
+    // (bounded concurrency, pausable from 下载管理）
+    // instead of starting immediately. The row's progress
+    // mirrors the job until it finishes.
     setState(() => _downloadProgress[chapter.id] = 0);
-    // Batch 30: fetchChapterPages inside the store throws on
-    // source failure — without a guard here the chapter row
-    // kept a stuck 0% progress forever and the error escaped
-    // as an unhandled async exception. A throw now lands in
-    // the same failure path as a null entry.
-    MangaDownloadEntry? entry;
-    try {
-      entry = await MangaDownloadStore.downloadChapter(
-        manga: _manga,
-        chapter: chapter,
-        onProgress: (done, total) {
-          if (mounted) {
-            setState(
-              () => _downloadProgress[chapter.id] = done / total,
-            );
+    final queue = MangaDownloadQueue.instance;
+    final job = queue.enqueue(_manga, chapter);
+    void listener() {
+      if (!mounted) return;
+      if (job.isFinished) {
+        queue.removeListener(listener);
+        setState(() {
+          _downloadProgress.remove(chapter.id);
+          if (job.status == MangaDownloadJobStatus.done) {
+            _downloadedKeys = {..._downloadedKeys, chapter.id};
           }
-        },
-      );
-    } catch (_) {
-      entry = null;
-    }
-    if (!mounted) return;
-    setState(() {
-      _downloadProgress.remove(chapter.id);
-      if (entry != null) {
-        _downloadedKeys = {..._downloadedKeys, chapter.id};
+        });
+        AnikumoDialog.showToast(
+          message: job.status == MangaDownloadJobStatus.done
+              ? S.t('下载完成，可离线阅读')
+              : S.t('下载失败，请检查网络后重试'),
+        );
+      } else {
+        setState(() => _downloadProgress[chapter.id] = job.progress);
       }
-    });
-    AnikumoDialog.showToast(
-      message: entry != null ? '下载完成，可离线阅读' : '下载失败，请检查网络后重试',
-    );
+    }
+
+    queue.addListener(listener);
+    listener();
   }
 
   @override
@@ -387,8 +387,8 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
       _thumbnails = const [];
     });
     AnikumoDialog.showToast(
-      message: '原源无可读章节，已自动切换到 '
-          '${MangaSources.byId(found.source)?.name ?? found.source}',
+      message: S.f('原源无可读章节，已自动切换到 {}',
+          [MangaSources.byId(found.source)?.name ?? found.source]),
     );
     _loadDetails();
     _loadDownloads();
@@ -441,7 +441,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
     );
     if (!mounted) return;
     setState(() => _isFavorite = nowFavorite);
-    AnikumoDialog.showToast(message: nowFavorite ? '已收藏' : '已取消收藏');
+    AnikumoDialog.showToast(message: nowFavorite ? S.t('已收藏') : S.t('已取消收藏'));
   }
 
   void _openReader(int chapterIndex, {int initialPage = 0}) {
@@ -544,7 +544,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
                         children: [
                           const SizedBox(width: 8),
                           IconButton(
-                            tooltip: '返回',
+                            tooltip: S.t('返回'),
                             onPressed: () => context.pop(),
                             icon: const Icon(AnikumoIcons.arrow_back_rounded,
                                 color: Colors.white),
@@ -560,7 +560,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
                                   ? VioletGlass.lavender
                                   : Colors.white,
                             ),
-                            tooltip: _isFavorite ? '取消收藏' : '收藏',
+                            tooltip: _isFavorite ? S.t('取消收藏') : S.t('收藏'),
                           ),
                           const SizedBox(width: 8),
                         ],
@@ -604,7 +604,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
                                   const SizedBox(height: 6),
                                   if (manga.author.isNotEmpty)
                                     Text(
-                                      '作者：${manga.author}',
+                                      S.f('作者：{}', [manga.author]),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: theme.textTheme.bodySmall
@@ -683,7 +683,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
           if (_thumbnails.isNotEmpty) ...[
             const SizedBox(height: 16),
             Text(
-              '内容预览',
+              S.t('内容预览'),
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -726,8 +726,8 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
             ),
             label: Text(
               _progress == null
-                  ? '开始阅读'
-                  : '继续阅读 · ${_progress!.chapterLabel} 第 ${_progress!.page + 1} 页',
+                  ? S.t('开始阅读')
+                  : S.f('继续阅读 · {} 第 {} 页', [_progress!.chapterLabel, _progress!.page + 1]),
             ),
           ),
           const SizedBox(height: 18),
@@ -744,7 +744,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '原源不可读，正在自动切换源…',
+                    S.t('原源不可读，正在自动切换源…'),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.primary,
                     ),
@@ -765,9 +765,8 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      '已从「$_switchedFromName」自动切换到'
-                      '「${MangaSources.byId(_current.source)?.name ?? _current.source}」'
-                      '（原源无可读章节）',
+                      S.f('已从「{}」自动切换到「{}」（原源无可读章节）',
+                          [_switchedFromName, MangaSources.byId(_current.source)?.name ?? _current.source]),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.primary,
                       ),
@@ -780,7 +779,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
           Row(
             children: [
               Text(
-                '章节（${_chapters.length}）',
+                S.f('章节（{}）', [_chapters.length]),
                 style: theme.textTheme.titleSmall
                     ?.copyWith(fontWeight: FontWeight.w700),
               ),
@@ -796,7 +795,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
                       : AnikumoIcons.arrow_upward_rounded,
                   size: 16,
                 ),
-                label: Text(_descending ? '最新在前' : '从头看起'),
+                label: Text(_descending ? S.t('最新在前') : S.t('从头看起')),
               ),
             ],
           ),
@@ -843,16 +842,16 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
                         });
                         _loadChapters();
                       },
-                      child: const Text('章节加载失败，点这里重试'),
+                      child: Text(S.t('章节加载失败，点这里重试')),
                     ),
                   ],
                 ),
               ),
             )
           else if (_chapters.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(28),
-              child: Center(child: Text('这个源暂时没有可读的章节')),
+            Padding(
+              padding: const EdgeInsets.all(28),
+              child: Center(child: Text(S.t('这个源暂时没有可读的章节'))),
             )
           else
             for (final chapter in visibleChapters)
@@ -913,7 +912,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
                               size: 20,
                             ),
                           ),
-                          tooltip: downloaded ? '已下载' : '下载本话（离线）',
+                          tooltip: downloaded ? S.t('已下载') : S.t('下载本话（离线）'),
                           onPressed:
                               downloaded ? null : () => _downloadChapter(chapter),
                         );
@@ -928,7 +927,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
             ListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(
-                '展开全部 ${displayedChapters.length} 章',
+                S.f('展开全部 {} 章', [displayedChapters.length]),
                 style: TextStyle(color: theme.colorScheme.primary),
               ),
               trailing: const Icon(AnikumoIcons.expand_more),
@@ -936,7 +935,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
             ),
           if (_pairedAnime.isNotEmpty) ...[
             const SizedBox(height: 22),
-            _railTitle('配套动漫'),
+            _railTitle(S.t('配套动漫')),
             const SizedBox(height: 10),
             SizedBox(
               height: 216,
@@ -957,7 +956,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
           ],
           if (_pairedNovels.isNotEmpty) ...[
             const SizedBox(height: 22),
-            _railTitle('配套小说'),
+            _railTitle(S.t('配套小说')),
             const SizedBox(height: 10),
             SizedBox(
               height: 218,
@@ -973,7 +972,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
           ],
           if (_authorWorks.isNotEmpty) ...[
             const SizedBox(height: 22),
-            _railTitle('作者的其他作品'),
+            _railTitle(S.t('作者的其他作品')),
             const SizedBox(height: 10),
             SizedBox(
               height: 208,
@@ -994,7 +993,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
           ],
           if (_tagRecs.isNotEmpty) ...[
             const SizedBox(height: 22),
-            _railTitle('你可能还喜欢'),
+            _railTitle(S.t('你可能还喜欢')),
             const SizedBox(height: 10),
             SizedBox(
               height: 208,
@@ -1009,6 +1008,26 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
                     '/manga/detail',
                     arguments: _tagRecs[index],
                   ),
+                ),
+              ),
+            ),
+          ],
+          // Batch 271: source comments entry. Shown for
+          // every JS source; the comments page itself
+          // reports when the source has no comment surface.
+          if (MangaSources.byId(manga.source) is JsBackedMangaSource) ...[
+            const SizedBox(height: 22),
+            _railTitle(S.t('评论')),
+            const SizedBox(height: 10),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(AnikumoIcons.chat_bubble_outline_rounded),
+              title: Text(S.t('查看评论')),
+              subtitle: Text(S.t('评论来自内容源，需要登录时请先在源管理里登录')),
+              trailing: const Icon(AnikumoIcons.chevron_right_rounded),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => MangaCommentsPage(manga: manga),
                 ),
               ),
             ),
@@ -1065,7 +1084,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
           Row(
             children: [
               Text(
-                '我的评分',
+                S.t('我的评分'),
                 style: theme.textTheme.titleSmall
                     ?.copyWith(fontWeight: FontWeight.w700),
               ),
@@ -1113,14 +1132,14 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
               if (stars > 0)
                 TextButton(
                   onPressed: () => _setStars(0),
-                  child: const Text('清除'),
+                  child: Text(S.t('清除')),
                 ),
             ],
           ),
           TextField(
             controller: _noteController,
-            decoration: const InputDecoration(
-              hintText: '写一句短评（仅本地保存）',
+            decoration: InputDecoration(
+              hintText: S.t('写一句短评（仅本地保存）'),
               isDense: true,
               border: OutlineInputBorder(),
             ),
@@ -1157,6 +1176,6 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
     setState(() => _rating = rating.stars <= 0 && rating.note.isEmpty
         ? null
         : rating);
-    AnikumoDialog.showToast(message: '短评已保存');
+    AnikumoDialog.showToast(message: S.t('短评已保存'));
   }
 }

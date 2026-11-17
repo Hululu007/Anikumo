@@ -4,6 +4,7 @@ import 'package:flutter_modular/flutter_modular.dart';
 import 'package:anikumo/bean/settings/settings_detail_scaffold.dart';
 import 'package:anikumo/bean/widget/state_presentation.dart';
 import 'package:anikumo/pages/settings/sync/sync_settings_widgets.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/services/sync/bangumi_sync_service.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
@@ -38,7 +39,7 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
 
   @override
   Widget build(BuildContext context) => SettingsDetailScaffold(
-        title: const Text('同步设置'),
+        title: Text(S.t('同步设置')),
         body: ListenableBuilder(
           listenable: BangumiSyncService(),
           builder: (context, _) {
@@ -60,10 +61,10 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
             final colors = Theme.of(context).colorScheme;
             final cards = [
               _SyncServiceCard(
-                title: '追番同步',
+                title: S.t('追番同步'),
                 service: 'Bangumi',
-                description: '与 Bangumi 保持相同的追番状态。',
-                content: '想看 · 在看 · 看过 · 搁置 · 抛弃',
+                description: S.t('与 Bangumi 保持相同的追番状态。'),
+                content: S.t('想看 · 在看 · 看过 · 搁置 · 抛弃'),
                 icon: AnikumoIcons.bookmarks_rounded,
                 color: colors.secondaryContainer,
                 onColor: colors.onSecondaryContainer,
@@ -76,14 +77,14 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
                             : bangumiEnabled
                                 ? _SyncStatus.enabled
                                 : _SyncStatus.disabled,
-                action: hasToken ? '管理追番同步' : '连接 Bangumi',
+                action: hasToken ? S.t('管理追番同步') : S.t('连接 Bangumi'),
                 onPressed: () => _open('/settings/bangumi/'),
               ),
               _SyncServiceCard(
-                title: '多设备同步',
+                title: S.t('多设备同步'),
                 service: 'WebDAV',
-                description: '通过自己的云盘，在其他设备接着看。',
-                content: '观看记录 · 收藏 · 弹幕屏蔽词',
+                description: S.t('通过自己的云盘，在其他设备接着看。'),
+                content: S.t('观看记录 · 收藏 · 弹幕屏蔽词'),
                 icon: AnikumoIcons.devices_rounded,
                 color: colors.tertiaryContainer,
                 onColor: colors.onTertiaryContainer,
@@ -94,16 +95,16 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
                             ? _SyncStatus.enabled
                             : _SyncStatus.contentRequired
                         : _SyncStatus.disabled,
-                action: hasServer ? '管理多设备同步' : '设置 WebDAV',
+                action: hasServer ? S.t('管理多设备同步') : S.t('设置 WebDAV'),
                 onPressed: () => _open('/settings/webdav/'),
               ),
             ];
             return SyncPageBody(
               children: [
-                const SyncPageIntro(
+                SyncPageIntro(
                   icon: AnikumoIcons.sync_rounded,
-                  title: '让追番保持同步',
-                  description: '选择需要的服务，也可以同时使用。',
+                  title: S.t('让追番保持同步'),
+                  description: S.t('选择需要的服务，也可以同时使用。'),
                 ),
                 LayoutBuilder(
                   builder: (context, constraints) {
@@ -245,7 +246,7 @@ class _SyncStatusChip extends StatelessWidget {
           Icon(status.icon, size: 16, color: foreground),
           const SizedBox(width: 6),
           Flexible(
-            child: Text(status.label,
+            child: Text(S.t(status.label),
                 style: Theme.of(context)
                     .textTheme
                     .labelMedium

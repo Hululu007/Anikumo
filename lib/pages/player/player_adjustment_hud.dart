@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:anikumo/utils/format.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 enum PlayerAdjustmentHudType {
   brightness,
@@ -740,7 +741,7 @@ class _PlayerSeekHudState extends State<PlayerSeekHud> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  _displayCancelPending ? '松开取消' : _offsetText,
+                                  _displayCancelPending ? S.t('松开取消') : _offsetText,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: Theme.of(context)
@@ -754,7 +755,7 @@ class _PlayerSeekHudState extends State<PlayerSeekHud> {
                                 const SizedBox(height: 1),
                                 Text(
                                   _displayCancelPending
-                                      ? '移回画面继续调整'
+                                      ? S.t('移回画面继续调整')
                                       : '${durationToString(_displayCurrentPosition)} / ${durationToString(_displayDuration)}',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,

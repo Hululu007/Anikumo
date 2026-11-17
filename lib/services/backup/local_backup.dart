@@ -1,5 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:archive/archive.dart';
 
 import 'package:anikumo/models/novel_item.dart';
 import 'package:anikumo/modules/collect/collect_module.dart';
@@ -135,6 +138,80 @@ class LocalBackup {
           GStorage.getSetting(SettingsKeys.novelInstalledSourcesJson),
     };
     return const JsonEncoder.withIndent('  ').convert(payload);
+  }
+
+  /// Batch 271: the full bundle — the same JSON payload
+  /// plus the downloaded manga chapters' page files, so a
+  /// restore brings offline reading back too (the plain
+  /// JSON backup only carries the download records, and
+  /// apply() skips records whose files are missing).
+  static Future<Uint8List> exportBundleBytes() async {
+    final archive = Archive();
+    final jsonBytes = utf8.encode(await exportJson());
+    archive.addFile(ArchiveFile('backup.json', jsonBytes.length, jsonBytes));
+    final root = await MangaDownloadStore.root();
+    if (await root.exists()) {
+      await for (final entity in root.list(recursive: true)) {
+        if (entity is! File) continue;
+        final relative = entity.path
+            .substring(root.path.length + 1)
+            .replaceAll('\\', '/');
+        final bytes = await entity.readAsBytes();
+        archive.addFile(
+          ArchiveFile('manga_downloads/$relative', bytes.length, bytes),
+        );
+      }
+    }
+    return Uint8List.fromList(ZipEncoder().encode(archive));
+  }
+
+  /// Whether [bytes] look like a bundle zip (PK header).
+  static bool isBundle(List<int> bytes) =>
+      bytes.length > 2 && bytes[0] == 0x50 && bytes[1] == 0x4B;
+
+  /// The backup.json text inside a bundle, or null.
+  static String? bundleJson(List<int> zipBytes) {
+    try {
+      final archive = ZipDecoder().decodeBytes(zipBytes);
+      for (final file in archive.files) {
+        if (file.name == 'backup.json') {
+          return utf8.decode(file.content as List<int>);
+        }
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// Extracts a bundle's downloaded-chapter files into
+  /// the manga downloads root; returns how many files
+  /// landed. Entries outside manga_downloads/ and any
+  /// path escaping the root are refused.
+  static Future<int> extractBundleFiles(List<int> zipBytes) async {
+    final root = await MangaDownloadStore.root();
+    var written = 0;
+    try {
+      final archive = ZipDecoder().decodeBytes(zipBytes);
+      for (final file in archive.files) {
+        if (!file.isFile) continue;
+        final name = file.name.replaceAll('\\', '/');
+        if (!name.startsWith('manga_downloads/')) continue;
+        final relative = name.substring('manga_downloads/'.length);
+        if (relative.isEmpty ||
+            relative.split('/').contains('..') ||
+            relative.startsWith('/')) {
+          continue;
+        }
+        // The index is merged by apply() from the JSON
+        // payload; never overwrite the local one wholesale
+        // (that would orphan downloads the backup lacks).
+        if (relative == 'index.json') continue;
+        final target = File('${root.path}/$relative');
+        await target.parent.create(recursive: true);
+        await target.writeAsBytes(file.content as List<int>);
+        written++;
+      }
+    } catch (_) {}
+    return written;
   }
 
   static Map<String, dynamic> downloadRecordToJson(DownloadRecord record) {

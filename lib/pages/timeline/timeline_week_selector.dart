@@ -61,9 +61,11 @@ class _TimelineWeekSelector extends StatelessWidget {
             Tab(
               height: heightFor(scaler) - 8,
               child: Semantics(
-                label: '星期${_weekdays[day]}'
-                    '${day == todayIndex ? '，今天' : ''}'
-                    '${isLoading ? '，加载中' : '，${counts[day]}部'}',
+                label: S.f('星期{}{}{}', [
+                  S.t(_weekdays[day]),
+                  day == todayIndex ? S.t('，今天') : '',
+                  isLoading ? S.t('，加载中') : S.f('，{}部', [counts[day]]),
+                ]),
                 excludeSemantics: true,
                 child: SizedBox(
                   width: scrollable ? minTabWidth : null,
@@ -73,7 +75,7 @@ class _TimelineWeekSelector extends StatelessWidget {
                       Text(
                         weekDates != null
                             ? '${weekDates![day].day}'
-                            : _weekdays[day],
+                            : S.t(_weekdays[day]),
                         style: theme.textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.w800,
                           color: day == todayIndex
@@ -84,8 +86,10 @@ class _TimelineWeekSelector extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${day == todayIndex ? '今天' : '周${_weekdays[day]}'}'
-                        ' · ${isLoading ? '—' : '${counts[day]}部'}',
+                        S.f('{} · {}', [
+                          day == todayIndex ? S.t('今天') : S.f('周{}', [S.t(_weekdays[day])]),
+                          isLoading ? '—' : S.f('{}部', [counts[day]]),
+                        ]),
                         style: theme.textTheme.labelSmall?.copyWith(
                           fontWeight: FontWeight.w500,
                         ),

@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:anikumo/bean/dialog/dialog_helper.dart';
 import 'package:anikumo/bean/settings/settings_dropdown_tile.dart';
 import 'package:anikumo/modules/danmaku/danmaku_ch_convert.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
 
 extension _ConversionLabel on DanmakuChConvert {
   String get label => switch (this) {
-    DanmakuChConvert.none => '不转换',
-    DanmakuChConvert.simplified => '转为简体',
-    DanmakuChConvert.traditional => '转为繁体',
+    DanmakuChConvert.none => S.t('不转换'),
+    DanmakuChConvert.simplified => S.t('转为简体'),
+    DanmakuChConvert.traditional => S.t('转为繁体'),
   };
 }
 
@@ -33,7 +34,7 @@ class _DanmakuChConvertTileState extends State<DanmakuChConvertTile> {
       await GStorage.putSetting(SettingsKeys.danmakuChConvert, mode.value);
     } catch (_) {
       if (mounted) {
-        AnikumoDialog.showToast(context: context, message: '简繁转换设置保存失败，请重试');
+        AnikumoDialog.showToast(context: context, message: S.t('简繁转换设置保存失败，请重试'));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -50,8 +51,8 @@ class _DanmakuChConvertTileState extends State<DanmakuChConvertTile> {
         );
         return SettingsDropdownTile<DanmakuChConvert>(
           leading: AnikumoIcons.translate_rounded,
-          title: const Text('简繁转换'),
-          description: const Text('下次联网加载弹幕时生效，已缓存弹幕保留下载时的文字'),
+          title: Text(S.t('简繁转换')),
+          description: Text(S.t('下次联网加载弹幕时生效，已缓存弹幕保留下载时的文字')),
           enabled: !_saving,
           value: mode,
           options: {

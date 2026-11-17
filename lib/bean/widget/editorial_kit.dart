@@ -1,4 +1,5 @@
 import 'package:anikumo/utils/tap_debouncer.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:anikumo/bean/card/network_img_layer.dart';
 import 'package:anikumo/modules/bangumi/bangumi_item.dart';
@@ -238,8 +239,8 @@ class EditorialHero extends StatelessWidget {
                     [
                       if (item.airDate.length >= 4)
                         item.airDate.substring(0, 4),
-                      if (item.rank > 0) 'Bangumi 排名 ${item.rank}',
-                      if (item.votes > 0) '${item.votes} 人评分',
+                      if (item.rank > 0) S.f('Bangumi 排名 {}', [item.rank]),
+                      if (item.votes > 0) S.f('{} 人评分', [item.votes]),
                     ].join(' · '),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -513,7 +514,7 @@ class _EditorialRankRowState extends State<EditorialRankRow> {
                         [
                           if (widget.item.airDate.length >= 4)
                             widget.item.airDate.substring(0, 4),
-                          if (widget.item.votes > 0) '${widget.item.votes} 人评分',
+                          if (widget.item.votes > 0) S.f('{} 人评分', [widget.item.votes]),
                         ].join(' · '),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

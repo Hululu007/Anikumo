@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -80,18 +81,18 @@ class _MangaLoginPageState extends State<MangaLoginPage> {
     final username = _usernameController.text.trim();
     final password = _passwordController.text;
     if (username.isEmpty || password.isEmpty) {
-      AnikumoDialog.showToast(message: '账号和密码都要填');
+      AnikumoDialog.showToast(message: S.t('账号和密码都要填'));
       return;
     }
     setState(() => _busy = true);
     try {
       await source.login(username, password);
       if (!mounted) return;
-      AnikumoDialog.showToast(message: '登录成功');
+      AnikumoDialog.showToast(message: S.t('登录成功'));
       await _probe();
     } catch (e) {
       if (!mounted) return;
-      AnikumoDialog.showToast(message: '登录失败：${friendlyError(e)}');
+      AnikumoDialog.showToast(message: S.f('登录失败：{}', [friendlyError(e)]));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -104,11 +105,11 @@ class _MangaLoginPageState extends State<MangaLoginPage> {
     try {
       await source.logout();
       if (!mounted) return;
-      AnikumoDialog.showToast(message: '已退出登录');
+      AnikumoDialog.showToast(message: S.t('已退出登录'));
       await _probe();
     } catch (e) {
       if (!mounted) return;
-      AnikumoDialog.showToast(message: '退出失败：${friendlyError(e)}');
+      AnikumoDialog.showToast(message: S.f('退出失败：{}', [friendlyError(e)]));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -127,12 +128,12 @@ class _MangaLoginPageState extends State<MangaLoginPage> {
     final theme = Theme.of(context);
     final source = _source;
     return Scaffold(
-      appBar: AppBar(title: Text(source?.name ?? '源账号')),
+      appBar: AppBar(title: Text(source?.name ?? S.t('源账号'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
         children: [
           if (source == null)
-            const Text('这个源已经不存在了')
+            Text(S.t('这个源已经不存在了'))
           else if (_probing)
             const Padding(
               padding: EdgeInsets.only(top: 48),
@@ -145,11 +146,11 @@ class _MangaLoginPageState extends State<MangaLoginPage> {
               color: theme.colorScheme.error,
             ),
             const SizedBox(height: 12),
-            Text('读取源的账号信息失败', style: theme.textTheme.titleMedium),
+            Text(S.t('读取源的账号信息失败'), style: theme.textTheme.titleMedium),
             const SizedBox(height: 6),
             Text(_probeError!, style: theme.textTheme.bodySmall),
             const SizedBox(height: 16),
-            FilledButton.tonal(onPressed: _probe, child: const Text('重试')),
+            FilledButton.tonal(onPressed: _probe, child: Text(S.t('重试'))),
           ] else if (_info == null) ...[
             Icon(
               AnikumoIcons.account_circle_outlined,
@@ -157,10 +158,10 @@ class _MangaLoginPageState extends State<MangaLoginPage> {
               color: theme.colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 12),
-            Text('这个源没有账号登录', style: theme.textTheme.titleMedium),
+            Text(S.t('这个源没有账号登录'), style: theme.textTheme.titleMedium),
             const SizedBox(height: 6),
             Text(
-              '它的内容不需要登录即可使用；如果某个功能提示要登录，可能是这个源的登录方式比较特殊，本 App 暂不支持。',
+              S.t('它的内容不需要登录即可使用；如果某个功能提示要登录，可能是这个源的登录方式比较特殊，本 App 暂不支持。'),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -172,10 +173,10 @@ class _MangaLoginPageState extends State<MangaLoginPage> {
               color: theme.colorScheme.primary,
             ),
             const SizedBox(height: 12),
-            Text('已登录', style: theme.textTheme.titleMedium),
+            Text(S.t('已登录'), style: theme.textTheme.titleMedium),
             const SizedBox(height: 6),
             Text(
-              '这个源的会话已经生效，搜索、详情和收藏等功能会带登录状态请求。',
+              S.t('这个源的会话已经生效，搜索、详情和收藏等功能会带登录状态请求。'),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -189,16 +190,16 @@ class _MangaLoginPageState extends State<MangaLoginPage> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('退出登录'),
+                  : Text(S.t('退出登录')),
             ),
           ] else ...[
             Text(
-              '登录 ${source.name}',
+              S.f('登录 {}', [source.name]),
               style: theme.textTheme.titleMedium,
             ),
             const SizedBox(height: 6),
             Text(
-              '账号密码只交给这个源自己的登录函数，App 不保存密码。',
+              S.t('账号密码只交给这个源自己的登录函数，App 不保存密码。'),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -206,8 +207,8 @@ class _MangaLoginPageState extends State<MangaLoginPage> {
             const SizedBox(height: 20),
             TextField(
               controller: _usernameController,
-              decoration: const InputDecoration(
-                labelText: '账号',
+              decoration: InputDecoration(
+                labelText: S.t('账号'),
                 border: OutlineInputBorder(),
               ),
               textInputAction: TextInputAction.next,
@@ -217,7 +218,7 @@ class _MangaLoginPageState extends State<MangaLoginPage> {
             TextField(
               controller: _passwordController,
               decoration: InputDecoration(
-                labelText: '密码',
+                labelText: S.t('密码'),
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   icon: Icon(
@@ -243,13 +244,13 @@ class _MangaLoginPageState extends State<MangaLoginPage> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('登录'),
+                  : Text(S.t('登录')),
             ),
             if (_info!.registerWebsite != null) ...[
               const SizedBox(height: 8),
               TextButton(
                 onPressed: _openRegister,
-                child: const Text('没有账号？去注册'),
+                child: Text(S.t('没有账号？去注册')),
               ),
             ],
           ],

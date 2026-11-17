@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:anikumo/bean/widget/bangumi_avatar.dart';
 import 'package:anikumo/modules/comments/comment_item.dart';
@@ -87,7 +88,7 @@ class CommentsCard extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
-                                  '我的吐槽',
+                                  S.t('我的吐槽'),
                                   style: TextStyle(
                                       fontSize: 12,
                                       color: Theme.of(context)

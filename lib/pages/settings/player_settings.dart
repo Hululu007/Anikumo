@@ -8,6 +8,7 @@ import 'package:anikumo/bean/settings/settings_dropdown_tile.dart';
 import 'package:anikumo/pages/player/controller/player_aspect_ratio.dart';
 import 'package:anikumo/pages/player/pip_settings_sheet.dart';
 import 'package:anikumo/pages/settings/low_memory_mode_settings.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/utils/constants.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/services/player/pip_utils.dart';
@@ -104,16 +105,16 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
   Future<void> resetPlayerSettings() async {
     final bool shouldReset = await AnikumoDialog.show<bool>(
           builder: (context) => AlertDialog(
-            title: const Text('恢复默认播放设置'),
-            content: const Text('播放设置、硬件解码器、视频渲染器和超分辨率设置将恢复为默认值。'),
+            title: Text(S.t('恢复默认播放设置')),
+            content: Text(S.t('播放设置、硬件解码器、视频渲染器和超分辨率设置将恢复为默认值。')),
             actions: [
               TextButton(
                 onPressed: () => AnikumoDialog.dismiss(popWith: false),
-                child: Text('取消'),
+                child: Text(S.t('取消')),
               ),
               TextButton(
                 onPressed: () => AnikumoDialog.dismiss(popWith: true),
-                child: Text('恢复默认'),
+                child: Text(S.t('恢复默认')),
               ),
             ],
           ),
@@ -127,7 +128,7 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
     }
     if (!mounted) return;
     setState(_loadSettingsFromStorage);
-    AnikumoDialog.showToast(message: '已恢复默认播放设置');
+    AnikumoDialog.showToast(message: S.t('已恢复默认播放设置'));
   }
 
   void updateDefaultPlaySpeed(double speed) {
@@ -164,7 +165,8 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
 
   Future<void> updateButtonSkipTime() async {
     final int? newButtonSkipTime = await _showSkipTimeChangeDialog(
-        title: '顶部按钮快进时长', initialValue: playerButtonSkipTime.toString());
+        title: S.t('顶部按钮快进时长'),
+        initialValue: playerButtonSkipTime.toString());
 
     if (newButtonSkipTime != null &&
         newButtonSkipTime != playerButtonSkipTime) {
@@ -200,7 +202,7 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
           TextButton(
             onPressed: () => AnikumoDialog.dismiss(),
             child: Text(
-              '取消',
+              S.t('取消'),
               style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
           ),
@@ -209,17 +211,17 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
               final int? newValue = int.tryParse(input);
 
               if (newValue == null) {
-                AnikumoDialog.showToast(message: '请输入数字');
+                AnikumoDialog.showToast(message: S.t('请输入数字'));
                 return;
               }
 
               if (newValue <= 0) {
-                AnikumoDialog.showToast(message: '请输入大于0的数字');
+                AnikumoDialog.showToast(message: S.t('请输入大于0的数字'));
                 return;
               }
               AnikumoDialog.dismiss(popWith: newValue);
             },
-            child: const Text('确定'),
+            child: Text(S.t('确定')),
           ),
         ],
       );
@@ -234,9 +236,9 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
 
   String formatPlayerControllerLayerDisappearSeconds(double seconds) {
     if (seconds == seconds.roundToDouble()) {
-      return '${seconds.toInt()} 秒';
+      return S.f('{} 秒', [seconds.toInt()]);
     }
-    return '${seconds.toStringAsFixed(1)} 秒';
+    return S.f('{} 秒', [seconds.toStringAsFixed(1)]);
   }
 
   void updatePlayerControllerLayerDisappearSeconds(double seconds) {
@@ -255,11 +257,11 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
   @override
   Widget build(BuildContext context) {
     return SettingsDetailScaffold(
-      title: const Text('播放设置'),
+      title: Text(S.t('播放设置')),
       body: SettingsList(
         sections: [
           SettingsSection(
-            title: Text('解码与渲染'),
+            title: Text(S.t('解码与渲染')),
             tiles: [
               SettingsTile.switchTile(
                 leading: AnikumoIcons.memory_rounded,
@@ -269,7 +271,7 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
                       SettingsKeys.hAenable, hAenable);
                   setState(() {});
                 },
-                title: Text('硬件解码'),
+                title: Text(S.t('硬件解码')),
                 initialValue: hAenable,
               ),
               SettingsTile(
@@ -277,8 +279,8 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
                 onPressed: (_) async {
                   await context.pushNamed('/settings/player/decoder');
                 },
-                title: Text('硬件解码器'),
-                description: Text('仅在硬件解码启用时生效'),
+                title: Text(S.t('硬件解码器')),
+                description: Text(S.t('仅在硬件解码启用时生效')),
               ),
               if (Platform.isAndroid) ...[
                 SettingsTile(
@@ -286,8 +288,8 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
                   onPressed: (_) async {
                     await context.pushNamed('/settings/player/renderer');
                   },
-                  title: Text('视频渲染器'),
-                  description: Text('选择视频输出方式'),
+                  title: Text(S.t('视频渲染器')),
+                  description: Text(S.t('选择视频输出方式')),
                 ),
               ],
               const LowMemoryModeSettingsTile(),
@@ -301,8 +303,8 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
                         androidEnableOpenSLES);
                     setState(() {});
                   },
-                  title: Text('低延迟音频'),
-                  description: Text('启用OpenSLES音频输出以降低延时'),
+                  title: Text(S.t('低延迟音频')),
+                  description: Text(S.t('启用OpenSLES音频输出以降低延时')),
                   initialValue: androidEnableOpenSLES,
                 ),
               ],
@@ -311,12 +313,12 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
                 onPressed: (_) async {
                   context.pushNamed('/settings/player/super');
                 },
-                title: Text('超分辨率'),
+                title: Text(S.t('超分辨率')),
               ),
             ],
           ),
           SettingsSection(
-            title: Text('播放行为'),
+            title: Text(S.t('播放行为')),
             tiles: [
               SettingsTile.switchTile(
                 leading: AnikumoIcons.headphones_rounded,
@@ -326,8 +328,8 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
                       SettingsKeys.backgroundPlayback, backgroundPlayback);
                   setState(() {});
                 },
-                title: Text('后台播放'),
-                description: Text('应用退到后台或熄屏时继续播放音频'),
+                title: Text(S.t('后台播放')),
+                description: Text(S.t('应用退到后台或熄屏时继续播放音频')),
                 initialValue: backgroundPlayback,
               ),
               SettingsTile.switchTile(
@@ -338,8 +340,8 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
                       SettingsKeys.playResume, playResume);
                   setState(() {});
                 },
-                title: Text('自动跳转'),
-                description: Text('跳转到上次播放位置'),
+                title: Text(S.t('自动跳转')),
+                description: Text(S.t('跳转到上次播放位置')),
                 initialValue: playResume,
               ),
               SettingsTile.switchTile(
@@ -350,8 +352,8 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
                       SettingsKeys.autoPlayNext, autoPlayNext);
                   setState(() {});
                 },
-                title: Text('自动连播'),
-                description: Text('当前视频播放完毕后自动播放下一集'),
+                title: Text(S.t('自动连播')),
+                description: Text(S.t('当前视频播放完毕后自动播放下一集')),
                 initialValue: autoPlayNext,
               ),
               if (Platform.isAndroid)
@@ -366,8 +368,8 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
                     await PipUtils.syncAndroidAutoEnterPIP();
                     setState(() {});
                   },
-                  title: Text('自动进入画中画'),
-                  description: Text('切到后台时，自动进入画中画'),
+                  title: Text(S.t('自动进入画中画')),
+                  description: Text(S.t('切到后台时，自动进入画中画')),
                   initialValue: androidAutoEnterPIP,
                 ),
               if (!isDesktop())
@@ -377,8 +379,8 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
                     await showPipSettingsSheet(context);
                     setState(() {});
                   },
-                  title: Text('画中画设置'),
-                  description: Text('应用内小窗、进入漫画/小说时隐藏与静音'),
+                  title: Text(S.t('画中画设置')),
+                  description: Text(S.t('应用内小窗、进入漫画/小说时隐藏与静音')),
                 ),
               SettingsTile.switchTile(
                 leading: AnikumoIcons.block_rounded,
@@ -388,8 +390,8 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
                       SettingsKeys.forceAdBlocker, forceAdBlocker);
                   setState(() {});
                 },
-                title: Text('广告过滤'),
-                description: Text('强制启用HLS广告过滤，忽略规则设置'),
+                title: Text(S.t('广告过滤')),
+                description: Text(S.t('强制启用HLS广告过滤，忽略规则设置')),
                 initialValue: forceAdBlocker,
               ),
               SettingsTile.switchTile(
@@ -401,8 +403,8 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
                       playerDisableAnimations);
                   setState(() {});
                 },
-                title: Text('禁用动画'),
-                description: Text('禁用播放器内的过渡动画'),
+                title: Text(S.t('禁用动画')),
+                description: Text(S.t('禁用播放器内的过渡动画')),
                 initialValue: playerDisableAnimations,
               ),
               if (!isDesktop())
@@ -415,10 +417,31 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
                         brightnessVolumeGesture);
                     setState(() {});
                   },
-                  title: Text('滑动手势'),
-                  description: Text('竖向滑动调节音量和亮度'),
+                  title: Text(S.t('滑动手势')),
+                  description: Text(S.t('竖向滑动调节音量和亮度')),
                   initialValue: brightnessVolumeGesture,
                 ),
+              // Batch 273 (#54): double-tap action choice.
+              SettingsDropdownTile<String>(
+                leading: AnikumoIcons.swipe_vertical_rounded,
+                title: Text(S.t('双击动作')),
+                description: Text(S.t('双击视频区域时执行的操作')),
+                value: GStorage.getSetting(SettingsKeys.doubleTapAction),
+                options: {
+                  'toggle': S.t('播放 / 暂停'),
+                  'seek': S.t('两侧快退 / 快进 10 秒'),
+                  'fullscreen': S.t('切换全屏'),
+                },
+                fallbackLabel: S.t('播放 / 暂停'),
+                onChanged: (value) async {
+                  if (value == null) return;
+                  await GStorage.putSetting<String>(
+                    SettingsKeys.doubleTapAction,
+                    value,
+                  );
+                  setState(() {});
+                },
+              ),
               SettingsTile.switchTile(
                 leading: AnikumoIcons.visibility_off_rounded,
                 onToggle: (value) async {
@@ -427,26 +450,26 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
                       SettingsKeys.privateMode, privateMode);
                   setState(() {});
                 },
-                title: Text('隐身模式'),
-                description: Text('不保留观看记录'),
+                title: Text(S.t('隐身模式')),
+                description: Text(S.t('不保留观看记录')),
                 initialValue: privateMode,
               ),
             ],
           ),
           SettingsSection(
-            title: Text('播放增强'),
+            title: Text(S.t('播放增强')),
             tiles: [
               SettingsDropdownTile<String>(
                 leading: AnikumoIcons.memory_rounded,
-                title: const Text('缓冲档位'),
-                description: const Text('流畅优先使用大缓冲；省流限制缓冲大小'),
+                title: Text(S.t('缓冲档位')),
+                description: Text(S.t('流畅优先使用大缓冲；省流限制缓冲大小')),
                 value: bufferProfile,
-                options: const {
-                  'auto': '自动（跟随网络与低内存）',
-                  'smooth': '流畅优先',
-                  'saver': '省流',
+                options: {
+                  'auto': S.t('自动（跟随网络与低内存）'),
+                  'smooth': S.t('流畅优先'),
+                  'saver': S.t('省流'),
                 },
-                fallbackLabel: '自动',
+                fallbackLabel: S.t('自动'),
                 onChanged: (value) async {
                   await GStorage.putSetting<String>(
                       SettingsKeys.bufferProfile, value);
@@ -457,19 +480,19 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
               ),
               SettingsDropdownTile<int>(
                 leading: AnikumoIcons.skip_next_rounded,
-                title: const Text('默认跳过片头'),
-                description: const Text('每集开始自动跳过的秒数，可按番单独设置'),
+                title: Text(S.t('默认跳过片头')),
+                description: Text(S.t('每集开始自动跳过的秒数，可按番单独设置')),
                 value: defaultOpSkipSeconds,
-                options: const {
-                  0: '关闭',
-                  60: '60 秒',
-                  75: '75 秒',
-                  85: '85 秒',
-                  90: '90 秒',
-                  100: '100 秒',
-                  120: '120 秒',
+                options: {
+                  0: S.t('关闭'),
+                  60: S.f('{} 秒', [60]),
+                  75: S.f('{} 秒', [75]),
+                  85: S.f('{} 秒', [85]),
+                  90: S.f('{} 秒', [90]),
+                  100: S.f('{} 秒', [100]),
+                  120: S.f('{} 秒', [120]),
                 },
-                fallbackLabel: '关闭',
+                fallbackLabel: S.t('关闭'),
                 onChanged: (value) async {
                   await GStorage.putSetting<int>(
                       SettingsKeys.defaultOpSkipSeconds, value);
@@ -480,18 +503,18 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
               ),
               SettingsDropdownTile<int>(
                 leading: AnikumoIcons.skip_previous_rounded,
-                title: const Text('默认跳过片尾'),
-                description: const Text('片尾剩余秒数内自动连播下一集'),
+                title: Text(S.t('默认跳过片尾')),
+                description: Text(S.t('片尾剩余秒数内自动连播下一集')),
                 value: defaultEdSkipSeconds,
-                options: const {
-                  0: '关闭',
-                  30: '30 秒',
-                  45: '45 秒',
-                  60: '60 秒',
-                  90: '90 秒',
-                  120: '120 秒',
+                options: {
+                  0: S.t('关闭'),
+                  30: S.f('{} 秒', [30]),
+                  45: S.f('{} 秒', [45]),
+                  60: S.f('{} 秒', [60]),
+                  90: S.f('{} 秒', [90]),
+                  120: S.f('{} 秒', [120]),
                 },
-                fallbackLabel: '关闭',
+                fallbackLabel: S.t('关闭'),
                 onChanged: (value) async {
                   await GStorage.putSetting<int>(
                       SettingsKeys.defaultEdSkipSeconds, value);
@@ -508,14 +531,14 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
                       SettingsKeys.autoSwitchRoad, autoSwitchRoad);
                   setState(() {});
                 },
-                title: Text('播放失败自动换线'),
-                description: Text('当前线路解析失败时，自动尝试同一来源的其他线路'),
+                title: Text(S.t('播放失败自动换线')),
+                description: Text(S.t('当前线路解析失败时，自动尝试同一来源的其他线路')),
                 initialValue: autoSwitchRoad,
               ),
             ],
           ),
           SettingsSection(
-            title: Text('诊断'),
+            title: Text(S.t('诊断')),
             tiles: [
               SettingsTile.switchTile(
                 leading: AnikumoIcons.error_outline_rounded,
@@ -525,8 +548,8 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
                       SettingsKeys.showPlayerError, showPlayerError);
                   setState(() {});
                 },
-                title: Text('错误提示'),
-                description: Text('显示播放器内部错误提示'),
+                title: Text(S.t('错误提示')),
+                description: Text(S.t('显示播放器内部错误提示')),
                 initialValue: showPlayerError,
               ),
               SettingsTile.switchTile(
@@ -537,27 +560,30 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
                       SettingsKeys.playerDebugMode, playerDebugMode);
                   setState(() {});
                 },
-                title: Text('调试模式'),
-                description: Text('记录播放器内部日志'),
+                title: Text(S.t('调试模式')),
+                description: Text(S.t('记录播放器内部日志')),
                 initialValue: playerDebugMode,
               ),
               SettingsDropdownTile<int>(
                 leading: AnikumoIcons.receipt_long_rounded,
-                title: const Text('日志等级'),
-                description: const Text('播放器内部日志等级'),
+                title: Text(S.t('日志等级')),
+                description: Text(S.t('播放器内部日志等级')),
                 value: playerLogLevel,
-                options: playerLogLevelMap,
+                options: {
+                  for (final entry in playerLogLevelMap.entries)
+                    entry.key: S.t(entry.value),
+                },
                 fallbackLabel: '???',
                 onChanged: updatePlayerLogLevel,
               ),
             ],
           ),
           SettingsSection(
-            title: Text('播放参数'),
+            title: Text(S.t('播放参数')),
             tiles: [
               SettingsSliderTile(
                 leading: AnikumoIcons.speed_rounded,
-                title: Text('默认倍速'),
+                title: Text(S.t('默认倍速')),
                 value: defaultPlaySpeed,
                 min: 0.25,
                 max: 3,
@@ -568,8 +594,8 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
               ),
               SettingsSliderTile(
                 leading: AnikumoIcons.fast_forward_rounded,
-                title: Text('长按倍速'),
-                description: Text('长按屏幕或按住方向键时的倍速'),
+                title: Text(S.t('长按倍速')),
+                description: Text(S.t('长按屏幕或按住方向键时的倍速')),
                 value: defaultShortcutForwardPlaySpeed,
                 min: 1.25,
                 max: 3,
@@ -580,13 +606,13 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
               ),
               SettingsSliderTile(
                 leading: AnikumoIcons.swap_horiz_rounded,
-                title: Text('方向键跳转'),
-                description: Text('左右方向键的快进/快退秒数'),
+                title: Text(S.t('方向键跳转')),
+                description: Text(S.t('左右方向键的快进/快退秒数')),
                 value: playerArrowKeySkipTime.toDouble(),
                 min: 0,
                 max: 15,
                 divisions: 15,
-                valueLabel: '$playerArrowKeySkipTime 秒',
+                valueLabel: S.f('{} 秒', [playerArrowKeySkipTime]),
                 onChanged: (value) {
                   final newArrowKeySkipTime = value.toInt();
                   if (newArrowKeySkipTime == playerArrowKeySkipTime) {
@@ -604,14 +630,14 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
                 onPressed: (_) async {
                   await updateButtonSkipTime();
                 },
-                title: Text('跳过时长'),
-                description: Text('顶栏跳过按钮的秒数'),
-                value: Text('$playerButtonSkipTime 秒'),
+                title: Text(S.t('跳过时长')),
+                description: Text(S.t('顶栏跳过按钮的秒数')),
+                value: Text(S.f('{} 秒', [playerButtonSkipTime])),
               ),
               SettingsSliderTile(
                 leading: AnikumoIcons.timer_rounded,
-                title: Text('控制栏消失时间'),
-                description: Text('播放控制器自动隐藏前的停留时长'),
+                title: Text(S.t('控制栏消失时间')),
+                description: Text(S.t('播放控制器自动隐藏前的停留时长')),
                 value: playerControllerLayerDisappearSeconds,
                 min: _minPlayerControllerLayerDisappearSeconds,
                 max: _maxPlayerControllerLayerDisappearSeconds,
@@ -622,10 +648,11 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
               ),
               SettingsDropdownTile<PlayerAspectRatio>(
                 leading: AnikumoIcons.aspect_ratio_rounded,
-                title: const Text('默认视频比例'),
+                title: Text(S.t('默认视频比例')),
                 value: defaultAspectRatioMode,
                 options: {
-                  for (final mode in PlayerAspectRatio.values) mode: mode.label,
+                  for (final mode in PlayerAspectRatio.values)
+                    mode: S.t(mode.label),
                 },
                 onChanged: updateDefaultAspectRatioMode,
               ),
@@ -636,8 +663,8 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
               SettingsTile(
                 leading: AnikumoIcons.settings_backup_restore_rounded,
                 onPressed: (_) => resetPlayerSettings(),
-                title: Text('恢复默认设置'),
-                description: Text('将播放相关设置恢复为默认值'),
+                title: Text(S.t('恢复默认设置')),
+                description: Text(S.t('将播放相关设置恢复为默认值')),
               ),
             ],
           ),

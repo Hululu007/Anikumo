@@ -29,6 +29,7 @@ import 'package:anikumo/utils/media.dart';
 import 'package:anikumo/utils/async_session.dart';
 import 'package:anikumo/services/platform/display_mode_service.dart';
 import 'package:anikumo/pages/video/video_fullscreen_controller.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 part 'video_controller.g.dart';
 
@@ -418,7 +419,7 @@ abstract class _VideoPageController with Store implements Disposable {
     final titleFromRoad = roadData.identifier[index];
     final episodeTitle = downloadEpisode?.episodeName.isNotEmpty == true
         ? downloadEpisode!.episodeName
-        : (titleFromRoad.isNotEmpty ? titleFromRoad : '第$episodeNumber集');
+        : (titleFromRoad.isNotEmpty ? titleFromRoad : S.f('第{}集', [episodeNumber]));
     return EpisodeRef.offline(
       listIndex: episode,
       roadIndex: targetRoad,
@@ -563,7 +564,7 @@ abstract class _VideoPageController with Store implements Disposable {
       if (result.ok) {
         unawaited(RoadPreference.save(currentPlugin.name, roadIndex));
         if (roadIndex != currentRoad) {
-          AnikumoDialog.showToast(message: '已自动切换到线路 ${roadIndex + 1}');
+          AnikumoDialog.showToast(message: S.f('已自动切换到线路 {}', [roadIndex + 1]));
         }
         return;
       }
@@ -577,7 +578,7 @@ abstract class _VideoPageController with Store implements Disposable {
     if (attempted == 0) {
       AnikumoLogger().e(
           'VideoPageController: failed to resolve online episode. road=$currentRoad, episode=$episode');
-      _failLoading('集数解析失败');
+      _failLoading(S.t('集数解析失败'));
     } else if (lastError != null) {
       _failLoading(lastError);
     } else {
@@ -598,7 +599,7 @@ abstract class _VideoPageController with Store implements Disposable {
     if (resolvedEpisode == null) {
       AnikumoLogger().e(
           'VideoPageController: failed to resolve offline episode. road=${selection.road}, episode=${selection.episode}');
-      _failLoading('集数解析失败');
+      _failLoading(S.t('集数解析失败'));
       return;
     }
 
@@ -609,7 +610,7 @@ abstract class _VideoPageController with Store implements Disposable {
       originalRoad: resolvedEpisode.originalRoadIndex,
     );
     if (localPath == null) {
-      _failLoading('该集数未下载');
+      _failLoading(S.t('该集数未下载'));
       return;
     }
     _applyResolvedSelection(resolvedEpisode);
@@ -698,14 +699,14 @@ abstract class _VideoPageController with Store implements Disposable {
         } else {
           playerController.danmaku.applyUnavailableDanmakuLoad(result);
           if (result.isFailed) {
-            AnikumoDialog.showToast(message: '弹幕加载失败，可手动检索');
+            AnikumoDialog.showToast(message: S.t('弹幕加载失败，可手动检索'));
           }
         }
       }
     } catch (e) {
       if (session.isActive && danmakuSession.isActive) {
         playerController.danmaku.finishDanmakuLoad(disableDanmaku: true);
-        AnikumoDialog.showToast(message: '弹幕加载失败，可手动检索');
+        AnikumoDialog.showToast(message: S.t('弹幕加载失败，可手动检索'));
       }
       AnikumoLogger().w('VideoPageController: failed to load danmaku', error: e);
     }
@@ -846,14 +847,14 @@ abstract class _VideoPageController with Store implements Disposable {
       if (session.isStale) {
         return (ok: false, error: null);
       }
-      return (ok: false, error: '视频解析超时，请重试');
+      return (ok: false, error: S.t('视频解析超时，请重试'));
     } on VideoSourceCancelledException {
       AnikumoLogger().i('VideoPageController: video URL resolution cancelled');
     } catch (e) {
       if (session.isStale) {
         return (ok: false, error: null);
       }
-      return (ok: false, error: '视频解析失败：${e.toString()}');
+      return (ok: false, error: S.f('视频解析失败：{}', [e.toString()]));
     }
     return (ok: false, error: null);
   }
@@ -1006,12 +1007,12 @@ OfflineRoadListSnapshot buildOfflineRoadListSnapshot(
     originalRoadToDisplayRoad[originalRoad] = displayRoad;
     roads.add(Road(
       name: originalRoad >= 0
-          ? '播放列表${originalRoad + 1}'
-          : '播放列表${displayRoad + 1}',
+          ? S.f('播放列表{}', [originalRoad + 1])
+          : S.f('播放列表{}', [displayRoad + 1]),
       data: roadEpisodes.map((e) => e.episodeNumber.toString()).toList(),
       identifier: roadEpisodes
           .map((e) =>
-              e.episodeName.isNotEmpty ? e.episodeName : '第${e.episodeNumber}集')
+              e.episodeName.isNotEmpty ? e.episodeName : S.f('第{}集', [e.episodeNumber]))
           .toList(),
     ));
   }

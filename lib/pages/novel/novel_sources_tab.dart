@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 
 import '../../services/novel/local_books.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import '../../services/novel/novel_source.dart';
 import '../../services/novel/novel_sources.dart';
 import '../../services/novel/rss_sources.dart';
@@ -16,6 +18,8 @@ import '../../utils/github_links.dart';
 import 'novel_source_info_panel.dart';
 import 'novel_widgets.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/notifications/update_notification_service.dart';
+import 'package:anikumo/services/storage/storage.dart';
 
 /// Sources tab: pick the active source, manage imported
 /// ones, and import from the 书源库 bundles or any URL /
@@ -71,7 +75,7 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
           await NovelSources.importFromUrlDiagnosed(url);
       AnikumoDialog.showToast(message: _importMessage(added, probe));
     } catch (e) {
-      AnikumoDialog.showToast(message: '导入失败：$e');
+      AnikumoDialog.showToast(message: S.f('导入失败：{}', [e]));
     } finally {
       if (mounted) setState(() => _busyKey = null);
     }
@@ -85,20 +89,27 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
     final (bookAdded, rssAdded) = added;
     final total = bookAdded + rssAdded;
     if (total > 0) {
-      return '已导入 $total 个'
-          '${rssAdded > 0 ? '（书源 $bookAdded · 订阅源 $rssAdded，在下方「订阅源」里打开）' : '书源'}'
-          '${probe.encrypted > 0 ? '（其中 ${probe.encrypted} 个含加密规则，可能无法完整使用）' : ''}';
+      return S.f('已导入 {} 个', [total]) +
+          (rssAdded > 0
+              ? S.f('（书源 {} · 订阅源 {}，在下方「订阅源」里打开）',
+                  [bookAdded, rssAdded])
+              : S.t('书源')) +
+          (probe.encrypted > 0
+              ? S.f('（其中 {} 个含加密规则，可能无法完整使用）',
+                  [probe.encrypted])
+              : '');
     }
     if (probe.foreignPack) {
-      return '这是其他阅读应用的加密规则包（.yds），不是通用书源格式，无法导入';
+      return S.t('这是其他阅读应用的加密规则包（.yds），不是通用书源格式，无法导入');
     }
     if (probe.entries == 0) {
-      return '无法识别这个格式（支持书源/订阅源 JSON，含 base16、base64 压缩格式）';
+      return S.t('无法识别这个格式（支持书源/订阅源 JSON，含 base16、base64 压缩格式）');
     }
     if (probe.recognized == 0 && probe.rss == 0) {
-      return '识别到 ${probe.entries} 条内容，但都缺少源名或地址，未能导入';
+      return S.f('识别到 {} 条内容，但都缺少源名或地址，未能导入',
+          [probe.entries]);
     }
-    return '没有新的内容（都已存在）';
+    return S.t('没有新的内容（都已存在）');
   }
 
   /// Batch 63: list the repo directory's .json/.txt files
@@ -117,13 +128,13 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
       setState(() => _busyKey = null);
       if (candidates.isEmpty) {
         AnikumoDialog.showToast(
-          message: '这个仓库目录里没有 .json/.txt 书源文件',
+          message: S.t('这个仓库目录里没有 .json/.txt 书源文件'),
         );
         return;
       }
       final picked = await showGithubFilePicker(
         context,
-        title: '从 GitHub 仓库导入书源',
+        title: S.t('从 GitHub 仓库导入书源'),
         files: candidates,
       );
       if (picked == null || picked.isEmpty || !mounted) return;
@@ -138,11 +149,12 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
         }
       }
       AnikumoDialog.showToast(
-        message: '已导入 $total 个书源'
-            '${failed > 0 ? '，$failed 个文件导入失败' : ''}',
+        message: S.f('已导入 {} 个书源', [total]) +
+            (failed > 0 ? S.f('，{} 个文件导入失败', [failed]) : ''),
       );
     } catch (e) {
-      AnikumoDialog.showToast(message: '导入失败：${friendlyError(e)}');
+      AnikumoDialog.showToast(
+          message: S.f('导入失败：{}', [friendlyError(e)]));
     } finally {
       if (mounted) setState(() => _busyKey = null);
     }
@@ -160,7 +172,7 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
     if (result == null || result.files.isEmpty || !mounted) return;
     final bytes = result.files.first.bytes;
     if (bytes == null) {
-      AnikumoDialog.showToast(message: '导入失败：读不到该文件');
+      AnikumoDialog.showToast(message: S.t('导入失败：读不到该文件'));
       return;
     }
     setState(() => _busyKey = 'file');
@@ -171,7 +183,7 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
         message: _importMessage(added, NovelSources.probeImport(text)),
       );
     } catch (e) {
-      AnikumoDialog.showToast(message: '导入失败：$e');
+      AnikumoDialog.showToast(message: S.f('导入失败：{}', [e]));
     } finally {
       if (mounted) setState(() => _busyKey = null);
     }
@@ -182,24 +194,24 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(paste ? '粘贴书源 JSON' : '从 URL 导入'),
+        title: Text(paste ? S.t('粘贴书源 JSON') : S.t('从 URL 导入')),
         content: TextField(
           controller: controller,
           maxLines: paste ? 8 : 1,
           decoration: InputDecoration(
             hintText: paste
-                ? '粘贴书源 JSON（数组或单个对象，base16 也可以）'
-                : 'https://…/sources.json，或 GitHub 仓库/文件链接',
+                ? S.t('粘贴书源 JSON（数组或单个对象，base16 也可以）')
+                : S.t('https://…/sources.json，或 GitHub 仓库/文件链接'),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('导入'),
+            child: Text(S.t('导入')),
           ),
         ],
       ),
@@ -216,7 +228,7 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
               _importMessage(added, NovelSources.probeImport(text)),
         );
       } catch (e) {
-        AnikumoDialog.showToast(message: '导入失败：$e');
+        AnikumoDialog.showToast(message: S.f('导入失败：{}', [e]));
       } finally {
         if (mounted) setState(() => _busyKey = null);
       }
@@ -233,7 +245,7 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
     if (_selecting) return null;
     if (source.id == LocalNovelSource.sourceId) {
       return IconButton(
-        tooltip: '在功能仓库管理',
+        tooltip: S.t('在功能仓库管理'),
         icon: const Icon(AnikumoIcons.chevron_right, size: 18),
         onPressed: () => context.pushNamed('/novel/features'),
       );
@@ -243,7 +255,7 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
       children: [
         if (source.loginUrl.isNotEmpty)
           IconButton(
-            tooltip: '登录此源',
+            tooltip: S.t('登录此源'),
             icon: const Icon(AnikumoIcons.login),
             onPressed: () => context.pushNamed(
               '/novel/login',
@@ -258,7 +270,9 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
             color: theme.colorScheme.onSurfaceVariant,
           ),
         IconButton(
-          tooltip: NovelSources.isPinned(source.id) ? '取消置顶' : '置顶这个源',
+          tooltip: NovelSources.isPinned(source.id)
+              ? S.t('取消置顶')
+              : S.t('置顶这个源'),
           icon: Icon(
             NovelSources.isPinned(source.id)
                 ? AnikumoIcons.push_pin
@@ -270,11 +284,11 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
           onPressed: () => NovelSources.togglePin(source.id),
         ),
         IconButton(
-          tooltip: '删除这个源',
+          tooltip: S.t('删除这个源'),
           icon: const Icon(AnikumoIcons.delete_outline),
           onPressed: () async {
             await NovelSources.removeImported(source.id);
-            AnikumoDialog.showToast(message: '已删除');
+            AnikumoDialog.showToast(message: S.t('已删除'));
           },
         ),
       ],
@@ -292,16 +306,17 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('删除书源'),
-        content: Text('确定要删除选中的 ${ids.length} 个书源吗？此操作不可恢复。'),
+        title: Text(S.t('删除书源')),
+        content: Text(S.f('确定要删除选中的 {} 个书源吗？此操作不可恢复。',
+            [ids.length])),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('删除'),
+            child: Text(S.t('删除')),
           ),
         ],
       ),
@@ -313,23 +328,24 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
       _selected.clear();
       _selecting = false;
     });
-    AnikumoDialog.showToast(message: '已删除 $removed 个书源');
+    AnikumoDialog.showToast(message: S.f('已删除 {} 个书源', [removed]));
   }
 
   Future<void> _deleteAll(Set<String> ids) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('全部删除'),
-        content: Text('确定要删除全部 ${ids.length} 个已导入书源吗？此操作不可恢复。'),
+        title: Text(S.t('全部删除')),
+        content: Text(S.f('确定要删除全部 {} 个已导入书源吗？此操作不可恢复。',
+            [ids.length])),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('全部删除'),
+            child: Text(S.t('全部删除')),
           ),
         ],
       ),
@@ -341,7 +357,7 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
       _selected.clear();
       _selecting = false;
     });
-    AnikumoDialog.showToast(message: '已删除 $removed 个书源');
+    AnikumoDialog.showToast(message: S.f('已删除 {} 个书源', [removed]));
   }
 
   @override
@@ -362,11 +378,11 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
       child: ListView(
         padding: const EdgeInsets.only(bottom: 24),
         children: [
-          const NovelSectionHeader(title: '当前书源'),
+          NovelSectionHeader(title: S.t('当前书源')),
           if (sources.isEmpty)
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
-              child: Text('还没有书源。用下方「从 URL 导入」添加你自己的书源链接。'),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+              child: Text(S.t('还没有书源。用下方「从 URL 导入」添加你自己的书源链接。')),
             ),
           for (final source in sources) ...[
             ListTile(
@@ -396,7 +412,7 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        '置顶',
+                        S.t('置顶'),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.onPrimaryContainer,
                           fontWeight: FontWeight.w700,
@@ -416,7 +432,7 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        '已失效',
+                        S.t('已失效'),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.onErrorContainer,
                           fontWeight: FontWeight.w700,
@@ -431,13 +447,13 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
                 // Legado type 2 sources are image (comic)
                 // sources; users asked why "novel" sources
                 // contained manga.
-                '已导入 · '
-                '${switch (source.type) {
-                  0 => '小说源',
-                  1 => '音频源',
-                  2 => '图片源（漫画）',
-                  _ => '其他类型',
-                }}',
+                S.t('已导入 · ') +
+                    switch (source.type) {
+                      0 => S.t('小说源'),
+                      1 => S.t('音频源'),
+                      2 => S.t('图片源（漫画）'),
+                      _ => S.t('其他类型'),
+                    },
                 style: theme.textTheme.bodySmall,
               ),
               trailing: _tileTrailing(source, theme),
@@ -479,7 +495,8 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
             ListTile(
               leading: const Icon(AnikumoIcons.delete_sweep_outlined),
               title: Text(
-                '已选 ${effectiveSelected.length} / ${importedIds.length} 个',
+                S.f('已选 {} / {} 个',
+                    [effectiveSelected.length, importedIds.length]),
               ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -487,14 +504,14 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
                   TextButton(
                     onPressed: () =>
                         setState(() => _selected.addAll(importedIds)),
-                    child: const Text('全选'),
+                    child: Text(S.t('全选')),
                   ),
                   TextButton(
                     onPressed: effectiveSelected.isEmpty
                         ? null
                         : () => _deleteSelected(effectiveSelected),
                     child: Text(
-                      '删除选中',
+                      S.t('删除选中'),
                       style: TextStyle(color: theme.colorScheme.error),
                     ),
                   ),
@@ -503,7 +520,7 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
                       _selecting = false;
                       _selected.clear();
                     }),
-                    child: const Text('完成'),
+                    child: Text(S.t('完成')),
                   ),
                 ],
               ),
@@ -511,9 +528,9 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
           else if (importedIds.isNotEmpty) ...[
             ListTile(
               leading: const Icon(AnikumoIcons.delete_sweep_outlined),
-              title: const Text('批量删除'),
+              title: Text(S.t('批量删除')),
               subtitle: Text(
-                '多选后一次删完，不再逐个卡顿',
+                S.t('多选后一次删完，不再逐个卡顿'),
                 style: theme.textTheme.bodySmall,
               ),
               onTap: () => setState(() => _selecting = true),
@@ -524,21 +541,21 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
                 color: theme.colorScheme.error,
               ),
               title: Text(
-                '全部删除',
+                S.t('全部删除'),
                 style: TextStyle(color: theme.colorScheme.error),
               ),
               subtitle: Text(
-                '删除全部 ${importedIds.length} 个已导入书源',
+                S.f('删除全部 {} 个已导入书源', [importedIds.length]),
                 style: theme.textTheme.bodySmall,
               ),
               onTap: () => _deleteAll(importedIds),
             ),
           ],
-          const NovelSectionHeader(title: '订阅源'),
+          NovelSectionHeader(title: S.t('订阅源')),
           if (RssSources.all().isEmpty)
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
-              child: Text('还没有订阅源。订阅仓库（如源仓库的订阅链接）导入后会出现在这里。'),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+              child: Text(S.t('还没有订阅源。订阅仓库（如源仓库的订阅链接）导入后会出现在这里。')),
             ),
           for (final rss in RssSources.all())
             ListTile(
@@ -546,8 +563,8 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
               title: Text(rss.name),
               subtitle: Text(
                 rss.hasArticleRules
-                    ? '订阅源 · 文章列表'
-                    : '目录型 · 打开网页',
+                    ? S.t('订阅源 · 文章列表')
+                    : S.t('目录型 · 打开网页'),
                 style: theme.textTheme.bodySmall,
               ),
               trailing: Row(
@@ -557,10 +574,10 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
                     const Icon(AnikumoIcons.open_in_new_rounded),
                   IconButton(
                     icon: const Icon(AnikumoIcons.delete_outline),
-                    tooltip: '删除这个订阅源',
+                    tooltip: S.t('删除这个订阅源'),
                     onPressed: () async {
                       await RssSources.remove(rss.id);
-                      AnikumoDialog.showToast(message: '已删除');
+                      AnikumoDialog.showToast(message: S.t('已删除'));
                     },
                   ),
                 ],
@@ -582,56 +599,81 @@ class _NovelSourcesTabState extends State<NovelSourcesTab> {
                 color: theme.colorScheme.error,
               ),
               title: Text(
-                '清理失效源（${sources.where((s) => NovelSources.isDead(s.id)).length}）',
+                S.f('清理失效源（{}）',
+                    [sources.where((s) => NovelSources.isDead(s.id)).length]),
               ),
               subtitle: Text(
-                '删除已确认不可用的已导入书源',
+                S.t('删除已确认不可用的已导入书源'),
                 style: theme.textTheme.bodySmall,
               ),
               onTap: () async {
                 final removed =
                     await NovelSources.cleanupDeadImported();
                 AnikumoDialog.showToast(
-                  message: removed > 0 ? '已清理 $removed 个失效源' : '没有可清理的源',
+                  message: removed > 0
+                      ? S.f('已清理 {} 个失效源', [removed])
+                      : S.t('没有可清理的源'),
                 );
               },
             ),
           SwitchListTile(
             secondary: const Icon(AnikumoIcons.auto_delete_outlined),
-            title: const Text('自动删除失效书源'),
+            title: Text(S.t('自动删除失效书源')),
             subtitle: Text(
-              '书源连续两次确认不可用（域名失效 / 403 / '
-              '502 / 握手失败）时自动删除',
+              S.t('书源连续两次确认不可用（域名失效 / 403 / '
+                  '502 / 握手失败）时自动删除'),
               style: theme.textTheme.bodySmall,
             ),
             value: NovelSources.autoDeleteDeadSources,
             onChanged: (value) =>
                 NovelSources.setAutoDeleteDeadSources(value),
           ),
+          SwitchListTile(
+            secondary: const Icon(Icons.notifications_rounded),
+            title: Text(S.t('小说追更通知')),
+            subtitle: Text(
+              S.t('打开 App 时检查收藏的小说，有新章节就通知'),
+              style: theme.textTheme.bodySmall,
+            ),
+            value: GStorage.getSetting(SettingsKeys.notifyNovelUpdates),
+            onChanged: (value) async {
+              await GStorage.putSetting(
+                SettingsKeys.notifyNovelUpdates,
+                value,
+              );
+              if (value) {
+                await UpdateNotificationService.requestPermission();
+                unawaited(
+                  UpdateNotificationService.runChecksIfEnabled(force: true),
+                );
+              }
+              if (mounted) setState(() {});
+            },
+          ),
           ListTile(
             leading: const Icon(AnikumoIcons.fact_check_outlined),
-            title: const Text('书源诊断'),
+            title: Text(S.t('书源诊断')),
             subtitle: Text(
-              '逐源实测搜索/章节/内容，显示真实错误',
+              S.t('逐源实测搜索/章节/内容，显示真实错误'),
               style: theme.textTheme.bodySmall,
             ),
             onTap: () => context.pushNamed('/novel/diagnostics'),
           ),
-          const NovelSectionHeader(title: '手动导入'),
+          NovelSectionHeader(title: S.t('手动导入')),
           ListTile(
             leading: const Icon(AnikumoIcons.link),
-            title: const Text('从 URL 导入'),
+            title: Text(S.t('从 URL 导入')),
             onTap: () => _showImportDialog(paste: false),
           ),
           ListTile(
             leading: const Icon(AnikumoIcons.content_paste),
-            title: const Text('粘贴 JSON 导入'),
+            title: Text(S.t('粘贴 JSON 导入')),
             onTap: () => _showImportDialog(paste: true),
           ),
           ListTile(
             leading: const Icon(AnikumoIcons.folder_open_outlined),
-            title: const Text('从文件导入'),
-            subtitle: const Text('选择本地 .json / .txt 书源文件'),
+            title: Text(S.t('从文件导入')),
+            subtitle: Text(S.t('选择本地 .json / .txt 书源文件')),
             onTap: _busyKey == null ? _importFromFile : null,
           ),
         ],

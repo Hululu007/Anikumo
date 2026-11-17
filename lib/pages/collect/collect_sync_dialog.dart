@@ -5,6 +5,7 @@ import 'package:anikumo/bean/widget/state_presentation.dart';
 import 'package:anikumo/modules/bangumi/sync_priority.dart';
 import 'package:anikumo/modules/collect/collect_sync_plan.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 enum CollectSyncDestination { webDavSettings, bangumiSettings }
 
@@ -102,13 +103,13 @@ class _CollectSyncDialogState extends State<CollectSyncDialog> {
           )) {
         setState(() {
           state.status = _StepStatus.skipped;
-          state.message = '前两步未全部完成';
+          state.message = S.t('前两步未全部完成');
         });
         continue;
       }
       setState(() {
         state.status = _StepStatus.running;
-        state.message = '正在连接…';
+        state.message = S.t('正在连接…');
       });
       bool succeeded = false;
       String? failure;
@@ -120,7 +121,7 @@ class _CollectSyncDialogState extends State<CollectSyncDialog> {
             if (!_active || state.status != _StepStatus.running) return;
             setState(() {
               state.message =
-                  total > 0 ? '$message · $current / $total' : message;
+                  total > 0 ? S.f('{} · {} / {}', [message, current, total]) : message;
               state.progress = total > 0
                   ? (current / total).clamp(0.0, 1.0).toDouble()
                   : null;
@@ -128,12 +129,12 @@ class _CollectSyncDialogState extends State<CollectSyncDialog> {
           },
         );
       } catch (_) {
-        failure ??= '连接中断，请检查网络或设置';
+        failure ??= S.t('连接中断，请检查网络或设置');
       }
       if (!_active) return;
       setState(() {
         state.status = succeeded ? _StepStatus.succeeded : _StepStatus.failed;
-        state.message = succeeded ? null : failure ?? '请检查网络或同步设置';
+        state.message = succeeded ? null : failure ?? S.t('请检查网络或同步设置');
         state.progress = null;
       });
     }
@@ -142,21 +143,21 @@ class _CollectSyncDialogState extends State<CollectSyncDialog> {
   }
 
   String get _title {
-    if (!widget.plan.canSync) return '开启收藏同步';
-    if (_running) return '正在同步收藏';
-    if (!_finished) return '同步收藏';
-    if (!_hasFailure) return '收藏已同步';
-    return _hasSuccess ? '部分同步完成' : '同步未完成';
+    if (!widget.plan.canSync) return S.t('开启收藏同步');
+    if (_running) return S.t('正在同步收藏');
+    if (!_finished) return S.t('同步收藏');
+    if (!_hasFailure) return S.t('收藏已同步');
+    return _hasSuccess ? S.t('部分同步完成') : S.t('同步未完成');
   }
 
   String? get _description {
-    if (!widget.plan.canSync) return '选择同步服务';
+    if (!widget.plan.canSync) return S.t('选择同步服务');
     if (_running) {
       final current = _steps.indexWhere((s) => s.status == _StepStatus.running);
-      return '第 ${current + 1} / ${_steps.length} 步 · 请保持应用开启';
+      return S.f('第 {} / {} 步 · 请保持应用开启', [current + 1, _steps.length]);
     }
-    if (!_finished) return '同步全部收藏分类';
-    if (_hasFailure && _hasSuccess) return '已完成的更改已保留';
+    if (!_finished) return S.t('同步全部收藏分类');
+    if (_hasFailure && _hasSuccess) return S.t('已完成的更改已保留');
     return null;
   }
 
@@ -188,7 +189,7 @@ class _CollectSyncDialogState extends State<CollectSyncDialog> {
                     key: const ValueKey('syncing'),
                     size: 64,
                     color: colors.primary,
-                    semanticsLabel: '正在同步收藏',
+                    semanticsLabel: S.t('正在同步收藏'),
                   )
                 : StateIconBadge(
                     key: ValueKey((_finished, failed)),
@@ -244,7 +245,7 @@ class _CollectSyncDialogState extends State<CollectSyncDialog> {
                     widget.plan.shouldSyncBangumi) ...[
                   const SizedBox(height: 16),
                   Text(
-                    '冲突处理：${widget.priority.label}',
+                    S.f('冲突处理：{}', [S.t(widget.priority.label)]),
                     style: theme.textTheme.bodySmall
                         ?.copyWith(color: colors.onSurfaceVariant),
                   ),
@@ -265,7 +266,7 @@ class _CollectSyncDialogState extends State<CollectSyncDialog> {
                     ),
                     onPressed: () => Navigator.of(context).pop(),
                     child:
-                        Text(widget.plan.canSync && !_finished ? '取消' : '关闭'),
+                        Text(widget.plan.canSync && !_finished ? S.t('取消') : S.t('关闭')),
                   ),
                 if (widget.plan.canSync)
                   StateActionButton(
@@ -275,7 +276,7 @@ class _CollectSyncDialogState extends State<CollectSyncDialog> {
                     icon: _finished
                         ? (failed ? AnikumoIcons.refresh_rounded : AnikumoIcons.check_rounded)
                         : AnikumoIcons.sync_rounded,
-                    text: _finished ? (failed ? '重新同步' : '完成') : '开始同步',
+                    text: _finished ? (failed ? S.t('重新同步') : S.t('完成')) : S.t('开始同步'),
                   ),
               ],
       ),
@@ -293,12 +294,12 @@ class _CollectSyncDialogState extends State<CollectSyncDialog> {
     final (title, description, icon) = switch (destination) {
       CollectSyncDestination.webDavSettings => (
           'WebDAV',
-          '设置服务器，开启收藏同步',
+          S.t('设置服务器，开启收藏同步'),
           AnikumoIcons.cloud_sync_rounded
         ),
       CollectSyncDestination.bangumiSettings => (
           'Bangumi',
-          '连接账号，开启状态同步',
+          S.t('连接账号，开启状态同步'),
           AnikumoIcons.bookmarks_rounded
         ),
     };
@@ -324,7 +325,7 @@ class _CollectSyncDialogState extends State<CollectSyncDialog> {
     final active = state.status == _StepStatus.running;
     final failed = state.status == _StepStatus.failed;
     final detail = state.status == _StepStatus.waiting
-        ? (_running ? null : state.step._description)
+        ? (_running ? null : S.t(state.step._description))
         : state.message;
     final foreground = failed
         ? colors.onErrorContainer
@@ -332,11 +333,11 @@ class _CollectSyncDialogState extends State<CollectSyncDialog> {
             ? colors.onSecondaryContainer
             : colors.onSurface;
     final statusLabel = switch (state.status) {
-      _StepStatus.waiting => _running ? '等待中' : '第 ${index + 1} 步',
-      _StepStatus.running => '同步中',
-      _StepStatus.succeeded => '已完成',
-      _StepStatus.failed => '未完成',
-      _StepStatus.skipped => '已跳过',
+      _StepStatus.waiting => _running ? S.t('等待中') : S.f('第 {} 步', [index + 1]),
+      _StepStatus.running => S.t('同步中'),
+      _StepStatus.succeeded => S.t('已完成'),
+      _StepStatus.failed => S.t('未完成'),
+      _StepStatus.skipped => S.t('已跳过'),
     };
     final icon = switch (state.status) {
       _StepStatus.succeeded => AnikumoIcons.check_circle_rounded,
@@ -372,7 +373,7 @@ class _CollectSyncDialogState extends State<CollectSyncDialog> {
                       runSpacing: 4,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Text(state.step._title,
+                        Text(S.t(state.step._title),
                             style: theme.textTheme.titleSmall
                                 ?.copyWith(color: foreground)),
                         Text(statusLabel,
@@ -403,7 +404,7 @@ class _CollectSyncDialogState extends State<CollectSyncDialog> {
                         onPressed: () =>
                             Navigator.of(context).pop(state.step._settings),
                         icon: const Icon(AnikumoIcons.settings_rounded, size: 18),
-                        label: const Text('检查设置'),
+                        label: Text(S.t('检查设置')),
                       ),
                     ],
                     if (active && state.progress != null) ...[
@@ -416,7 +417,7 @@ class _CollectSyncDialogState extends State<CollectSyncDialog> {
                         minHeight: 4,
                         borderRadius: BorderRadius.circular(4),
                         trackGap: 4,
-                        semanticsLabel: state.step._title,
+                        semanticsLabel: S.t(state.step._title),
                       ),
                     ],
                   ],

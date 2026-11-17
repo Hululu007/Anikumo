@@ -6,6 +6,7 @@ import 'package:anikumo/bean/settings/settings_detail_scaffold.dart';
 import 'package:anikumo/bean/settings/settings_list.dart';
 import 'package:anikumo/bean/widget/content_section.dart';
 import 'package:anikumo/pages/settings/player_settings.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/utils/constants.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
 
@@ -246,7 +247,7 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Scaffold(
           appBar: wide
               ? SysAppBar(
-                  title: const Text('设置'),
+                  title: Text(S.t('设置')),
                   leading: BackButton(onPressed: _exitSettings),
                 )
               : null,
@@ -305,7 +306,7 @@ class SettingsIndexPage extends StatelessWidget {
     }
     return Scaffold(
       appBar: SysAppBar(
-        title: const Text('设置'),
+        title: Text(S.t('设置')),
         leading: BackButton(onPressed: () {
           if (!context.maybePop()) context.navigate('/tab/my');
         }),
@@ -342,7 +343,7 @@ class _SettingsMenu extends StatelessWidget {
             if (wide) ...[
               Padding(
                 padding: const EdgeInsets.fromLTRB(28, 16, 28, 8),
-                child: SectionHeader(title: Text(group.title)),
+                child: SectionHeader(title: Text(S.t(group.title))),
               ),
               for (final category in group.categories)
                 _RailDestination(
@@ -354,13 +355,13 @@ class _SettingsMenu extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 16),
                 child: ContentSection.group(
-                  title: group.title,
+                  title: S.t(group.title),
                   children: [
                     for (final category in group.categories)
                       SettingsCategoryTile(
                         icon: category.icon,
-                        title: category.label,
-                        description: category.description,
+                        title: S.t(category.label),
+                        description: S.t(category.description),
                         onTap: () => onSelect(category.path),
                       ),
                   ],
@@ -407,7 +408,7 @@ class _RailDestination extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    category.label,
+                    S.t(category.label),
                     style: textTheme.labelLarge?.copyWith(color: foreground),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

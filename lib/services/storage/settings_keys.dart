@@ -399,6 +399,91 @@ class SettingsKeys {
     group: SettingGroup.misc,
   );
 
+  /// Batch 269: notify when a watching anime airs a new
+  /// episode (checked at launch, local notification).
+  static const notifyAnimeUpdates = SettingKey<bool>(
+    'notifyAnimeUpdates',
+    false,
+    group: SettingGroup.misc,
+  );
+
+  /// Batch 269: notify when a favorite novel gains chapters.
+  static const notifyNovelUpdates = SettingKey<bool>(
+    'notifyNovelUpdates',
+    false,
+    group: SettingGroup.misc,
+  );
+
+  /// Batch 269: last known aired-episode count per Bangumi
+  /// id (JSON object of id -> count). First sighting of a
+  /// show baselines silently.
+  static const notifyKnownAnimeJson = SettingKey<String>(
+    'notifyKnownAnimeJson',
+    '',
+    group: SettingGroup.misc,
+  );
+
+  /// Batch 269: last known chapter count per novel storage
+  /// key (JSON object of key -> count).
+  static const notifyKnownNovelJson = SettingKey<String>(
+    'notifyKnownNovelJson',
+    '',
+    group: SettingGroup.misc,
+  );
+
+  /// Batch 269: epoch millis of the last update check, for
+  /// the launch-check throttle.
+  static const notifyLastCheckMs = SettingKey<int>(
+    'notifyLastCheckMs',
+    0,
+    group: SettingGroup.misc,
+  );
+
+  /// Batch 270: novel search history (JSON string list,
+  /// most recent first).
+  static const novelSearchHistoryJson = SettingKey<String>(
+    'novelSearchHistoryJson',
+    '',
+    group: SettingGroup.misc,
+  );
+
+  /// Batch 270: novel reader bookmarks + notes, JSON object
+  /// of book storage key -> bookmark list.
+  static const novelBookmarksJson = SettingKey<String>(
+    'novelBookmarksJson',
+    '',
+    group: SettingGroup.misc,
+  );
+
+  /// Batch 270: persisted TTS speech rate (0.5–2.0).
+  static const novelTtsRate = SettingKey<double>(
+    'novelTtsRate',
+    1.0,
+    group: SettingGroup.misc,
+  );
+
+  /// Batch 270: persisted TTS pitch (0.5–2.0).
+  static const novelTtsPitch = SettingKey<double>(
+    'novelTtsPitch',
+    1.0,
+    group: SettingGroup.misc,
+  );
+
+  /// Batch 270: persisted TTS voice name ('' = engine default).
+  static const novelTtsVoice = SettingKey<String>(
+    'novelTtsVoice',
+    '',
+    group: SettingGroup.misc,
+  );
+
+  /// Batch 270: per-book TTS rate overrides (JSON object of
+  /// book storage key -> rate). Falls back to novelTtsRate.
+  static const novelTtsRateByBookJson = SettingKey<String>(
+    'novelTtsRateByBookJson',
+    '',
+    group: SettingGroup.misc,
+  );
+
   /// User-imported Legado book sources, JSON array string.
   static const novelInstalledSourcesJson = SettingKey<String>(
     'novelInstalledSourcesJson',
@@ -545,6 +630,34 @@ class SettingsKeys {
     group: SettingGroup.misc,
   );
 
+  /// Batch 275 (#44): the user's zone display order as
+  /// a CSV of AppZone names; '' = the default order.
+  static const zoneOrderCsv = SettingKey<String>(
+    'zoneOrderCsv',
+    '',
+    group: SettingGroup.misc,
+  );
+
+  /// Batch 262: the app UI language — an AppLanguage storage
+  /// value ('system' default, 'zhHans', 'en', 'ja', 'zhHant').
+  /// One global setting; every zone's settings surface edits
+  /// the same key.
+  static const appLanguage = SettingKey<String>(
+    'appLanguage',
+    'system',
+    group: SettingGroup.interface,
+  );
+
+  /// Batch 267: the id of the announcement the user muted
+  /// with 「下次不再显示」. The startup announcement shows
+  /// whenever the published id differs from this value, so
+  /// a new announcement always reaches the user once.
+  static const announcementDismissedId = SettingKey<String>(
+    'announcementDismissedId',
+    '',
+    group: SettingGroup.misc,
+  );
+
   /// Batch 235 （排版主题 pack): the novel reader theme —
   /// '' (follow the app), 'paper', 'eye' or 'night'.
   static const novelReaderTheme = SettingKey<String>(
@@ -668,6 +781,24 @@ class SettingsKeys {
   /// covers come from its own metadata and never read this.
   static const videoTvmazeCoverCacheJson = SettingKey<String>(
     'videoTvmazeCoverCacheJson',
+    '',
+    group: SettingGroup.misc,
+  );
+
+  /// Batch 272 (#31): TVmaze show ids resolved for the
+  /// 追剧日历 (favorite title → TVmaze show id), so the
+  /// calendar does not re-search every favorite on open.
+  static const tvmazeCalendarShowIdsJson = SettingKey<String>(
+    'tvmazeCalendarShowIdsJson',
+    '',
+    group: SettingGroup.misc,
+  );
+
+  /// Batch 272 (#35): rolling probe history per film
+  /// source (source id → latest 30 {at, ms} records,
+  /// ms < 0 = failed) behind the 可用性历史 view.
+  static const filmSourceHistoryJson = SettingKey<String>(
+    'filmSourceHistoryJson',
     '',
     group: SettingGroup.misc,
   );
@@ -915,6 +1046,23 @@ class SettingsKeys {
   static const mangaReaderMode = SettingKey<String>(
     'mangaReaderMode',
     'galleryLTR',
+    group: SettingGroup.misc,
+  );
+
+  /// Batch 271: per-work reader-mode overrides (JSON object
+  /// of manga storage key -> mode). Falls back to
+  /// mangaReaderMode.
+  static const mangaReaderModeByWorkJson = SettingKey<String>(
+    'mangaReaderModeByWorkJson',
+    '',
+    group: SettingGroup.misc,
+  );
+
+  /// Batch 271: accumulated per-source health stats (JSON
+  /// object of source id -> counters).
+  static const mangaSourceHealthJson = SettingKey<String>(
+    'mangaSourceHealthJson',
+    '',
     group: SettingGroup.misc,
   );
 
@@ -1618,6 +1766,81 @@ class SettingsKeys {
     _SettingBoxKey.backgroundPlayback,
     false,
     group: SettingGroup.player,
+  );
+
+  /// Batch 273 (#52): audio equalizer record
+  /// ({on, g: [5 gains]}) applied as an mpv `af` chain.
+  static const audioEqJson = SettingKey<String>(
+    'audioEqJson',
+    '',
+    group: SettingGroup.player,
+  );
+
+  /// Batch 273 (#12): player timestamp bookmarks,
+  /// episode key → [{s, n, at}].
+  static const videoBookmarksJson = SettingKey<String>(
+    'videoBookmarksJson',
+    '',
+    group: SettingGroup.player,
+  );
+
+  /// Batch 273 (#54): what a double tap on the video
+  /// does — 'toggle' (play/pause, the classic behavior),
+  /// 'seek' (left/right thirds seek ∓10s, center
+  /// toggles), or 'fullscreen'.
+  static const doubleTapAction = SettingKey<String>(
+    'doubleTapAction',
+    'toggle',
+    group: SettingGroup.player,
+  );
+
+  /// Batch 274: per-zone WebDAV sync ledger
+  /// ({zone: {syncedHash, at}}).
+  static const zoneSyncStateJson = SettingKey<String>(
+    'zoneSyncStateJson',
+    '',
+    group: SettingGroup.sync,
+  );
+
+  /// Batch 274 (#39): parked zone sync conflicts
+  /// ([{zone, at, remoteAt, payload}]).
+  static const syncConflictsJson = SettingKey<String>(
+    'syncConflictsJson',
+    '',
+    group: SettingGroup.sync,
+  );
+
+  /// Batch 275 (#46): app lock via device biometrics /
+  /// PIN at cold start and after 5 minutes backgrounded.
+  static const appLockEnabled = SettingKey<bool>(
+    'appLockEnabled',
+    false,
+    group: SettingGroup.misc,
+  );
+
+  /// Batch 275 (#47): guest mode — hides history,
+  /// favorites and continue surfaces (display only).
+  static const guestMode = SettingKey<bool>(
+    'guestMode',
+    false,
+    group: SettingGroup.misc,
+  );
+
+  /// Batch 274 (#41): automatic local backup schedule.
+  static const autoBackupEnabled = SettingKey<bool>(
+    'autoBackupEnabled',
+    false,
+    group: SettingGroup.sync,
+  );
+  static const autoBackupIntervalDays = SettingKey<int>(
+    'autoBackupIntervalDays',
+    7,
+    group: SettingGroup.sync,
+  );
+  static const lastAutoBackupMs = SettingKey<int>(
+    'lastAutoBackupMs',
+    0,
+    group: SettingGroup.sync,
   );
   static const proxyEnable = SettingKey<bool>(
     _SettingBoxKey.proxyEnable,

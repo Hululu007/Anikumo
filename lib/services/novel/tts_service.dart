@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:anikumo/services/storage/settings_keys.dart';
+import 'package:anikumo/services/storage/storage.dart';
 
 /// Batch 158: speech chunking for chapter text. System
 /// speech engines cap one utterance (around 4000 chars on
@@ -63,6 +66,16 @@ List<String> splitTextForSpeech(String text, {int maxLen = 500}) {
 class TtsPlayer extends ChangeNotifier {
   TtsPlayer._() {
     _channel.setMethodCallHandler(_onPlatformCall);
+    // Batch 270: restore persisted rate / pitch / voice.
+    // Storage may be unavailable in tests that merely touch
+    // the singleton — defaults then apply.
+    try {
+      rate = GStorage.getSetting(SettingsKeys.novelTtsRate);
+      pitch = GStorage.getSetting(SettingsKeys.novelTtsPitch);
+      voiceName = GStorage.getSetting(SettingsKeys.novelTtsVoice);
+    } catch (_) {
+      // Keep the field defaults.
+    }
   }
 
   static final TtsPlayer instance = TtsPlayer._();
@@ -77,6 +90,12 @@ class TtsPlayer extends ChangeNotifier {
   bool speaking = false;
   bool paused = false;
   double rate = 1.0;
+
+  /// Batch 270: pitch (0.5–2.0) and voice, persisted like
+  /// the rate. [voiceName] '' means the engine default.
+  double pitch = 1.0;
+  String voiceName = '';
+
   int currentChunk = 0;
   int totalChunks = 0;
 
@@ -195,7 +214,107 @@ class TtsPlayer extends ChangeNotifier {
     rate = value.clamp(0.5, 2.0);
     try {
       await _channel.invokeMethod<void>('setRate', {'rate': rate});
+      await GStorage.putSetting(SettingsKeys.novelTtsRate, rate);
     } catch (_) {}
     notifyListeners();
+  }
+
+  /// Batch 270: the rate remembered for one book, if any.
+  static double? rateForBook(String storageKey) {
+    try {
+      final raw = GStorage.getSetting(SettingsKeys.novelTtsRateByBookJson);
+      if (raw.isEmpty) return null;
+      final decoded = jsonDecode(raw);
+      if (decoded is Map && decoded[storageKey] is num) {
+        return (decoded[storageKey] as num).toDouble().clamp(0.5, 2.0);
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// Remembers [value] as the rate for one book (the global
+  /// rate is updated too, via [setRate]).
+  Future<void> setRateForBook(String storageKey, double value) async {
+    await setRate(value);
+    try {
+      final raw = GStorage.getSetting(SettingsKeys.novelTtsRateByBookJson);
+      final map = <String, dynamic>{};
+      if (raw.isNotEmpty) {
+        final decoded = jsonDecode(raw);
+        if (decoded is Map) map.addAll(decoded.cast<String, dynamic>());
+      }
+      map[storageKey] = rate;
+      await GStorage.putSetting(
+        SettingsKeys.novelTtsRateByBookJson,
+        jsonEncode(map),
+      );
+    } catch (_) {}
+  }
+
+  Future<void> setPitch(double value) async {
+    pitch = value.clamp(0.5, 2.0);
+    try {
+      await _channel.invokeMethod<void>('setPitch', {'pitch': pitch});
+      await GStorage.putSetting(SettingsKeys.novelTtsPitch, pitch);
+    } catch (_) {}
+    notifyListeners();
+  }
+
+  /// Available engine voices as {name, locale} maps. Empty
+  /// on platforms/engines that cannot enumerate them.
+  Future<List<Map<String, String>>> fetchVoices() async {
+    try {
+      final raw = await _channel.invokeMethod<List<dynamic>>('getVoices');
+      return [
+        for (final entry in raw ?? const [])
+          if (entry is Map)
+            {
+              'name': '${entry['name'] ?? ''}',
+              'locale': '${entry['locale'] ?? ''}',
+            },
+      ];
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<void> setVoice(String name) async {
+    voiceName = name;
+    try {
+      await _channel.invokeMethod<void>('setVoice', {'name': name});
+      await GStorage.putSetting(SettingsKeys.novelTtsVoice, name);
+    } catch (_) {}
+    notifyListeners();
+  }
+
+  /// Batch 270: push the persisted rate/pitch/voice to the
+  /// engine. Called when a reading session starts; the
+  /// platform side also keeps the last values and applies
+  /// them when its engine finishes initializing.
+  Future<void> applySettings() async {
+    try {
+      await _channel.invokeMethod<void>('setRate', {'rate': rate});
+      await _channel.invokeMethod<void>('setPitch', {'pitch': pitch});
+      if (voiceName.isNotEmpty) {
+        await _channel.invokeMethod<void>('setVoice', {'name': voiceName});
+      }
+    } catch (_) {}
+  }
+
+  /// Batch 270: jump [delta] chunks (media-button next /
+  /// previous while listening). Re-speaks from the target
+  /// chunk, like resume does.
+  Future<void> skipBy(int delta) async {
+    if (!speaking || _queue.isEmpty) return;
+    final target =
+        (currentChunk + delta).clamp(0, _queue.length - 1).toInt();
+    if (target == currentChunk && !paused) return;
+    currentChunk = target;
+    paused = false;
+    try {
+      await _channel.invokeMethod<void>('stop');
+    } catch (_) {}
+    notifyListeners();
+    await _speakCurrent();
   }
 }

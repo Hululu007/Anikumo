@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -151,11 +152,11 @@ class AnimeFeatures {
       final response = await request.close();
       final body = await response.transform(utf8.decoder).join();
       if (response.statusCode >= 400) {
-        throw StateError('仓库返回 ${response.statusCode}');
+        throw StateError(S.f('仓库返回 {}', [response.statusCode]));
       }
       final decoded = jsonDecode(body);
       if (decoded is! List) {
-        throw const FormatException('目录格式不对：应为功能列表');
+        throw FormatException(S.t('目录格式不对：应为功能列表'));
       }
       final known = {for (final f in builtinCatalog) f.id: f};
       final out = <AnimeFeatureDef>[];

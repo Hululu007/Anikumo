@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview_platform_interface/flutter_inappwebview_platform_interface.dart';
 
 import '../../bean/dialog/dialog.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import '../../services/novel/legado_def.dart';
 import '../../services/novel/login_info.dart';
 import '../../services/novel/moyuan_host.dart';
@@ -183,21 +184,21 @@ class _NovelLoginPageState extends State<NovelLoginPage> {
       if (_rows.isNotEmpty) {
         AnikumoDialog.showToast(
           message: total > 0
-              ? '已保存登录信息与登录状态（$total 个 Cookie）'
-              : '已保存登录信息',
+              ? S.f('已保存登录信息与登录状态（{} 个 Cookie）', [total])
+              : S.t('已保存登录信息'),
         );
         Navigator.of(context).pop();
       } else {
         AnikumoDialog.showToast(
           message: total > 0
-              ? '已保存登录状态（$total 个 Cookie），回去重新打开这个源试试'
-              : '没有读到登录 Cookie，请确认已在页面里完成登录',
+              ? S.f('已保存登录状态（{} 个 Cookie），回去重新打开这个源试试', [total])
+              : S.t('没有读到登录 Cookie，请确认已在页面里完成登录'),
         );
         if (total > 0) Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) {
-        AnikumoDialog.showToast(message: '保存登录状态失败：$e');
+        AnikumoDialog.showToast(message: S.f('保存登录状态失败：{}', [e]));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -222,7 +223,7 @@ class _NovelLoginPageState extends State<NovelLoginPage> {
           .runLoginAction(widget.sourceId, row.action);
     } catch (e) {
       if (mounted) {
-        AnikumoDialog.showToast(message: '执行失败：$e');
+        AnikumoDialog.showToast(message: S.f('执行失败：{}', [e]));
       }
     }
   }
@@ -242,7 +243,7 @@ class _NovelLoginPageState extends State<NovelLoginPage> {
     await MoyuanHost.instance
         .clearSourceLogin(widget.sourceId, _jarHosts);
     if (mounted) {
-      AnikumoDialog.showToast(message: '已清除这个源的登录状态');
+      AnikumoDialog.showToast(message: S.t('已清除这个源的登录状态'));
     }
   }
 
@@ -262,7 +263,7 @@ class _NovelLoginPageState extends State<NovelLoginPage> {
         title: Text(row.label),
         trailing: DropdownButton<String>(
           value: row.chars.contains(value) ? value : null,
-          hint: const Text('请选择'),
+          hint: Text(S.t('请选择')),
           items: [
             for (final choice in row.chars)
               DropdownMenuItem(value: choice, child: Text(choice)),
@@ -294,8 +295,8 @@ class _NovelLoginPageState extends State<NovelLoginPage> {
     final source = NovelSources.byId(widget.sourceId);
     if (source == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('书源登录')),
-        body: const Center(child: Text('这个源已不存在。')),
+        appBar: AppBar(title: Text(S.t('书源登录'))),
+        body: Center(child: Text(S.t('这个源已不存在。'))),
       );
     }
     final theme = Theme.of(context);
@@ -304,8 +305,8 @@ class _NovelLoginPageState extends State<NovelLoginPage> {
         (loginUrl.startsWith('http') ? loginUrl : null);
     if (_rows.isEmpty && webUrl == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('书源登录')),
-        body: const Center(child: Text('这个源没有声明登录页，或源已不存在。')),
+        appBar: AppBar(title: Text(S.t('书源登录'))),
+        body: Center(child: Text(S.t('这个源没有声明登录页，或源已不存在。'))),
       );
     }
     if (webUrl != null && _webViewUrl != webUrl) {
@@ -331,15 +332,15 @@ class _NovelLoginPageState extends State<NovelLoginPage> {
     }
     return Scaffold(
       appBar: AppBar(
-        title: Text('登录 · ${source.name}'),
+        title: Text(S.f('登录 · {}', [source.name])),
         actions: [
           TextButton(
             onPressed: _clearLogin,
-            child: const Text('清除登录'),
+            child: Text(S.t('清除登录')),
           ),
           TextButton(
             onPressed: _saving ? null : _saveAll,
-            child: Text(_saving ? '保存中…' : '完成'),
+            child: Text(_saving ? S.t('保存中…') : S.t('完成')),
           ),
         ],
       ),
@@ -351,10 +352,10 @@ class _NovelLoginPageState extends State<NovelLoginPage> {
             color: theme.colorScheme.surfaceContainerHighest,
             child: Text(
               _rows.isNotEmpty
-                  ? '按这个源的要求填写下面几项，点右上角「完成」保存；'
-                      '需要网页登录时，点表单里的按钮打开登录页，登录后同样点「完成」。'
-                  : '在页面里登录这个网站，登录成功后点右上角「完成」，'
-                      '登录状态会保存下来，这个源的搜索和目录就会带上它。',
+                  ? S.t('按这个源的要求填写下面几项，点右上角「完成」保存；'
+                      '需要网页登录时，点表单里的按钮打开登录页，登录后同样点「完成」。')
+                  : S.t('在页面里登录这个网站，登录成功后点右上角「完成」，'
+                      '登录状态会保存下来，这个源的搜索和目录就会带上它。'),
               style: theme.textTheme.bodySmall,
             ),
           ),

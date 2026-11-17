@@ -14,6 +14,7 @@ import 'package:anikumo/services/player/screenshot_export_service.dart';
 import 'package:anikumo/services/player/screenshot_image_cache.dart';
 import 'package:mobx/mobx.dart' as mobx;
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 Future<void> showPlayerScreenshotSheet(
   BuildContext context, {
@@ -228,16 +229,16 @@ class _PlayerScreenshotSheetState extends State<_PlayerScreenshotSheet> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('清空候选截图？'),
-        content: Text('这将丢弃 ${collection.candidates.length} 张未保存的截图，无法恢复。'),
+        title: Text(S.t('清空候选截图？')),
+        content: Text(S.f('这将丢弃 {} 张未保存的截图，无法恢复。', [collection.candidates.length])),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('清空'),
+            child: Text(S.t('清空')),
           ),
         ],
       ),
@@ -435,7 +436,7 @@ class _PlayerScreenshotSheetState extends State<_PlayerScreenshotSheet> {
     mainAxisSize: MainAxisSize.min,
     children: [
       IconButton(
-        tooltip: '上一张',
+        tooltip: S.t('上一张'),
         onPressed: _index > 0 ? () => _step(-1) : null,
         icon: const Icon(AnikumoIcons.chevron_left_rounded),
       ),
@@ -444,7 +445,7 @@ class _PlayerScreenshotSheetState extends State<_PlayerScreenshotSheet> {
         style: Theme.of(context).textTheme.labelMedium,
       ),
       IconButton(
-        tooltip: '下一张',
+        tooltip: S.t('下一张'),
         onPressed: _index < collection.candidates.length - 1
             ? () => _step(1)
             : null,
@@ -471,7 +472,7 @@ class _PlayerScreenshotSheetState extends State<_PlayerScreenshotSheet> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '挑选截图',
+                S.t('挑选截图'),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: compact
@@ -495,19 +496,19 @@ class _PlayerScreenshotSheetState extends State<_PlayerScreenshotSheet> {
             animated: true,
             enabled: !collection.busy,
             builder: (context, toggle) => IconButton(
-              tooltip: '管理截图',
+              tooltip: S.t('管理截图'),
               icon: const Icon(AnikumoIcons.more_vert_rounded),
               onPressed: toggle,
             ),
             menuChildren: [
               AnikumoMenuItem(
-                label: '移除所选',
+                label: S.t('移除所选'),
                 onPressed: !collection.busy && collection.selectedCount > 0
                     ? _removeSelected
                     : null,
               ),
               AnikumoMenuItem(
-                label: '清空候选',
+                label: S.t('清空候选'),
                 onPressed: collection.busy
                     ? null
                     : () => unawaited(_clearCandidates()),
@@ -516,7 +517,7 @@ class _PlayerScreenshotSheetState extends State<_PlayerScreenshotSheet> {
           ),
         if (current != null)
           IconButton(
-            tooltip: _zoomed ? '还原大小' : '放大查看',
+            tooltip: _zoomed ? S.t('还原大小') : S.t('放大查看'),
             onPressed: _toggleZoom,
             icon: Icon(
               _zoomed ? AnikumoIcons.zoom_out_rounded : AnikumoIcons.zoom_in_rounded,
@@ -524,7 +525,7 @@ class _PlayerScreenshotSheetState extends State<_PlayerScreenshotSheet> {
           ),
         Observer(
           builder: (context) => IconButton(
-            tooltip: '返回播放',
+            tooltip: S.t('返回播放'),
             onPressed: collection.saving ? null : _close,
             icon: const Icon(AnikumoIcons.close_rounded),
           ),
@@ -572,9 +573,10 @@ class _PlayerScreenshotSheetState extends State<_PlayerScreenshotSheet> {
               },
               child: PlayerScreenshotImage(
                 bytes: collection.candidates[index].bytes,
-                semanticLabel:
-                    '${collection.candidates[index].episode} '
-                    '${collection.candidates[index].timeLabel} 截图',
+                semanticLabel: S.f('{} {} 截图', [
+                  collection.candidates[index].episode,
+                  collection.candidates[index].timeLabel,
+                ]),
               ),
             ),
           ),
@@ -624,7 +626,7 @@ class _PlayerScreenshotSheetState extends State<_PlayerScreenshotSheet> {
                 : AnikumoIcons.radio_button_unchecked_rounded,
             size: 20,
           ),
-          label: Text(selected ? '已选中' : '选择这张'),
+          label: Text(selected ? S.t('已选中') : S.t('选择这张')),
         ),
       );
     },
@@ -670,7 +672,7 @@ class _PlayerScreenshotSheetState extends State<_PlayerScreenshotSheet> {
                 ),
               ),
               IconButton(
-                tooltip: '关闭提示',
+                tooltip: S.t('关闭提示'),
                 color: colors.onInverseSurface,
                 onPressed: () => setState(() => _notice = null),
                 icon: const Icon(AnikumoIcons.close_rounded, size: 20),
@@ -708,7 +710,9 @@ class _PlayerScreenshotSheetState extends State<_PlayerScreenshotSheet> {
           label: Text(
             collection.saving
                 ? '${collection.saveCompleted}/${collection.saveTotal}'
-                : '保存${collection.selectedCount > 0 ? ' ${collection.selectedCount} 张' : '所选'}',
+                : collection.selectedCount > 0
+                    ? S.f('保存 {} 张', [collection.selectedCount])
+                    : S.t('保存所选'),
             maxLines: 1,
           ),
         ),
@@ -776,7 +780,7 @@ class _PlayerScreenshotSheetState extends State<_PlayerScreenshotSheet> {
             final onPressed = collection.saving
                 ? null
                 : () => collection.setAllSelected(!all);
-            final label = Text(all ? '取消全选' : '全选');
+            final label = Text(all ? S.t('取消全选') : S.t('全选'));
             if (compact) {
               return FilledButton.tonal(
                 style: style.copyWith(
@@ -841,15 +845,15 @@ class _PlayerScreenshotSheetState extends State<_PlayerScreenshotSheet> {
             color: Theme.of(context).colorScheme.primary,
           ),
           const SizedBox(height: 20),
-          Text('暂无待处理截图', style: Theme.of(context).textTheme.titleLarge),
+          Text(S.t('暂无待处理截图'), style: Theme.of(context).textTheme.titleLarge),
           if (_notice != null) ...[const SizedBox(height: 16), _noticeView()],
           const SizedBox(height: 8),
-          const Text(
-            '返回视频，点击相机收集喜欢的画面。\n保存或移除截图后，可以继续截图。',
+          Text(
+            S.t('返回视频，点击相机收集喜欢的画面。\n保存或移除截图后，可以继续截图。'),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
-          FilledButton.tonal(onPressed: _close, child: const Text('返回视频截图')),
+          FilledButton.tonal(onPressed: _close, child: Text(S.t('返回视频截图'))),
         ],
       ),
     ),
@@ -988,8 +992,8 @@ class _FrameThumbnail extends StatelessWidget {
     return Semantics(
       button: true,
       selected: active,
-      label:
-          '查看第 ${index + 1} 张，${item.episode} ${item.timeLabel}${selected ? '，已选中' : ''}',
+      label: S.f('查看第 {} 张，{} {}', [index + 1, item.episode, item.timeLabel]) +
+          (selected ? S.t('，已选中') : ''),
       child: Material(
         color: Colors.transparent,
         child: InkWell(

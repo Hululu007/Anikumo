@@ -12,6 +12,7 @@ import 'package:anikumo/services/library/user_library.dart';
 import 'package:anikumo/services/share/share_builders.dart';
 import 'package:anikumo/utils/constants.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// 我的榜单 (hub 区二）: user-created lists over their own collections
 /// and history — e.g. 「本季度神作」「补番计划」 — stored locally as
@@ -37,22 +38,22 @@ class _MyListsPageState extends State<MyListsPage> {
     final name = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('新建榜单'),
+        title: Text(S.t('新建榜单')),
         content: TextField(
           controller: controller,
           autofocus: true,
           maxLength: 20,
-          decoration: const InputDecoration(hintText: '比如：本季度神作'),
+          decoration: InputDecoration(hintText: S.t('比如：本季度神作')),
           onSubmitted: (value) => Navigator.of(context).pop(value),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(controller.text),
-            child: const Text('创建'),
+            child: Text(S.t('创建')),
           ),
         ],
       ),
@@ -76,7 +77,7 @@ class _MyListsPageState extends State<MyListsPage> {
     setState(() => _lists = _lists.where((e) => e.id != list.id).toList());
     await UserListsStore.save(_lists);
     if (mounted) {
-      AnikumoDialog.showToast(context: context, message: '已删除榜单「${list.name}」');
+      AnikumoDialog.showToast(context: context, message: S.f('已删除榜单「{}」', [list.name]));
     }
   }
 
@@ -84,10 +85,10 @@ class _MyListsPageState extends State<MyListsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: SysAppBar(
-        title: const Text('我的榜单'),
+        title: Text(S.t('我的榜单')),
         actions: [
           IconButton(
-            tooltip: '新建榜单',
+            tooltip: S.t('新建榜单'),
             onPressed: _createList,
             icon: const Icon(AnikumoIcons.add),
           ),
@@ -96,12 +97,12 @@ class _MyListsPageState extends State<MyListsPage> {
       body: _lists.isEmpty
           ? GeneralEmptyState(
               icon: AnikumoIcons.list_alt_outlined,
-              title: '还没有自建榜单',
+              title: S.t('还没有自建榜单'),
               actions: [
                 StateActionButton.tonal(
                   onPressed: _createList,
                   icon: AnikumoIcons.add,
-                  text: '新建榜单',
+                  text: S.t('新建榜单'),
                 ),
               ],
             )
@@ -142,14 +143,14 @@ class _MyListsPageState extends State<MyListsPage> {
                                   ?.copyWith(fontWeight: FontWeight.w600),
                             ),
                             Text(
-                              '共 ${list.bangumiIds.length} 部',
+                              S.f('共 {} 部', [list.bangumiIds.length]),
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
                         ),
                       ),
                       IconButton(
-                        tooltip: '删除榜单',
+                        tooltip: S.t('删除榜单'),
                         onPressed: () => _deleteList(list),
                         icon: const Icon(AnikumoIcons.delete_outline),
                       ),
@@ -200,10 +201,10 @@ class _ListDetailPageState extends State<_ListDetailPage> {
   }
 
   Future<void> _addItem() async {
-    final picked = await showBangumiPicker(context, title: '添加到榜单');
+    final picked = await showBangumiPicker(context, title: S.t('添加到榜单'));
     if (picked == null || _list == null || !mounted) return;
     if (_list!.bangumiIds.contains(picked.id)) {
-      AnikumoDialog.showToast(context: context, message: '这部番已经在榜单里了');
+      AnikumoDialog.showToast(context: context, message: S.t('这部番已经在榜单里了'));
       return;
     }
     setState(() => _list!.bangumiIds.add(picked.id));
@@ -223,14 +224,14 @@ class _ListDetailPageState extends State<_ListDetailPage> {
         .whereType<BangumiItem>()
         .toList();
     if (items.isEmpty) {
-      AnikumoDialog.showToast(context: context, message: '榜单还是空的');
+      AnikumoDialog.showToast(context: context, message: S.t('榜单还是空的'));
       return;
     }
     await Clipboard.setData(
       ClipboardData(text: buildListShareText(list.name, items)),
     );
     if (!mounted) return;
-    AnikumoDialog.showToast(context: context, message: '片单文本已复制，去粘贴分享吧');
+    AnikumoDialog.showToast(context: context, message: S.t('片单文本已复制，去粘贴分享吧'));
   }
 
   @override
@@ -238,10 +239,10 @@ class _ListDetailPageState extends State<_ListDetailPage> {
     final list = _list;
     if (list == null) {
       return Scaffold(
-        appBar: const SysAppBar(title: Text('榜单')),
-        body: const GeneralEmptyState(
+        appBar: SysAppBar(title: Text(S.t('榜单'))),
+        body: GeneralEmptyState(
           icon: AnikumoIcons.list_alt_outlined,
-          title: '这个榜单不存在了',
+          title: S.t('这个榜单不存在了'),
         ),
       );
     }
@@ -254,17 +255,17 @@ class _ListDetailPageState extends State<_ListDetailPage> {
         title: Text(list.name),
         actions: [
           IconButton(
-            tooltip: '分享为文本',
+            tooltip: S.t('分享为文本'),
             onPressed: _shareAsText,
             icon: const Icon(AnikumoIcons.share_outlined),
           ),
           IconButton(
-            tooltip: _editing ? '完成' : '编辑条目',
+            tooltip: _editing ? S.t('完成') : S.t('编辑条目'),
             onPressed: () => setState(() => _editing = !_editing),
             icon: Icon(_editing ? AnikumoIcons.done : AnikumoIcons.edit_outlined),
           ),
           IconButton(
-            tooltip: '添加番剧',
+            tooltip: S.t('添加番剧'),
             onPressed: _addItem,
             icon: const Icon(AnikumoIcons.add),
           ),
@@ -273,12 +274,12 @@ class _ListDetailPageState extends State<_ListDetailPage> {
       body: items.isEmpty
           ? GeneralEmptyState(
               icon: AnikumoIcons.playlist_add_outlined,
-              title: '榜单还是空的',
+              title: S.t('榜单还是空的'),
               actions: [
                 StateActionButton.tonal(
                   onPressed: _addItem,
                   icon: AnikumoIcons.add,
-                  text: '从追番/历史中添加',
+                  text: S.t('从追番/历史中添加'),
                 ),
               ],
             )
@@ -305,7 +306,7 @@ class _ListDetailPageState extends State<_ListDetailPage> {
                         top: 2,
                         right: 2,
                         child: IconButton.filledTonal(
-                          tooltip: '从榜单移除',
+                          tooltip: S.t('从榜单移除'),
                           onPressed: () => _removeItem(item.id),
                           icon: const Icon(AnikumoIcons.close, size: 18),
                         ),

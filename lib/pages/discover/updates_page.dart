@@ -14,6 +14,7 @@ import 'package:anikumo/services/share/share_builders.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/utils/constants.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 const _weekdayLabels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
 
@@ -83,17 +84,17 @@ class _UpdatesPageState extends State<UpdatesPage> {
         .where((show) => show.weekday >= 1 && show.weekday <= 7)
         .toList();
     if (shows.isEmpty) {
-      AnikumoDialog.showToast(message: '在看的番剧没有可用的放送星期信息');
+      AnikumoDialog.showToast(message: S.t('在看的番剧没有可用的放送星期信息'));
       return;
     }
     final ics = buildBangumiCalendarIcs(shows, fromDate: DateTime.now());
     final path = await FilePicker.platform.saveFile(
-      dialogTitle: '导出放送日历',
+      dialogTitle: S.t('导出放送日历'),
       fileName: 'anikumo-bangumi-calendar.ics',
       bytes: utf8.encode(ics),
     );
     if (path != null) {
-      AnikumoDialog.showToast(message: '已导出 ${shows.length} 部番的放送日历');
+      AnikumoDialog.showToast(message: S.f('已导出 {} 部番的放送日历', [shows.length]));
     }
   }
 
@@ -104,19 +105,19 @@ class _UpdatesPageState extends State<UpdatesPage> {
     final todayItems = _byWeekday[todayWeekday] ?? const <BangumiItem>[];
     return Scaffold(
       appBar: AppBar(
-        title: const Text('更新中心'),
+        title: Text(S.t('更新中心')),
         actions: [
           IconButton(
             onPressed: _exportIcs,
             icon: const Icon(AnikumoIcons.event_available_rounded),
-            tooltip: '导出放送日历 (.ics)',
+            tooltip: S.t('导出放送日历 (.ics)'),
           ),
         ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _failed
-              ? const Center(child: Text('加载失败，请检查网络后重试'))
+              ? Center(child: Text(S.t('加载失败，请检查网络后重试')))
               : ListView(
                   padding: const EdgeInsets.fromLTRB(
                     StyleString.pagePadding,
@@ -135,8 +136,8 @@ class _UpdatesPageState extends State<UpdatesPage> {
                           Expanded(
                             child: Text(
                               todayItems.isEmpty
-                                  ? '今天没有在看的番更新，看看本周还有什么'
-                                  : '今天有 ${todayItems.length} 部在看的番更新',
+                                  ? S.t('今天没有在看的番更新，看看本周还有什么')
+                                  : S.f('今天有 {} 部在看的番更新', [todayItems.length]),
                               style: theme.textTheme.bodyMedium,
                             ),
                           ),
@@ -166,15 +167,15 @@ class _UpdatesPageState extends State<UpdatesPage> {
                         Row(
                           children: [
                             Text(
-                              _weekdayLabels[weekday - 1],
+                              S.t(_weekdayLabels[weekday - 1]),
                               style: theme.textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
                             if (weekday == todayWeekday) ...[
                               const SizedBox(width: 8),
-                              const Chip(
-                                label: Text('今天'),
+                              Chip(
+                                label: Text(S.t('今天')),
                                 visualDensity: VisualDensity.compact,
                               ),
                             ],
@@ -191,9 +192,9 @@ class _UpdatesPageState extends State<UpdatesPage> {
                         ),
                       ],
                     if (_byWeekday.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.only(top: 32),
-                        child: Center(child: Text('本周没有在看的番更新')),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 32),
+                        child: Center(child: Text(S.t('本周没有在看的番更新'))),
                       ),
                   ],
                 ),

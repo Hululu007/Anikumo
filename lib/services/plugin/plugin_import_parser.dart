@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
@@ -44,9 +45,9 @@ Future<String> _dioFetchRuleText(String url) async {
 Future<PluginImportParseResult> parseRuleUrl(String url) async {
   final text = await _dioFetchRuleText(url);
   if (text.trim().isEmpty) {
-    return const PluginImportParseResult(
+    return PluginImportParseResult(
       plugins: [],
-      failures: ['下载到的文件是空的'],
+      failures: [S.t('下载到的文件是空的')],
       duplicateCount: 0,
     );
   }
@@ -117,7 +118,7 @@ Future<PluginImportParseResult> parseRuleUrls(
         if (text.trim().isEmpty) {
           return PluginImportParseResult(
             plugins: const [],
-            failures: ['下载到的文件是空的：$url'],
+            failures: [S.f('下载到的文件是空的：{}', [url])],
             duplicateCount: 0,
           );
         }
@@ -125,7 +126,7 @@ Future<PluginImportParseResult> parseRuleUrls(
       } catch (e) {
         return PluginImportParseResult(
           plugins: const [],
-          failures: ['下载失败（$url）：${friendlyError(e)}'],
+          failures: [S.f('下载失败（{}）：{}', [url, friendlyError(e)])],
           duplicateCount: 0,
         );
       }
@@ -158,7 +159,7 @@ Future<PluginImportParseResult> importFromPastedText(
   final repoNotes = <String>[];
   for (final url in urls) {
     if (RuleRepository.normalizeBase(url) != null) {
-      repoNotes.add('「$url」是规则仓库地址，请到「规则管理 → 规则仓库」粘贴它批量导入');
+      repoNotes.add(S.f('「{}」是规则仓库地址，请到「规则管理 → 规则仓库」粘贴它批量导入', [url]));
     } else {
       fileUrls.add(url);
     }
@@ -204,9 +205,9 @@ class PluginImportParser {
   static PluginImportParseResult parse(String input) {
     final value = input.trim();
     if (value.isEmpty) {
-      return const PluginImportParseResult(
+      return PluginImportParseResult(
         plugins: [],
-        failures: ['导入内容为空'],
+        failures: [S.t('导入内容为空')],
         duplicateCount: 0,
       );
     }
@@ -235,7 +236,7 @@ class PluginImportParser {
         parsed.addAll(conversion.plugins);
         failures.addAll(conversion.skipped);
         if (conversion.plugins.isEmpty && conversion.skipped.isEmpty) {
-          failures.add('这份配置里没有可导入的源');
+          failures.add(S.t('这份配置里没有可导入的源'));
         }
       } else if (bookSourceShapeOf(jsonValue) case final bookSource?) {
         // Batch 107: a book-source package is not a Kazumi
@@ -244,8 +245,8 @@ class PluginImportParser {
         // per-entry rule errors (batch 108: unnamed).
         failures.add(
           bookSource.isVideo
-              ? '识别为视频书源格式：动漫区暂未支持这种格式，未导入'
-              : '识别为书源格式：请到小说区或漫画区导入，动漫区未导入',
+              ? S.t('识别为视频书源格式：动漫区暂未支持这种格式，未导入')
+              : S.t('识别为书源格式：请到小说区或漫画区导入，动漫区未导入'),
         );
       } else if (jsonValue is List) {
         for (var index = 0; index < jsonValue.length; index++) {
@@ -257,7 +258,7 @@ class PluginImportParser {
     } else {
       final segments = findAnikumoRuleLinkSegments(value).toList();
       if (segments.isEmpty) {
-        failures.add('未找到有效的 JSON 或 anikumo:// 规则链接');
+        failures.add(S.t('未找到有效的 JSON 或 anikumo:// 规则链接'));
       } else {
         for (var index = 0; index < segments.length; index++) {
           final segment = segments[index];
@@ -300,7 +301,7 @@ class PluginImportParser {
       final entry = _decodeRuleEntry(scheme, rawPayload);
       _parseEntry(entry, index, plugins, failures);
     } catch (error) {
-      failures.add('第 $index 条：$error');
+      failures.add(S.f('第 {} 条：{}', [index, error]));
     }
   }
 
@@ -333,7 +334,7 @@ class PluginImportParser {
           return Map<String, dynamic>.from(decoded);
         }
         firstError ??=
-            const FormatException('规则链接内容必须是 JSON object');
+            FormatException(S.t('规则链接内容必须是 JSON object'));
       } on FormatException catch (error) {
         firstError ??= error;
         // Try a shorter prefix in case prose follows the rule link.
@@ -355,22 +356,22 @@ class PluginImportParser {
       } else if (entry is String) {
         final decoded = json.decode(anikumoBase64ToJson(entry));
         if (decoded is! Map) {
-          throw const FormatException('规则链接内容必须是 JSON object');
+          throw FormatException(S.t('规则链接内容必须是 JSON object'));
         }
         plugin = Plugin.fromJson(Map<String, dynamic>.from(decoded));
       } else {
-        throw const FormatException('规则必须是 JSON object 或 anikumo:// 链接');
+        throw FormatException(S.t('规则必须是 JSON object 或 anikumo:// 链接'));
       }
 
       if (plugin.name.trim().isEmpty) {
-        throw const FormatException('规则名称不能为空');
+        throw FormatException(S.t('规则名称不能为空'));
       }
       if (plugin.requiresNewerClient) {
-        throw const FormatException('规则需要更高版本客户端');
+        throw FormatException(S.t('规则需要更高版本客户端'));
       }
       plugins.add(plugin);
     } catch (error) {
-      failures.add('第 $index 条：$error');
+      failures.add(S.f('第 {} 条：{}', [index, error]));
     }
   }
 }

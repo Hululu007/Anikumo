@@ -16,6 +16,7 @@ import 'package:anikumo/services/browse/feed_builder.dart';
 import 'package:anikumo/services/network/bangumi_acceleration.dart';
 import 'package:anikumo/utils/constants.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// 发现 (discover) tab: anime discovery only.
 ///
@@ -133,7 +134,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'DISCOVER · 探索中心',
+                    S.t('DISCOVER · 探索中心'),
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: Theme.of(context).colorScheme.outline,
                           fontWeight: FontWeight.w700,
@@ -142,7 +143,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '发现',
+                    S.t('发现'),
                     style: Theme.of(context)
                         .textTheme
                         .headlineMedium
@@ -160,14 +161,14 @@ class _DiscoverPageState extends State<DiscoverPage> {
           // purely about anime content again.
           // Batch 44: the two-column entry cards become a
           // numbered editorial index — same seven destinations.
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
             child: FadeSlideIn(
-              delay: Duration(milliseconds: 60),
+              delay: const Duration(milliseconds: 60),
               child: EditorialSectionHeader(
                 index: '01',
                 label: 'EXPLORE',
-                title: '内容发现',
-                subtitle: '排行榜、今日上新，还有按标签慢慢逛',
+                title: S.t('内容发现'),
+                subtitle: S.t('排行榜、今日上新，还有按标签慢慢逛'),
               ),
             ),
           ),
@@ -179,8 +180,8 @@ class _DiscoverPageState extends State<DiscoverPage> {
                   EditorialIndexRow(
                     index: '01',
                     icon: AnikumoIcons.emoji_events_outlined,
-                    title: '排行榜',
-                    subtitle: '按 Bangumi 排名看热门',
+                    title: S.t('排行榜'),
+                    subtitle: S.t('按 Bangumi 排名看热门'),
                     onTap: () =>
                         context.pushNamed('/tab/discover/rank/'),
                   ),
@@ -188,8 +189,8 @@ class _DiscoverPageState extends State<DiscoverPage> {
                   EditorialIndexRow(
                     index: '02',
                     icon: AnikumoIcons.today_outlined,
-                    title: '今日上新',
-                    subtitle: '今天播出的新番与你的在追',
+                    title: S.t('今日上新'),
+                    subtitle: S.t('今天播出的新番与你的在追'),
                     onTap: () =>
                         context.pushNamed('/tab/discover/today/'),
                   ),
@@ -197,8 +198,8 @@ class _DiscoverPageState extends State<DiscoverPage> {
                   EditorialIndexRow(
                     index: '03',
                     icon: AnikumoIcons.auto_awesome_outlined,
-                    title: '每日推荐',
-                    subtitle: '每天换一批，专挑没看过的',
+                    title: S.t('每日推荐'),
+                    subtitle: S.t('每天换一批，专挑没看过的'),
                     onTap: () =>
                         context.pushNamed('/tab/discover/daily/'),
                   ),
@@ -206,8 +207,8 @@ class _DiscoverPageState extends State<DiscoverPage> {
                   EditorialIndexRow(
                     index: '04',
                     icon: AnikumoIcons.update_outlined,
-                    title: '更新中心',
-                    subtitle: '在看的番这周哪天更新',
+                    title: S.t('更新中心'),
+                    subtitle: S.t('在看的番这周哪天更新'),
                     onTap: () =>
                         context.pushNamed('/tab/discover/updates/'),
                   ),
@@ -215,8 +216,8 @@ class _DiscoverPageState extends State<DiscoverPage> {
                   EditorialIndexRow(
                     index: '05',
                     icon: AnikumoIcons.movie_filter_outlined,
-                    title: '相似推荐',
-                    subtitle: '喜欢这部？再找几部像的',
+                    title: S.t('相似推荐'),
+                    subtitle: S.t('喜欢这部？再找几部像的'),
                     onTap: () =>
                         context.pushNamed('/tab/discover/similar/'),
                   ),
@@ -224,8 +225,8 @@ class _DiscoverPageState extends State<DiscoverPage> {
                   EditorialIndexRow(
                     index: '06',
                     icon: AnikumoIcons.upcoming_outlined,
-                    title: '即将开播',
-                    subtitle: '想看里还没开播的，带倒计时',
+                    title: S.t('即将开播'),
+                    subtitle: S.t('想看里还没开播的，带倒计时'),
                     onTap: () =>
                         context.pushNamed('/tab/discover/coming/'),
                   ),
@@ -233,10 +234,30 @@ class _DiscoverPageState extends State<DiscoverPage> {
                   EditorialIndexRow(
                     index: '07',
                     icon: AnikumoIcons.casino_outlined,
-                    title: '随便看一部',
-                    subtitle: '选择困难时，随机抽一部今晚看',
+                    title: S.t('随便看一部'),
+                    subtitle: S.t('选择困难时，随机抽一部今晚看'),
                     onTap: () =>
                         context.pushNamed('/tab/discover/random/'),
+                  ),
+                  const EditorialHairline(),
+                  // Batch 275 (#43): cross-zone favorites.
+                  EditorialIndexRow(
+                    index: '08',
+                    icon: AnikumoIcons.favorite_rounded,
+                    title: S.t('全部收藏'),
+                    subtitle: S.t('四个专区的收藏放在一页看'),
+                    onTap: () => context
+                        .pushNamed('/tab/discover/cross-favorites/'),
+                  ),
+                  const EditorialHairline(),
+                  // Batch 276 (#58): cross-zone hot chart.
+                  EditorialIndexRow(
+                    index: '09',
+                    icon: AnikumoIcons.emoji_events_rounded,
+                    title: S.t('四区热门榜'),
+                    subtitle: S.t('每个专区现在最热的十部'),
+                    onTap: () => context
+                        .pushNamed('/tab/discover/cross-ranks/'),
                   ),
                 ],
               ),
@@ -248,9 +269,9 @@ class _DiscoverPageState extends State<DiscoverPage> {
             child: EditorialSectionHeader(
               index: '02',
               label: 'BY TAGS',
-              title: '按标签发现',
-              subtitle: '点一个标签，看看这个分类里有什么',
-              actionLabel: '换一批',
+              title: S.t('按标签发现'),
+              subtitle: S.t('点一个标签，看看这个分类里有什么'),
+              actionLabel: S.t('换一批'),
               onAction: _rotateTags,
             ),
           ),
@@ -284,17 +305,17 @@ class _DiscoverPageState extends State<DiscoverPage> {
             SliverFillRemaining(
               hasScrollBody: false,
               child: GeneralErrorWidget(
-                errMsg: '这个标签暂时没有拉到内容，请重试或换个标签。',
+                errMsg: S.t('这个标签暂时没有拉到内容，请重试或换个标签。'),
                 onRetry: () =>
                     _selectedTag == null ? null : _loadTag(_selectedTag!),
               ),
             )
           else if (_items.isEmpty)
-            const SliverFillRemaining(
+            SliverFillRemaining(
               hasScrollBody: false,
               child: GeneralEmptyState(
                 icon: AnikumoIcons.explore_outlined,
-                title: '选一个标签开始发现',
+                title: S.t('选一个标签开始发现'),
                 compact: true,
               ),
             )

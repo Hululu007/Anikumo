@@ -29,6 +29,7 @@ import 'package:anikumo/modules/staff/staff_item.dart';
 import 'package:anikumo/utils/constants.dart';
 import 'package:anikumo/utils/device.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class InfoTabView extends StatefulWidget {
   const InfoTabView({
@@ -261,7 +262,7 @@ class _InfoTabViewState extends State<InfoTabView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('简介', style: TextStyle(fontSize: 18)),
+              Text(S.t('简介'), style: TextStyle(fontSize: 18)),
               const SizedBox(height: 8),
               LayoutBuilder(
                 builder: (context, constraints) {
@@ -297,7 +298,7 @@ class _InfoTabViewState extends State<InfoTabView> {
                               fullIntro = !fullIntro;
                             });
                           },
-                          child: Text(fullIntro ? '加载更少' : '加载更多'),
+                          child: Text(fullIntro ? S.t('加载更少') : S.t('加载更多')),
                         ),
                       ],
                     );
@@ -312,7 +313,7 @@ class _InfoTabViewState extends State<InfoTabView> {
                 },
               ),
               const SizedBox(height: 16),
-              Text('标签', style: TextStyle(fontSize: 18)),
+              Text(S.t('标签'), style: TextStyle(fontSize: 18)),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8.0,
@@ -325,7 +326,7 @@ class _InfoTabViewState extends State<InfoTabView> {
                     if (!fullTag && index == 12) {
                       return ActionChip(
                         label: Text(
-                          '更多 +',
+                          S.t('更多 +'),
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.primary,
                           ),
@@ -362,7 +363,7 @@ class _InfoTabViewState extends State<InfoTabView> {
               ),
               if (_pairedAnime.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                const Text('配套动漫', style: TextStyle(fontSize: 18)),
+                Text(S.t('配套动漫'), style: TextStyle(fontSize: 18)),
                 const SizedBox(height: 8),
                 FadeSlideIn(
                   delay: const Duration(milliseconds: 60),
@@ -420,14 +421,14 @@ class _InfoTabViewState extends State<InfoTabView> {
                 ),
               ],
               const SizedBox(height: 16),
-              const Text('配套漫画', style: TextStyle(fontSize: 18)),
+              Text(S.t('配套漫画'), style: TextStyle(fontSize: 18)),
               const SizedBox(height: 8),
               if (!_pairedMangaLoaded)
-                const CompanionLoadingRow(label: '正在漫画源里查找同名作品…')
+                CompanionLoadingRow(label: S.t('正在漫画源里查找同名作品…'))
               else if (_pairedManga.isEmpty)
                 CompanionEmptyRow(
-                  message: '漫画源里暂未找到同名作品',
-                  actionLabel: '去漫画区搜索',
+                  message: S.t('漫画源里暂未找到同名作品'),
+                  actionLabel: S.t('去漫画区搜索'),
                   onAction: () => context.pushNamed(
                     '/manga/search',
                     arguments: widget.bangumiItem.nameCn,
@@ -458,14 +459,14 @@ class _InfoTabViewState extends State<InfoTabView> {
                 ),
               ],
               const SizedBox(height: 16),
-              const Text('配套小说', style: TextStyle(fontSize: 18)),
+              Text(S.t('配套小说'), style: TextStyle(fontSize: 18)),
               const SizedBox(height: 8),
               if (!_pairedNovelsLoaded)
-                const CompanionLoadingRow(label: '正在小说源里查找同名作品…')
+                CompanionLoadingRow(label: S.t('正在小说源里查找同名作品…'))
               else if (_pairedNovels.isEmpty)
                 CompanionEmptyRow(
-                  message: '小说源里暂未找到同名作品',
-                  actionLabel: '去小说区搜索',
+                  message: S.t('小说源里暂未找到同名作品'),
+                  actionLabel: S.t('去小说区搜索'),
                   onAction: () => context.pushNamed(
                     '/novel/search',
                     arguments: widget.bangumiItem.nameCn,
@@ -509,18 +510,18 @@ class _InfoTabViewState extends State<InfoTabView> {
                   return SliverFillRemaining(
                     hasScrollBody: false,
                     child: GeneralErrorWidget(
-                      title: '关联条目加载失败',
-                      errMsg: '请检查网络连接后重试。',
+                      title: S.t('关联条目加载失败'),
+                      errMsg: S.t('请检查网络连接后重试。'),
                       onRetry: widget.loadRelations,
                     ),
                   );
                 }
                 if (widget.relationsHasLoaded && widget.relationList.isEmpty) {
-                  return const SliverFillRemaining(
+                  return SliverFillRemaining(
                     hasScrollBody: false,
                     child: GeneralEmptyState(
                       icon: AnikumoIcons.account_tree_rounded,
-                      title: '暂无关联条目',
+                      title: S.t('暂无关联条目'),
                     ),
                   );
                 }
@@ -654,18 +655,18 @@ class _InfoTabViewState extends State<InfoTabView> {
                 if (widget.staffQueryTimeout) {
                   return SliverFillRemaining(
                     child: GeneralErrorWidget(
-                      title: '制作人员加载失败',
-                      errMsg: '请检查网络连接后重试。',
+                      title: S.t('制作人员加载失败'),
+                      errMsg: S.t('请检查网络连接后重试。'),
                       onRetry: widget.loadStaff,
                     ),
                   );
                 }
                 if (widget.staffIsEmpty) {
-                  return const SliverFillRemaining(
+                  return SliverFillRemaining(
                     hasScrollBody: false,
                     child: GeneralEmptyState(
                       icon: AnikumoIcons.groups_rounded,
-                      title: '暂无制作人员信息',
+                      title: S.t('暂无制作人员信息'),
                     ),
                   );
                 }
@@ -732,18 +733,18 @@ class _InfoTabViewState extends State<InfoTabView> {
                 if (widget.charactersQueryTimeout) {
                   return SliverFillRemaining(
                     child: GeneralErrorWidget(
-                      title: '角色列表加载失败',
-                      errMsg: '请检查网络连接后重试。',
+                      title: S.t('角色列表加载失败'),
+                      errMsg: S.t('请检查网络连接后重试。'),
                       onRetry: widget.loadCharacters,
                     ),
                   );
                 }
                 if (widget.charactersIsEmpty) {
-                  return const SliverFillRemaining(
+                  return SliverFillRemaining(
                     hasScrollBody: false,
                     child: GeneralEmptyState(
                       icon: AnikumoIcons.people_alt_rounded,
-                      title: '暂无角色信息',
+                      title: S.t('暂无角色信息'),
                     ),
                   );
                 }
@@ -817,12 +818,12 @@ class _InfoTabViewState extends State<InfoTabView> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('还没有规则，无法开始观看'),
+                Text(S.t('还没有规则，无法开始观看')),
                 const SizedBox(height: 12),
                 FilledButton.icon(
                   onPressed: () => context.pushNamed('/settings/plugin/'),
                   icon: const Icon(AnikumoIcons.add_rounded),
-                  label: const Text('添加规则'),
+                  label: Text(S.t('添加规则')),
                 ),
               ],
             ),
@@ -897,7 +898,7 @@ class _RelatedBangumiCardH extends StatelessWidget {
     final textScaler = MediaQuery.textScalerOf(
       context,
     ).clamp(maxScaleFactor: 1.1);
-    final relationLabel = relation.relation.isEmpty ? '关联' : relation.relation;
+    final relationLabel = relation.relation.isEmpty ? S.t('关联') : relation.relation;
     final bangumiItem = relation.toBangumiItem();
     final title = bangumiItem.nameCn.isEmpty
         ? bangumiItem.name.trim()

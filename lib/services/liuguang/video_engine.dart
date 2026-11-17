@@ -6,8 +6,10 @@ import 'package:liuguang_core/liuguang_core.dart';
 
 import 'package:path_provider/path_provider.dart';
 
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/storage/storage.dart';
 import 'package:anikumo/services/liuguang/cms_api_source.dart';
+import 'package:anikumo/services/liuguang/film_prefs.dart';
 import 'package:anikumo/services/liuguang/liuguang_hive_storage.dart';
 import 'package:anikumo/services/liuguang/mediakit_player_engine.dart';
 
@@ -68,10 +70,10 @@ List<VideoSourceEntry> filterFilmSources(
 /// the sources tab （刚刚 / N分钟前 / N小时前 / N天前）.
 String filmCheckAgeText(DateTime checkedAt, DateTime now) {
   final diff = now.difference(checkedAt);
-  if (diff.inSeconds < 60) return '刚刚';
-  if (diff.inMinutes < 60) return '${diff.inMinutes}分钟前';
-  if (diff.inHours < 24) return '${diff.inHours}小时前';
-  return '${diff.inDays}天前';
+  if (diff.inSeconds < 60) return S.t('刚刚');
+  if (diff.inMinutes < 60) return S.f('{}分钟前', [diff.inMinutes]);
+  if (diff.inHours < 24) return S.f('{}小时前', [diff.inHours]);
+  return S.f('{}天前', [diff.inDays]);
 }
 
 /// Batch 203: one user-imported interface source of the
@@ -224,6 +226,12 @@ class VideoEngineService extends ChangeNotifier {
         checkedAt: DateTime.now(),
       );
       await _persistHealth();
+      // Batch 272 (#35): feed the availability history.
+      await FilmSourceHistory.append(
+        entry.id,
+        ok: health.healthy,
+        ms: health.healthy ? health.latency.inMilliseconds : -1,
+      );
       return health;
     } catch (e) {
       final health = SourceHealth.fail(e.toString());
@@ -234,6 +242,7 @@ class VideoEngineService extends ChangeNotifier {
         checkedAt: DateTime.now(),
       );
       await _persistHealth();
+      await FilmSourceHistory.append(entry.id, ok: false, ms: -1);
       return health;
     } finally {
       notifyListeners();

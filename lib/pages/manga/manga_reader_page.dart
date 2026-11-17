@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -188,7 +189,11 @@ class _MangaReaderPageState extends State<MangaReaderPage> {
     // long-past pages in RAM.
     // Batch 239: 160 -> 128 MB in the "less cache" pass;
     // the window around the reading position is unaffected.
-    imageCache.maximumSizeBytes = 128 * 1024 * 1024;
+    // Batch 268: SmoothMode （低内存模式） tightens the reader
+    // cache further, to 64 MB — long strip chapters churn
+    // less and low-RAM devices stop evicting under pressure.
+    imageCache.maximumSizeBytes =
+        (SmoothMode.notifier.value ? 64 : 128) * 1024 * 1024;
     _chapters = widget.args.chapters;
     _chapterIndex = widget.args.chapterIndex;
     _pageController = PageController();
@@ -241,9 +246,12 @@ class _MangaReaderPageState extends State<MangaReaderPage> {
   }
 
   void _applySettings() {
-    _mode = normalizeMangaReaderMode(
-      GStorage.getSetting(SettingsKeys.mangaReaderMode),
-    );
+    // Batch 271: a mode remembered for this work wins
+    // over the global mode.
+    _mode = MangaReaderModeMemory.modeForWork(_manga.storageKey) ??
+        normalizeMangaReaderMode(
+          GStorage.getSetting(SettingsKeys.mangaReaderMode),
+        );
     _tapToTurn = GStorage.getSetting(SettingsKeys.mangaTapToTurn);
     _reverseTap = GStorage.getSetting(SettingsKeys.mangaReverseTap);
     _pageAnimation = GStorage.getSetting(SettingsKeys.mangaPageAnimation);
@@ -907,7 +915,7 @@ class _MangaReaderPageState extends State<MangaReaderPage> {
 
   void _nextChapter() {
     if (_chapterIndex >= _chapters.length - 1) {
-      AnikumoDialog.showToast(message: '已经是最后一话了');
+      AnikumoDialog.showToast(message: S.t('已经是最后一话了'));
       return;
     }
     _loadChapter(_chapterIndex + 1);
@@ -915,7 +923,7 @@ class _MangaReaderPageState extends State<MangaReaderPage> {
 
   void _prevChapter() {
     if (_chapterIndex <= 0) {
-      AnikumoDialog.showToast(message: '已经是第一话了');
+      AnikumoDialog.showToast(message: S.t('已经是第一话了'));
       return;
     }
     _loadChapter(_chapterIndex - 1);
@@ -1105,10 +1113,10 @@ class _MangaReaderPageState extends State<MangaReaderPage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('自动滚动速度', style: theme.textTheme.titleMedium),
+                  Text(S.t('自动滚动速度'), style: theme.textTheme.titleMedium),
                   const SizedBox(height: 2),
                   Text(
-                    '$speed 像素/秒 · 调整立即生效',
+                    S.f('{} 像素/秒 · 调整立即生效', [speed]),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.outline,
                     ),
@@ -1132,8 +1140,8 @@ class _MangaReaderPageState extends State<MangaReaderPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('慢', style: theme.textTheme.bodySmall),
-                      Text('快', style: theme.textTheme.bodySmall),
+                      Text(S.t('慢'), style: theme.textTheme.bodySmall),
+                      Text(S.t('快'), style: theme.textTheme.bodySmall),
                     ],
                   ),
                 ],
@@ -1143,6 +1151,65 @@ class _MangaReaderPageState extends State<MangaReaderPage> {
         },
       ),
     );
+    _pokeChrome();
+  }
+
+  /// Batch 271: per-work reading mode. Picking a mode
+  /// here stores it against this work only (the global
+  /// mode in settings stays the default for everything
+  /// else); 「跟随全局」 clears the override.
+  Future<void> _showModeSheet() async {
+    final workKey = _manga.storageKey;
+    final remembered = MangaReaderModeMemory.modeForWork(workKey);
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+              child: Text(
+                S.t('阅读模式（本作）'),
+                style: Theme.of(sheetContext).textTheme.titleMedium,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Text(
+                S.t('只影响这部作品，其它作品仍用全局阅读模式'),
+                style: Theme.of(sheetContext).textTheme.bodySmall,
+              ),
+            ),
+            for (final entry in MangaReaderModes.labels.entries)
+              RadioListTile<String>(
+                title: Text(S.t(entry.value)),
+                value: entry.key,
+                groupValue: remembered ?? '',
+                onChanged: (value) => Navigator.pop(sheetContext, value),
+              ),
+            RadioListTile<String>(
+              title: Text(S.t('跟随全局')),
+              value: '',
+              groupValue: remembered ?? '',
+              onChanged: (value) => Navigator.pop(sheetContext, value),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (picked == null || !mounted) return;
+    await MangaReaderModeMemory.setModeForWork(
+      workKey,
+      picked.isEmpty ? null : picked,
+    );
+    if (!mounted) return;
+    setState(_applySettings);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _pages.isNotEmpty) _jumpToCurrentPage();
+    });
     _pokeChrome();
   }
 
@@ -1261,13 +1328,21 @@ class _MangaReaderPageState extends State<MangaReaderPage> {
                         ),
                       ),
                       IconButton(
+                        onPressed: _showModeSheet,
+                        icon: const Icon(
+                          AnikumoIcons.auto_stories_rounded,
+                          color: Colors.white,
+                        ),
+                        tooltip: S.t('阅读模式（本作）'),
+                      ),
+                      IconButton(
                         onPressed: () =>
                             setState(() => _showDimPanel = !_showDimPanel),
                         icon: const Icon(
                           AnikumoIcons.brightness_6_rounded,
                           color: Colors.white,
                         ),
-                        tooltip: '亮度遮罩',
+                        tooltip: S.t('亮度遮罩'),
                       ),
                       IconButton(
                         onPressed: _openSettings,
@@ -1275,7 +1350,7 @@ class _MangaReaderPageState extends State<MangaReaderPage> {
                           AnikumoIcons.tune_rounded,
                           color: Colors.white,
                         ),
-                        tooltip: '阅读设置',
+                        tooltip: S.t('阅读设置'),
                       ),
                     ],
                   ),
@@ -1347,12 +1422,12 @@ class _MangaReaderPageState extends State<MangaReaderPage> {
                               AnikumoIcons.skip_previous,
                               color: Colors.white,
                             ),
-                            tooltip: '上一话',
+                            tooltip: S.t('上一话'),
                           ),
                           Expanded(
                             child: _isContinuous
                                 ? Text(
-                                    '第 ${page + 1} / ${_pages.length} 页（滚动）',
+                                    S.f('第 {} / {} 页（滚动）', [page + 1, _pages.length]),
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(color: Colors.white),
                                   )
@@ -1379,7 +1454,7 @@ class _MangaReaderPageState extends State<MangaReaderPage> {
                               AnikumoIcons.skip_next,
                               color: Colors.white,
                             ),
-                            tooltip: '下一话',
+                            tooltip: S.t('下一话'),
                           ),
                           if (_isContinuous &&
                               MangaFeatures.isInstalled(
@@ -1393,7 +1468,7 @@ class _MangaReaderPageState extends State<MangaReaderPage> {
                                     : AnikumoIcons.play_arrow_rounded,
                                 color: Colors.white,
                               ),
-                              tooltip: _autoScrolling ? '停止自动滚动' : '自动滚动',
+                              tooltip: _autoScrolling ? S.t('停止自动滚动') : S.t('自动滚动'),
                             ),
                           if (_isContinuous &&
                               MangaFeatures.isInstalled(
@@ -1405,7 +1480,7 @@ class _MangaReaderPageState extends State<MangaReaderPage> {
                                 AnikumoIcons.speed_rounded,
                                 color: Colors.white,
                               ),
-                              tooltip: '自动滚动速度',
+                              tooltip: S.t('自动滚动速度'),
                             ),
                         ],
                       );
@@ -1441,11 +1516,11 @@ class _MangaReaderPageState extends State<MangaReaderPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('这一话加载失败', style: TextStyle(color: Colors.white)),
+            Text(S.t('这一话加载失败'), style: const TextStyle(color: Colors.white)),
             const SizedBox(height: 12),
             FilledButton(
               onPressed: () => _loadChapter(_chapterIndex),
-              child: const Text('重试'),
+              child: Text(S.t('重试')),
             ),
           ],
         ),
@@ -1484,7 +1559,7 @@ class _MangaReaderPageState extends State<MangaReaderPage> {
                       constraints: const BoxConstraints(maxWidth: 640),
                       child: FilledButton(
                         onPressed: _nextChapter,
-                        child: const Text('下一话'),
+                        child: Text(S.t('下一话')),
                       ),
                     ),
                   ),
@@ -1687,15 +1762,15 @@ class _PageErrorState extends State<_PageError> {
     if (widget.canAutoRetry && !_autoFired) {
       return SizedBox(
         height: widget.height,
-        child: const Center(
+        child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircularProgressIndicator(color: Colors.white54),
-              SizedBox(height: 8),
+              const CircularProgressIndicator(color: Colors.white54),
+              const SizedBox(height: 8),
               Text(
-                '加载失败，自动重试中…',
-                style: TextStyle(color: Colors.white54, fontSize: 12),
+                S.t('加载失败，自动重试中…'),
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
               ),
             ],
           ),
@@ -1706,15 +1781,15 @@ class _PageErrorState extends State<_PageError> {
       onTap: widget.onRetry,
       child: SizedBox(
         height: widget.height,
-        child: const Center(
+        child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(AnikumoIcons.broken_image_outlined, color: Colors.white54),
-              SizedBox(height: 8),
+              const Icon(AnikumoIcons.broken_image_outlined, color: Colors.white54),
+              const SizedBox(height: 8),
               Text(
-                '加载失败，点按重试',
-                style: TextStyle(color: Colors.white54, fontSize: 12),
+                S.t('加载失败，点按重试'),
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
               ),
             ],
           ),

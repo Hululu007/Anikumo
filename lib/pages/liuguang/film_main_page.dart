@@ -9,6 +9,7 @@ import 'package:anikumo/pages/liuguang/film_favorites_tab.dart';
 import 'package:anikumo/pages/liuguang/film_home_tab.dart';
 import 'package:anikumo/pages/liuguang/film_settings_tab.dart';
 import 'package:anikumo/pages/liuguang/film_sources_tab.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/liuguang/video_engine.dart';
 import 'package:anikumo/services/liuguang/film_auto_update.dart';
 import 'package:anikumo/services/liuguang/film_probes.dart';
@@ -128,7 +129,7 @@ class _FilmMainPageState extends State<FilmMainPage> {
                   const ZoneWheelChip(current: AppZone.video, english: true),
                   const Spacer(),
                   IconButton(
-                    tooltip: '搜索',
+                    tooltip: S.t('搜索'),
                     onPressed: () => context.pushNamed('/film/search'),
                     icon: const Icon(AnikumoIcons.search_rounded),
                   ),
@@ -192,7 +193,7 @@ class _FilmMainPageState extends State<FilmMainPage> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      _channels[index].$1,
+                      S.t(_channels[index].$1),
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: index == _index
                             ? FontWeight.w800

@@ -11,6 +11,9 @@ import 'package:anikumo/bean/widget/empty_state_widget.dart';
 import 'package:anikumo/bean/widget/error_widget.dart';
 import 'package:anikumo/bean/widget/loading_indicator.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:anikumo/services/diagnostics/diagnostics_export.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class LogsPage extends StatefulWidget {
   const LogsPage({super.key});
@@ -144,7 +147,7 @@ class _LogsPageState extends State<LogsPage> {
       });
     } catch (e) {
       if (!mounted) return;
-      AnikumoDialog.showToast(message: '清空失败: $e');
+      AnikumoDialog.showToast(message: S.f('清空失败: {}', [e]));
     }
   }
 
@@ -152,17 +155,17 @@ class _LogsPageState extends State<LogsPage> {
     try {
       await Clipboard.setData(ClipboardData(text: _fullContent));
       if (!mounted) return;
-      AnikumoDialog.showToast(message: '已复制到剪贴板');
+      AnikumoDialog.showToast(message: S.t('已复制到剪贴板'));
     } catch (e) {
       if (!mounted) return;
-      AnikumoDialog.showToast(message: '复制失败: $e');
+      AnikumoDialog.showToast(message: S.f('复制失败: {}', [e]));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return SettingsDetailScaffold(
-      title: const Text('日志'),
+      title: Text(S.t('日志')),
       body: _buildBody(),
       floatingActionButton: _buildFloatingButtons(),
     );
@@ -177,17 +180,17 @@ class _LogsPageState extends State<LogsPage> {
 
     if (_hasError) {
       return GeneralErrorWidget(
-        title: '无法读取日志',
-        errMsg: '请稍后重新加载。',
+        title: S.t('无法读取日志'),
+        errMsg: S.t('请稍后重新加载。'),
         icon: AnikumoIcons.receipt_long_rounded,
         onRetry: _loadLogs,
       );
     }
 
     if (_logLines.isEmpty) {
-      return const GeneralEmptyState(
+      return GeneralEmptyState(
         icon: AnikumoIcons.receipt_long_rounded,
-        title: '还没有日志记录',
+        title: S.t('还没有日志记录'),
       );
     }
 
@@ -228,17 +231,49 @@ class _LogsPageState extends State<LogsPage> {
         FloatingActionButton(
           heroTag: null,
           onPressed: _clearLogs,
-          tooltip: '清空日志',
+          tooltip: S.t('清空日志'),
           child: const Icon(AnikumoIcons.clear_all),
         ),
         const SizedBox(width: 15),
         FloatingActionButton(
           heroTag: null,
           onPressed: _copyLogs,
-          tooltip: '复制日志',
+          tooltip: S.t('复制日志'),
           child: const Icon(AnikumoIcons.copy),
+        ),
+        const SizedBox(width: 15),
+        // Batch 276 (#64): one-tap diagnostics bundle.
+        FloatingActionButton(
+          heroTag: null,
+          onPressed: _exportDiagnostics,
+          tooltip: S.t('导出诊断包'),
+          child: const Icon(AnikumoIcons.bug_report),
         ),
       ],
     );
+  }
+
+  Future<void> _exportDiagnostics() async {
+    try {
+      final bytes = await DiagnosticsExport.buildBundle();
+      final now = DateTime.now();
+      String pad(int v) => v.toString().padLeft(2, '0');
+      final stamp = '${now.year}${pad(now.month)}${pad(now.day)}-'
+          '${pad(now.hour)}${pad(now.minute)}';
+      final path = await FilePicker.platform.saveFile(
+        dialogTitle: S.t('保存诊断包'),
+        fileName: 'anikumo-diagnostics-$stamp.zip',
+        type: FileType.custom,
+        allowedExtensions: const ['zip'],
+        bytes: bytes,
+      );
+      if (!mounted) return;
+      AnikumoDialog.showToast(
+        message: path == null ? S.t('已取消导出') : S.t('诊断包已保存'),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      AnikumoDialog.showToast(message: S.f('导出失败: {}', [e]));
+    }
   }
 }

@@ -47,7 +47,7 @@ class _CollectCategories extends StatelessWidget {
           Tab(
             height: 48,
             child: Semantics(
-              label: '${type?.label ?? '全部'}，${count(type)} 部',
+              label: S.f('{}，{} 部', [S.t(type?.label ?? '全部'), count(type)]),
               excludeSemantics: true,
               child: ConstrainedBox(
                 constraints: const BoxConstraints(minWidth: 64),
@@ -56,7 +56,7 @@ class _CollectCategories extends StatelessWidget {
                   child: ValueListenableBuilder(
                     valueListenable: selected,
                     builder: (context, value, _) => Text(
-                      '${type?.label ?? '全部'} · ${count(type)}',
+                      S.f('{} · {}', [S.t(type?.label ?? '全部'), count(type)]),
                       textAlign: TextAlign.center,
                       style: value == type
                           ? const TextStyle(fontWeight: FontWeight.w700)
@@ -90,7 +90,7 @@ class _CollectLayoutSwitch extends StatelessWidget {
             selected: value == layout,
             inMutuallyExclusiveGroup: true,
             child: IconButton.filledTonal(
-              tooltip: '${layout.label}布局',
+              tooltip: S.f('{}布局', [S.t(layout.label)]),
               isSelected: value == layout,
               onPressed: () => onChanged(layout),
               style: ButtonStyle(
@@ -150,12 +150,12 @@ class _CollectSortMenu extends StatelessWidget {
           AnikumoMenuItem(
             selected: value == sort,
             onPressed: () => onChanged(sort),
-            label: sort.label,
+            label: S.t(sort.label),
           ),
       ],
       builder: (context, toggle) {
         return Tooltip(
-          message: '排序：${value.label}',
+          message: S.f('排序：{}', [S.t(value.label)]),
           child: showLabel
               ? TextButton.icon(
                   onPressed: toggle,
@@ -165,9 +165,10 @@ class _CollectSortMenu extends StatelessWidget {
                     minimumSize: const Size(48, 48),
                   ),
                   icon: const Icon(AnikumoIcons.sort_rounded, size: 20),
-                  label: Text(value.label),
+                  label: Text(S.t(value.label)),
                 )
               : IconButton(
+                tooltip: S.t('排序'),
                   onPressed: toggle,
                   icon: const Icon(AnikumoIcons.sort_rounded),
                 ),

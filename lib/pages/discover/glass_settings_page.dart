@@ -4,6 +4,7 @@ import 'package:anikumo/bean/glass/glass_surface.dart';
 import 'package:anikumo/services/ui/glass_style.dart';
 import 'package:anikumo/utils/constants.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// 玻璃效果 (hub 区三）: one intensity switch for every frosted surface
 /// in the app — bottom navigation bar, hub panels, stat tiles. Changes
@@ -26,7 +27,7 @@ class _GlassSettingsPageState extends State<GlassSettingsPage> {
   Widget build(BuildContext context) {
     final level = GlassStyle.level;
     return Scaffold(
-      appBar: const SysAppBar(title: Text('玻璃效果')),
+      appBar: SysAppBar(title: Text(S.t('玻璃效果'))),
       body: ListView(
         padding: const EdgeInsets.all(StyleString.pagePadding),
         children: [
@@ -44,8 +45,8 @@ class _GlassSettingsPageState extends State<GlassSettingsPage> {
                 for (final (value, title, subtitle) in _options)
                   RadioListTile<int>(
                     value: value,
-                    title: Text(title),
-                    subtitle: Text(subtitle),
+                    title: Text(S.t(title)),
+                    subtitle: Text(S.t(subtitle)),
                     shape: RoundedRectangleBorder(
                       borderRadius: StyleString.lgRadius,
                     ),
@@ -55,8 +56,8 @@ class _GlassSettingsPageState extends State<GlassSettingsPage> {
           ),
           const SizedBox(height: StyleString.sectionSpace),
           Text(
-            '生效范围：底部导航栏、发现页三大区的面板、观看统计的玻璃卡片等。'
-            '调低或关闭可以减少老设备上的滑动开销。',
+            S.t('生效范围：底部导航栏、发现页三大区的面板、观看统计的玻璃卡片等。'
+            '调低或关闭可以减少老设备上的滑动开销。'),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -124,14 +125,14 @@ class _Preview extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '玻璃预览',
+                          S.t('玻璃预览'),
                           style: Theme.of(context)
                               .textTheme
                               .titleSmall
                               ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         Text(
-                          '切换下面的档位，看通透程度变化',
+                          S.t('切换下面的档位，看通透程度变化'),
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],

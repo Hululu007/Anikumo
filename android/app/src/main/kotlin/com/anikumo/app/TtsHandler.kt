@@ -32,6 +32,27 @@ class TtsHandler(context: Context, private val channel: MethodChannel) :
 
     private var tts: TextToSpeech? = null
 
+    // Batch 270: speech settings are kept natively so values
+    // set before the engine finishes initializing are
+    // applied the moment it is ready.
+    private var speechRate = 1.0f
+    private var speechPitch = 1.0f
+    private var voiceName = ""
+    private var defaultVoice: android.speech.tts.Voice? = null
+
+    private fun applySpeechSettings() {
+        val engine = tts ?: return
+        engine.setSpeechRate(speechRate)
+        engine.setPitch(speechPitch)
+        if (voiceName.isEmpty()) {
+            defaultVoice?.let { engine.voice = it }
+        } else {
+            engine.voices?.firstOrNull { it.name == voiceName }?.let {
+                engine.voice = it
+            }
+        }
+    }
+
     init {
         tts = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
@@ -43,6 +64,8 @@ class TtsHandler(context: Context, private val channel: MethodChannel) :
                     ) {
                         engine.setLanguage(Locale.getDefault())
                     }
+                    defaultVoice = engine.voice
+                    applySpeechSettings()
                     engine.setOnUtteranceProgressListener(
                         object : UtteranceProgressListener() {
                             override fun onStart(utteranceId: String?) {}
@@ -98,8 +121,30 @@ class TtsHandler(context: Context, private val channel: MethodChannel) :
                 result.success(null)
             }
             "setRate" -> {
-                val rate = (call.argument<Double>("rate") ?: 1.0).toFloat()
-                tts?.setSpeechRate(rate)
+                speechRate = (call.argument<Double>("rate") ?: 1.0).toFloat()
+                applySpeechSettings()
+                result.success(null)
+            }
+            "setPitch" -> {
+                speechPitch = (call.argument<Double>("pitch") ?: 1.0).toFloat()
+                applySpeechSettings()
+                result.success(null)
+            }
+            "getVoices" -> {
+                val voices = tts?.voices
+                    ?.map {
+                        mapOf(
+                            "name" to it.name,
+                            "locale" to it.locale.toString(),
+                        )
+                    }
+                    ?.sortedBy { it["name"] }
+                    ?: emptyList()
+                result.success(voices)
+            }
+            "setVoice" -> {
+                voiceName = call.argument<String>("name") ?: ""
+                applySpeechSettings()
                 result.success(null)
             }
             else -> result.notImplemented()

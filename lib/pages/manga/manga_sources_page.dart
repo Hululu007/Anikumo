@@ -1,3 +1,4 @@
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
@@ -65,11 +66,11 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
     try {
       final book = await LocalMangaLibrary.importArchive(path);
       MangaSources.notifyRegistryChanged();
-      AnikumoDialog.showToast(message: '已导入《${book.title}》（${book.pages} 页）');
+      AnikumoDialog.showToast(message: S.f('已导入《{}》（{} 页）', [book.title, book.pages]));
     } on FormatException catch (e) {
       AnikumoDialog.showToast(message: e.message);
     } catch (_) {
-      AnikumoDialog.showToast(message: '导入失败，文件可能已损坏');
+      AnikumoDialog.showToast(message: S.t('导入失败，文件可能已损坏'));
     } finally {
       if (mounted) setState(() => _importing = false);
     }
@@ -79,16 +80,16 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('删除本地漫画'),
-        content: Text('确定要删除《${book.title}》吗？本地文件会被删掉；收藏与进度会保留，但无法再打开这本书。'),
+        title: Text(S.t('删除本地漫画')),
+        content: Text(S.f('确定要删除《{}》吗？本地文件会被删掉；收藏与进度会保留，但无法再打开这本书。', [book.title])),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('删除'),
+            child: Text(S.t('删除')),
           ),
         ],
       ),
@@ -96,7 +97,7 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
     if (confirmed != true) return;
     await LocalMangaLibrary.deleteBook(book.id);
     MangaSources.notifyRegistryChanged();
-    AnikumoDialog.showToast(message: '已删除《${book.title}》');
+    AnikumoDialog.showToast(message: S.f('已删除《{}》', [book.title]));
     if (mounted) setState(() {});
   }
 
@@ -115,8 +116,8 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
       // only be imported by URL. Say so instead of failing
       // with the single-source parser's error.
       if (MangaSources.parseVeneraIndex(code) != null) {
-        throw const FormatException(
-          '这是源索引文件（内含多个源的链接），请改用「从 URL 导入」粘贴它的链接导入',
+        throw FormatException(
+          S.t('这是源索引文件（内含多个源的链接），请改用「从 URL 导入」粘贴它的链接导入'),
         );
       }
       // Batch 67: the payload may be a Legado book-source
@@ -128,9 +129,11 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
         if (!mounted) return;
         AnikumoDialog.showToast(
           message: pack.added > 0
-              ? '已导入 ${pack.added} 个书源'
-                  '${pack.mangaCount > 0 ? '，已可在本区使用' : '（不含漫画类，可在小说区使用）'}'
-              : '没有新的书源（都已存在）',
+              ? S.f('已导入 {} 个书源', [pack.added]) +
+                  (pack.mangaCount > 0
+                      ? S.t('，已可在本区使用')
+                      : S.t('（不含漫画类，可在小说区使用）'))
+              : S.t('没有新的书源（都已存在）'),
         );
         setState(() {});
         return;
@@ -141,14 +144,14 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
         origin: origin,
       );
       if (!mounted) return;
-      AnikumoDialog.showToast(message: '已导入源「${meta.name}」v${meta.version}');
+      AnikumoDialog.showToast(message: S.f('已导入源「{}」v{}', [meta.name, meta.version]));
       setState(() {});
     } on FormatException catch (e) {
       if (!mounted) return;
-      AnikumoDialog.showToast(message: '导入失败：${e.message}');
+      AnikumoDialog.showToast(message: S.f('导入失败：{}', [e.message]));
     } catch (e) {
       if (!mounted) return;
-      AnikumoDialog.showToast(message: '导入失败：${friendlyError(e)}');
+      AnikumoDialog.showToast(message: S.f('导入失败：{}', [friendlyError(e)]));
     } finally {
       if (mounted) setState(() => _importing = false);
     }
@@ -159,23 +162,23 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
     final url = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('从 URL 导入漫画源'),
+        title: Text(S.t('从 URL 导入漫画源')),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            hintText: 'https://…/source.js，或 GitHub 仓库/文件链接',
+          decoration: InputDecoration(
+            hintText: S.t('https://…/source.js，或 GitHub 仓库/文件链接'),
           ),
           keyboardType: TextInputType.url,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () =>
                 Navigator.pop(dialogContext, controller.text.trim()),
-            child: const Text('下载并导入'),
+            child: Text(S.t('下载并导入')),
           ),
         ],
       ),
@@ -205,7 +208,7 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
       );
       final code = response.data ?? '';
       if (code.trim().isEmpty) {
-        throw const FormatException('下载到的文件是空的');
+        throw FormatException(S.t('下载到的文件是空的'));
       }
       // Batch 88: the URL may point at a source *index* (a
       // JSON list of .js files, e.g. a CDN mirror of the
@@ -222,11 +225,11 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
       await _installCode(code, fileName: url.split('/').last, origin: url);
     } on FormatException catch (e) {
       if (mounted) {
-        AnikumoDialog.showToast(message: '导入失败：${e.message}');
+        AnikumoDialog.showToast(message: S.f('导入失败：{}', [e.message]));
       }
     } catch (_) {
       if (mounted) {
-        AnikumoDialog.showToast(message: '导入失败：无法下载该文件，请检查链接');
+        AnikumoDialog.showToast(message: S.t('导入失败：无法下载该文件，请检查链接'));
       }
     } finally {
       if (mounted) setState(() => _importing = false);
@@ -261,7 +264,7 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
           );
           final code = response.data ?? '';
           if (code.trim().isEmpty) {
-            throw const FormatException('下载到的文件是空的');
+            throw FormatException(S.t('下载到的文件是空的'));
           }
           await MangaSources.installCustomJs(
             code,
@@ -277,8 +280,8 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
     if (!mounted) return;
     setState(() {});
     AnikumoDialog.showToast(
-      message: '已从索引导入 $installed 个漫画源'
-          '${failed > 0 ? '，$failed 个导入失败' : ''}',
+      message: S.f('已从索引导入 {} 个漫画源', [installed]) +
+          (failed > 0 ? S.f('，{} 个导入失败', [failed]) : ''),
     );
   }
 
@@ -296,13 +299,13 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
       setState(() => _importing = false);
       if (candidates.isEmpty) {
         AnikumoDialog.showToast(
-          message: '这个仓库目录里没有 .js 漫画源文件',
+          message: S.t('这个仓库目录里没有 .js 漫画源文件'),
         );
         return;
       }
       final picked = await showGithubFilePicker(
         context,
-        title: '从 GitHub 仓库导入漫画源',
+        title: S.t('从 GitHub 仓库导入漫画源'),
         files: candidates,
       );
       if (picked == null || picked.isEmpty || !mounted) return;
@@ -321,7 +324,7 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
           );
           final code = response.data ?? '';
           if (code.trim().isEmpty) {
-            throw const FormatException('下载到的文件是空的');
+            throw FormatException(S.t('下载到的文件是空的'));
           }
           await MangaSources.installCustomJs(
             code,
@@ -336,12 +339,12 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
       if (!mounted) return;
       setState(() {});
       AnikumoDialog.showToast(
-        message: '已导入 $installed 个漫画源'
-            '${failed > 0 ? '，$failed 个文件导入失败' : ''}',
+        message: S.f('已导入 {} 个漫画源', [installed]) +
+            (failed > 0 ? S.f('，{} 个文件导入失败', [failed]) : ''),
       );
     } catch (e) {
       if (mounted) {
-        AnikumoDialog.showToast(message: '导入失败：${friendlyError(e)}');
+        AnikumoDialog.showToast(message: S.f('导入失败：{}', [friendlyError(e)]));
       }
     } finally {
       if (mounted) setState(() => _importing = false);
@@ -353,26 +356,26 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
     final code = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('粘贴 JS 源代码'),
+        title: Text(S.t('粘贴 JS 源代码')),
         content: SizedBox(
           width: double.maxFinite,
           child: TextField(
             controller: controller,
             maxLines: 12,
-            decoration: const InputDecoration(
-              hintText: '粘贴完整的 JS 源代码（class … extends ComicSource）',
+            decoration: InputDecoration(
+              hintText: S.t('粘贴完整的 JS 源代码（class … extends ComicSource）'),
             ),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () =>
                 Navigator.pop(dialogContext, controller.text),
-            child: const Text('导入'),
+            child: Text(S.t('导入')),
           ),
         ],
       ),
@@ -391,7 +394,7 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
     final file = result.files.first;
     final bytes = file.bytes;
     if (bytes == null) {
-      AnikumoDialog.showToast(message: '导入失败：读不到该文件');
+      AnikumoDialog.showToast(message: S.t('导入失败：读不到该文件'));
       return;
     }
     await _installCode(utf8.decode(bytes), fileName: file.name);
@@ -406,20 +409,20 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
           children: [
             ListTile(
               leading: const Icon(AnikumoIcons.link),
-              title: const Text('从 URL 导入'),
-              subtitle: const Text('粘贴 .js 直链或 GitHub 链接，下载后安装'),
+              title: Text(S.t('从 URL 导入')),
+              subtitle: Text(S.t('粘贴 .js 直链或 GitHub 链接，下载后安装')),
               onTap: () => Navigator.pop(sheetContext, 'url'),
             ),
             ListTile(
               leading: const Icon(AnikumoIcons.content_paste),
-              title: const Text('粘贴 JS 代码'),
-              subtitle: const Text('把整段源代码粘进来'),
+              title: Text(S.t('粘贴 JS 代码')),
+              subtitle: Text(S.t('把整段源代码粘进来')),
               onTap: () => Navigator.pop(sheetContext, 'paste'),
             ),
             ListTile(
               leading: const Icon(AnikumoIcons.folder_open_outlined),
-              title: const Text('从本地文件导入'),
-              subtitle: const Text('选择一个 .js 源文件'),
+              title: Text(S.t('从本地文件导入')),
+              subtitle: Text(S.t('选择一个 .js 源文件')),
               onTap: () => Navigator.pop(sheetContext, 'file'),
             ),
           ],
@@ -453,16 +456,16 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('删除来源'),
-        content: Text('确定要删除选中的 ${ids.length} 个源吗？收藏与进度会保留，但无法再打开这些源的内容。'),
+        title: Text(S.t('删除来源')),
+        content: Text(S.f('确定要删除选中的 {} 个源吗？收藏与进度会保留，但无法再打开这些源的内容。', [ids.length])),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('删除'),
+            child: Text(S.t('删除')),
           ),
         ],
       ),
@@ -474,23 +477,23 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
       _selected.clear();
       _selecting = false;
     });
-    AnikumoDialog.showToast(message: '已删除 $removed 个源');
+    AnikumoDialog.showToast(message: S.f('已删除 {} 个源', [removed]));
   }
 
   Future<void> _deleteAll(Set<String> ids) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('全部删除'),
-        content: Text('确定要删除全部 ${ids.length} 个已导入源吗？收藏与进度会保留，但无法再打开这些源的内容。'),
+        title: Text(S.t('全部删除')),
+        content: Text(S.f('确定要删除全部 {} 个已导入源吗？收藏与进度会保留，但无法再打开这些源的内容。', [ids.length])),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('全部删除'),
+            child: Text(S.t('全部删除')),
           ),
         ],
       ),
@@ -502,23 +505,23 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
       _selected.clear();
       _selecting = false;
     });
-    AnikumoDialog.showToast(message: '已删除 $removed 个源');
+    AnikumoDialog.showToast(message: S.f('已删除 {} 个源', [removed]));
   }
 
   Future<void> _remove(String id, String name) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('删除来源'),
-        content: Text('确定要删除下载源「$name」吗？它的收藏与进度会保留在本地，但无法再打开。'),
+        title: Text(S.t('删除来源')),
+        content: Text(S.f('确定要删除下载源「{}」吗？它的收藏与进度会保留在本地，但无法再打开。', [name])),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('取消'),
+            child: Text(S.t('取消')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('删除'),
+            child: Text(S.t('删除')),
           ),
         ],
       ),
@@ -548,25 +551,25 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
     final effectiveSelected = _selected.intersection(deletableIds);
     return Scaffold(
       appBar: AppBar(
-        title: Text(_selecting ? '已选 ${effectiveSelected.length} 个' : '漫画源管理'),
+        title: Text(_selecting ? S.f('已选 {} 个', [effectiveSelected.length]) : S.t('漫画源管理')),
         actions: [
           if (_selecting) ...[
             TextButton(
               onPressed: () =>
                   setState(() => _selected.addAll(deletableIds)),
-              child: const Text('全选'),
+              child: Text(S.t('全选')),
             ),
             TextButton(
               onPressed: effectiveSelected.isEmpty
                   ? null
                   : () => _deleteSelected(effectiveSelected),
               child: Text(
-                '删除',
+                S.t('删除'),
                 style: TextStyle(color: theme.colorScheme.error),
               ),
             ),
             IconButton(
-              tooltip: '完成',
+              tooltip: S.t('完成'),
               icon: const Icon(AnikumoIcons.close),
               onPressed: () => setState(() {
                 _selecting = false;
@@ -576,18 +579,18 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
           ] else ...[
             if (deletableIds.isNotEmpty)
               IconButton(
-                tooltip: '批量删除',
+                tooltip: S.t('批量删除'),
                 icon: const Icon(AnikumoIcons.delete_sweep_outlined),
                 onPressed: () => setState(() => _selecting = true),
               ),
             IconButton(
-              tooltip: '检查更新',
+              tooltip: S.t('检查更新'),
               icon: const Icon(AnikumoIcons.cloud_sync_rounded),
               onPressed: () =>
                   MangaSourceUpdatePrompt.run(context, force: true),
             ),
             IconButton(
-              tooltip: '源诊断',
+              tooltip: S.t('源诊断'),
               icon: const Icon(AnikumoIcons.fact_check_outlined),
               onPressed: () => context.pushNamed('/manga/diagnostics'),
             ),
@@ -600,7 +603,7 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: Text(
-              '当前源决定首页、探索与搜索的内容；详情与阅读始终回到每部漫画自己的源。',
+              S.t('当前源决定首页、探索与搜索的内容；详情与阅读始终回到每部漫画自己的源。'),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -637,7 +640,7 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        '置顶',
+                        S.t('置顶'),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.onPrimaryContainer,
                           fontWeight: FontWeight.w700,
@@ -647,7 +650,7 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
                   ],
                 ],
               ),
-              subtitle: Text('${source.description} · 已导入'),
+              subtitle: Text(S.f('{} · 已导入', [source.description])),
               trailing: _selecting
                   ? null
                   : Row(
@@ -655,17 +658,26 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
                 children: [
                   if (source is JsBackedMangaSource)
                     IconButton(
-                      tooltip: '源账号登录',
+                      tooltip: S.t('源账号登录'),
                       icon: const Icon(AnikumoIcons.account_circle_outlined),
                       onPressed: () => context.pushNamed(
                         '/manga/login',
                         arguments: source.id,
                       ),
                     ),
+                  if (source is JsBackedMangaSource)
+                    IconButton(
+                      tooltip: S.t('源站网页登录'),
+                      icon: const Icon(AnikumoIcons.language_rounded),
+                      onPressed: () => context.pushNamed(
+                        '/manga/web-login',
+                        arguments: source.id,
+                      ),
+                    ),
                   IconButton(
                     tooltip: MangaSources.isPinned(source.id)
-                        ? '取消置顶'
-                        : '置顶这个源',
+                        ? S.t('取消置顶')
+                        : S.t('置顶这个源'),
                     icon: Icon(
                       MangaSources.isPinned(source.id)
                           ? AnikumoIcons.push_pin
@@ -680,11 +692,11 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
                     },
                   ),
                   if (source.id == activeId)
-                    const Chip(label: Text('使用中'))
+                    Chip(label: Text(S.t('使用中')))
                   else if (source.id != LocalMangaSource.sourceId)
                     IconButton(
                       icon: const Icon(AnikumoIcons.delete_outline),
-                      tooltip: '删除',
+                      tooltip: S.t('删除'),
                       onPressed: () => _remove(source.id, source.name),
                     ),
                   if (source is JsBackedMangaSource)
@@ -733,17 +745,17 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
                 color: theme.colorScheme.error,
               ),
               title: Text(
-                '全部删除',
+                S.t('全部删除'),
                 style: TextStyle(color: theme.colorScheme.error),
               ),
-              subtitle: Text('删除全部 ${deletableIds.length} 个已导入源'),
+              subtitle: Text(S.f('删除全部 {} 个已导入源', [deletableIds.length])),
               onTap: () => _deleteAll(deletableIds),
             ),
           const Divider(),
           ListTile(
             leading: const Icon(AnikumoIcons.file_download_outlined),
-            title: const Text('导入自定义源'),
-            subtitle: const Text('从 URL、粘贴代码或本地文件导入'),
+            title: Text(S.t('导入自定义源')),
+            subtitle: Text(S.t('从 URL、粘贴代码或本地文件导入')),
             trailing: _importing
                 ? const SizedBox(
                     width: 18,
@@ -757,7 +769,7 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
             child: Text(
-              '本地漫画',
+              S.t('本地漫画'),
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -765,8 +777,8 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
           ),
           ListTile(
             leading: const Icon(AnikumoIcons.folder_zip_outlined),
-            title: const Text('导入本地漫画'),
-            subtitle: const Text('从 CBZ / ZIP 文件导入，导入后离线可读'),
+            title: Text(S.t('导入本地漫画')),
+            subtitle: Text(S.t('从 CBZ / ZIP 文件导入，导入后离线可读')),
             trailing: _importing
                 ? const SizedBox(
                     width: 18,
@@ -785,10 +797,10 @@ class _MangaSourcesPageState extends State<MangaSourcesPage> {
                 radius: 6,
               ),
               title: Text(book.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-              subtitle: Text('${book.pages} 页'),
+              subtitle: Text(S.f('{} 页', [book.pages])),
               trailing: IconButton(
                 icon: const Icon(AnikumoIcons.delete_outline),
-                tooltip: '删除这本书',
+                tooltip: S.t('删除这本书'),
                 onPressed: () => _deleteLocalBook(book),
               ),
             ),

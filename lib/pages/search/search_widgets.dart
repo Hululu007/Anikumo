@@ -7,18 +7,19 @@ const _searchSortLabels = {
   'match': '匹配',
 };
 
-String _sortLabel(String sort) => _searchSortLabels[sort] ?? '热度';
+String _sortLabel(String sort) => S.t(_searchSortLabels[sort] ?? '热度');
 
 String _filterSummary(SearchFilterState state) => [
       ...state.tags,
       if (state.season.isNotEmpty) state.season,
       if (state.season.isEmpty && state.dateRange != null)
-        '${state.dateRange!.start} 至 ${state.dateRange!.end}',
+        S.f('{} 至 {}', [state.dateRange!.start, state.dateRange!.end]),
       if (state.scoreRange?.isValid == true)
-        '评分 ${state.scoreRange!.toToken()}',
-      if (state.rankRange?.isValid == true) '排名 ${state.rankRange!.toToken()}',
+        S.f('评分 {}', [state.scoreRange!.toToken()]),
+      if (state.rankRange?.isValid == true)
+        S.f('排名 {}', [state.rankRange!.toToken()]),
       if (state.weekdays.isNotEmpty)
-        '周${state.weekdays.map((day) => '一二三四五六日'[day - 1]).join('、')}',
+        S.f('周{}', [state.weekdays.map((day) => '一二三四五六日'[day - 1]).join('、')]),
     ].join(' · ');
 
 String _readableQuery(String query) {
@@ -26,9 +27,9 @@ String _readableQuery(String query) {
   final summary = _filterSummary(state);
   return [
     if (state.keyword.isNotEmpty) state.keyword,
-    if (state.id.isNotEmpty) '条目 ${state.id}',
+    if (state.id.isNotEmpty) S.f('条目 {}', [state.id]),
     if (summary.isNotEmpty) summary,
-    if (state.sort != 'heat') '${_sortLabel(state.sort)}排序',
+    if (state.sort != 'heat') S.f('{}排序', [_sortLabel(state.sort)]),
   ].join(' · ');
 }
 
@@ -46,13 +47,13 @@ class _SearchSortMenu extends StatelessWidget {
       menuChildren: [
         for (final sort in _searchSortLabels.entries)
           AnikumoMenuItem(
-            label: '按${sort.value}排序',
+            label: S.f('按{}排序', [S.t(sort.value)]),
             selected: sort.key == value,
             onPressed: () => onChanged(sort.key),
           ),
       ],
       builder: (context, toggle) => Tooltip(
-        message: '排序方式',
+        message: S.t('排序方式'),
         child: TextButton.icon(
           onPressed: toggle,
           style: TextButton.styleFrom(
@@ -217,7 +218,7 @@ class _SearchLoadingState extends StatelessWidget {
         child: Column(children: [
           Semantics(
               liveRegion: true,
-              child: Text('正在搜索番剧',
+              child: Text(S.t('正在搜索番剧'),
                   textAlign: TextAlign.center,
                   style: theme.textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.w700))),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:anikumo/bean/widget/anikumo_menu.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/modules/bangumi/bangumi_item.dart';
 import 'package:anikumo/modules/collect/collect_type.dart';
 import 'package:anikumo/pages/collect/collect_controller.dart';
@@ -37,7 +38,7 @@ class _CollectButtonState extends State<CollectButton> {
   final _collectController = inject<CollectController>();
 
   String _labelFor(CollectType type) =>
-      type == CollectType.none ? '未追' : type.label;
+      S.t(type == CollectType.none ? '未追' : type.label);
 
   IconData _iconFor(CollectType type) => switch (type) {
     CollectType.none => AnikumoIcons.favorite_border,

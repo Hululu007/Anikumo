@@ -4,6 +4,7 @@ import 'package:anikumo/bean/dialog/adaptive_bottom_sheet.dart';
 import 'package:anikumo/bean/dialog/material_bottom_sheet.dart';
 import 'package:anikumo/bean/widget/split_list_row.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 enum DanmakuDestination {
   chatRoom,
@@ -17,7 +18,7 @@ Future<DanmakuDestination?> showDanmakuDestinationSheet(BuildContext context) {
       mainAxisSize: MainAxisSize.min,
       children: [
         MaterialBottomSheetHeader(
-          title: '发送到',
+          title: S.t('发送到'),
           onClose: () => Navigator.of(context).pop(),
         ),
         Flexible(
@@ -27,15 +28,15 @@ Future<DanmakuDestination?> showDanmakuDestinationSheet(BuildContext context) {
               children: [
                 ListTile(
                   leading: const Icon(AnikumoIcons.groups_rounded),
-                  title: const Text('一起看聊天室'),
-                  subtitle: const Text('与同房间的朋友聊天'),
+                  title: Text(S.t('一起看聊天室')),
+                  subtitle: Text(S.t('与同房间的朋友聊天')),
                   onTap: () =>
                       Navigator.of(context).pop(DanmakuDestination.chatRoom),
                 ),
                 ListTile(
                   leading: const Icon(AnikumoIcons.subtitles_outlined),
-                  title: const Text('视频弹幕'),
-                  subtitle: const Text('保存在本机，在这集播放时显示'),
+                  title: Text(S.t('视频弹幕')),
+                  subtitle: Text(S.t('保存在本机，在这集播放时显示')),
                   onTap: () => Navigator.of(context)
                       .pop(DanmakuDestination.remoteDanmaku),
                 ),

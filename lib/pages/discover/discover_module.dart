@@ -1,6 +1,8 @@
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:anikumo/pages/discover/achievements_page.dart';
 import 'package:anikumo/pages/discover/coming_page.dart';
+import 'package:anikumo/pages/discover/cross_favorites_page.dart';
+import 'package:anikumo/pages/discover/cross_ranks_page.dart';
 import 'package:anikumo/pages/discover/daily_page.dart';
 import 'package:anikumo/pages/discover/discover_page.dart';
 import 'package:anikumo/pages/discover/moments_page.dart';
@@ -41,7 +43,17 @@ final discoverModule = createModule(
         '/achievements',
         child: (context, state) => const AchievementsPage(),
       )
-      ..route('/notes', child: (context, state) => const NotesPage());
+      ..route('/notes', child: (context, state) => const NotesPage())
+      // Batch 275 (#43): cross-zone favorites overview.
+      ..route(
+        '/cross-favorites',
+        child: (context, state) => const CrossFavoritesPage(),
+      )
+      // Batch 276 (#58): cross-zone hot chart.
+      ..route(
+        '/cross-ranks',
+        child: (context, state) => const CrossRanksPage(),
+      );
       // Batch 55: /glass, /card-style and /backup moved with
       // the toolbox into Settings (/settings/toolbox/*).
   },

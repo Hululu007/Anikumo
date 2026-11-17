@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:anikumo/services/player/screenshot_candidate.dart';
 import 'package:anikumo/services/player/screenshot_image_cache.dart';
 import 'package:mobx/mobx.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 part 'player_screenshot_controller.g.dart';
 
@@ -71,7 +72,7 @@ abstract class _PlayerScreenshotController with Store {
   }) async {
     if (_disposed || busy) return false;
     if (_candidates.length >= _maxCandidates || _byteCount >= _maxBytes) {
-      _report('待处理截图已满，请保存或移除部分截图后继续', error: true);
+      _report(S.t('待处理截图已满，请保存或移除部分截图后继续'), error: true);
       return false;
     }
     _capturing = true;
@@ -82,15 +83,15 @@ abstract class _PlayerScreenshotController with Store {
       final bytes = await capturePng();
       if (_disposed) return false;
       if (!isCurrent()) {
-        _report('视频已切换，请重新截图', error: true);
+        _report(S.t('视频已切换，请重新截图'), error: true);
         return false;
       }
       if (bytes == null || bytes.isEmpty) {
-        _report('暂未获取到画面，请等视频显示后重试', error: true);
+        _report(S.t('暂未获取到画面，请等视频显示后重试'), error: true);
         return false;
       }
       if (_byteCount + bytes.lengthInBytes > _maxBytes) {
-        _report('截图暂存空间已满，请保存或移除部分截图后继续', error: true);
+        _report(S.t('截图暂存空间已满，请保存或移除部分截图后继续'), error: true);
         return false;
       }
       final item = ScreenshotCandidate(
@@ -104,7 +105,7 @@ abstract class _PlayerScreenshotController with Store {
       _byteCount += bytes.lengthInBytes;
       return true;
     } catch (_) {
-      _report('截图失败，请稍后重试', error: true);
+      _report(S.t('截图失败，请稍后重试'), error: true);
       return false;
     } finally {
       if (!_disposed) _capturing = false;
@@ -146,7 +147,7 @@ abstract class _PlayerScreenshotController with Store {
     if (_disposed || busy || selectedCount == 0) return;
     final count = selectedCount;
     _removeCandidates(_candidates.where(isSelected));
-    _report('已移除 $count 张候选截图');
+    _report(S.f('已移除 {} 张候选截图', [count]));
   }
 
   @action
@@ -173,7 +174,7 @@ abstract class _PlayerScreenshotController with Store {
       final destination = await chooseDestination();
       if (_disposed) return;
       if (destination == null) {
-        _report('已取消保存，候选截图仍保留');
+        _report(S.t('已取消保存，候选截图仍保留'));
         return;
       }
       for (final item in batch) {
@@ -190,14 +191,15 @@ abstract class _PlayerScreenshotController with Store {
       }
       if (failures > 0) {
         _report(
-          '已保存 ${saved.length} 张，$failures 张失败；未保存的截图仍已选中，请重试',
+          S.f('已保存 {} 张，{} 张失败；未保存的截图仍已选中，请重试',
+              [saved.length, failures]),
           error: true,
         );
       } else {
-        _report('已保存 ${saved.length} 张到所选位置');
+        _report(S.f('已保存 {} 张到所选位置', [saved.length]));
       }
     } catch (_) {
-      _report('无法打开保存位置，请检查权限后重试', error: true);
+      _report(S.t('无法打开保存位置，请检查权限后重试'), error: true);
     } finally {
       if (!_disposed) {
         // Keep the preview stable during the batch, then release successful items.

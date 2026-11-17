@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:anikumo/utils/github_links.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// Batch 63: multi-select dialog over the files of a
 /// GitHub repository directory, shared by the novel and
@@ -42,17 +43,16 @@ class _GithubFilePickerState extends State<_GithubFilePicker> {
           children: [
             Row(
               children: [
-                Text('仓库里有 ${widget.files.length} 个可导入文件，'
-                    '已选 ${_selected.length} 个'),
+                Text(S.f('仓库里有 {} 个可导入文件，已选 {} 个', [widget.files.length, _selected.length])),
                 const Spacer(),
                 TextButton(
                   onPressed: () => setState(() => _selected
                       .addAll(List.generate(widget.files.length, (i) => i))),
-                  child: const Text('全选'),
+                  child: Text(S.t('全选')),
                 ),
                 TextButton(
                   onPressed: () => setState(_selected.clear),
-                  child: const Text('清空'),
+                  child: Text(S.t('清空')),
                 ),
               ],
             ),
@@ -84,7 +84,7 @@ class _GithubFilePickerState extends State<_GithubFilePicker> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('取消'),
+          child: Text(S.t('取消')),
         ),
         FilledButton(
           onPressed: _selected.isEmpty
@@ -96,7 +96,7 @@ class _GithubFilePickerState extends State<_GithubFilePicker> {
                         widget.files[i],
                     ],
                   ),
-          child: Text('导入所选（${_selected.length}）'),
+          child: Text(S.f('导入所选（{}）', [_selected.length])),
         ),
       ],
     );

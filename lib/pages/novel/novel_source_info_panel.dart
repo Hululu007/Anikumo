@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/novel/novel_source.dart';
 
 /// Batch 191: the expanded panel under a novel source's
@@ -41,12 +42,13 @@ class NovelSourceInfoPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SelectableText(
-            '源链接：${def.url}',
+            S.f('源链接：{}', [def.url]),
             style: theme.textTheme.bodySmall,
           ),
           if (def.group.isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text('分组：${def.group}', style: theme.textTheme.bodySmall),
+            Text(S.f('分组：{}', [def.group]),
+                style: theme.textTheme.bodySmall),
           ],
           if (comment.isNotEmpty) ...[
             const SizedBox(height: 6),
@@ -55,7 +57,7 @@ class NovelSourceInfoPanel extends StatelessWidget {
           if (source.loginUrl.isNotEmpty) ...[
             const SizedBox(height: 6),
             SelectableText(
-              '登录页：${source.loginUrl}',
+              S.f('登录页：{}', [source.loginUrl]),
               style: theme.textTheme.bodySmall,
             ),
           ],
@@ -64,12 +66,12 @@ class NovelSourceInfoPanel extends StatelessWidget {
               if (!isActive)
                 TextButton(
                   onPressed: onActivate,
-                  child: const Text('设为当前源'),
+                  child: Text(S.t('设为当前源')),
                 ),
               if (hasLogin)
                 TextButton(
                   onPressed: onOpenLogin,
-                  child: const Text('打开源登录/设置'),
+                  child: Text(S.t('打开源登录/设置')),
                 ),
             ],
           ),

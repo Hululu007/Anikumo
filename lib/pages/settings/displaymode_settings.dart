@@ -6,6 +6,7 @@ import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:anikumo/bean/settings/settings_list.dart';
 import 'package:anikumo/bean/settings/settings_detail_scaffold.dart';
 import 'package:anikumo/bean/widget/loading_indicator.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 import 'package:anikumo/services/storage/storage.dart';
 
 class SetDisplayMode extends StatefulWidget {
@@ -58,13 +59,13 @@ class _SetDisplayModeState extends State<SetDisplayMode> {
   @override
   Widget build(BuildContext context) {
     return SettingsDetailScaffold(
-      title: const Text('屏幕帧率设置'),
+      title: Text(S.t('屏幕帧率设置')),
       body: (modes.isEmpty)
           ? const LoadingIndicator()
           : SettingsList(
               sections: [
                 SettingsRadioSection<DisplayMode>(
-                  title: Text('没有生效? 重启app试试'),
+                  title: Text(S.t('没有生效? 重启app试试')),
                   groupValue: preferred,
                   onChanged: (DisplayMode? newMode) async {
                     await FlutterDisplayMode.setPreferredMode(newMode!);
@@ -77,8 +78,8 @@ class _SetDisplayModeState extends State<SetDisplayMode> {
                       .map((e) => SettingsTile<DisplayMode>.radioTile(
                             radioValue: e,
                             title: e == DisplayMode.auto
-                                ? Text('自动')
-                                : Text('$e${e == active ? "  [系统]" : ""}'),
+                                ? Text(S.t('自动'))
+                                : Text('$e${e == active ? S.t('  [系统]') : ''}'),
                           ))
                       .toList(),
                 ),

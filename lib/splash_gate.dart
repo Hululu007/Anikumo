@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 /// Batch 93: animated launch intro.
 ///
@@ -10,7 +11,7 @@ import 'package:flutter/material.dart';
 /// The native launch background now carries the brand
 /// (deep-violet night + emblem), and this gate continues
 /// the same palette in Flutter: two soft violet glows
-/// breathe behind the emblem, which scales/fades in with
+/// sit behind the emblem, which scales/fades in with
 /// a slight overshoot, then the name rises in and the
 /// three zone words fade up. The real app builds
 /// UNDERNEATH the overlay the whole time (routing, first
@@ -44,7 +45,6 @@ class _SplashGateState extends State<SplashGate>
   static bool _played = false;
 
   late final AnimationController _intro;
-  late final AnimationController _pulse;
   Timer? _leaveTimer;
   bool _started = false;
   bool _leaving = false;
@@ -58,10 +58,6 @@ class _SplashGateState extends State<SplashGate>
     _intro = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
-    );
-    _pulse = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1600),
     );
   }
 
@@ -77,7 +73,6 @@ class _SplashGateState extends State<SplashGate>
       _leaveTimer = Timer(const Duration(milliseconds: 450), _startLeaving);
     } else {
       _intro.forward();
-      _pulse.repeat();
       _leaveTimer =
           Timer(const Duration(milliseconds: 1700), _startLeaving);
     }
@@ -95,7 +90,6 @@ class _SplashGateState extends State<SplashGate>
   void dispose() {
     _leaveTimer?.cancel();
     _intro.dispose();
-    _pulse.dispose();
     super.dispose();
   }
 
@@ -114,10 +108,16 @@ class _SplashGateState extends State<SplashGate>
                 child: GestureDetector(
                   onTap: _startLeaving,
                   child: AnimatedBuilder(
-                    animation: Listenable.merge([_intro, _pulse]),
+                    animation: _intro,
                     builder: (context, _) => _SplashVisual(
                       t: _intro.value,
-                      pulse: _pulse.value,
+                      // Batch 268: the glows used to breathe via
+                      // a second, ever-repeating controller —
+                      // a full-screen repaint on every frame of
+                      // the most fragile window of a cold start.
+                      // They are static now (mid-breath value);
+                      // the composed intro animation is unchanged.
+                      pulse: 0.5,
                       reduced: _reduced,
                     ),
                   ),
@@ -227,8 +227,8 @@ class _SplashVisual extends StatelessWidget {
                 const SizedBox(height: 10),
                 Opacity(
                   opacity: subOpacity,
-                  child: const Text(
-                    '动 漫 · 漫 画 · 小 说',
+                  child: Text(
+                    S.t('动 漫 · 漫 画 · 小 说'),
                     style: TextStyle(
                       fontSize: 12.5,
                       letterSpacing: 3,

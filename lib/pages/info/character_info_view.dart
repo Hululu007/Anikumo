@@ -8,6 +8,7 @@ import 'package:anikumo/bean/widget/image_preview.dart';
 import 'package:anikumo/bean/widget/tonal_card.dart';
 import 'package:anikumo/modules/character/character_full_item.dart';
 import 'package:anikumo/bean/widget/anikumo_icons.dart';
+import 'package:anikumo/services/i18n/app_strings.dart';
 
 class CharacterInfoView extends StatelessWidget {
   const CharacterInfoView({
@@ -72,7 +73,7 @@ class CharacterInfoView extends StatelessWidget {
                 const SizedBox(height: 12),
               ],
               SelectableText(
-                name.isEmpty ? '人物' : name,
+                name.isEmpty ? S.t('人物') : name,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: theme.colorScheme.onSurface,
@@ -87,7 +88,7 @@ class CharacterInfoView extends StatelessWidget {
               ],
               if (actorNames.isNotEmpty) ...[
                 const SizedBox(height: 20),
-                _buildInfoField(context, '配音', actorNames.join(' / ')),
+                _buildInfoField(context, S.t('配音'), actorNames.join(' / ')),
               ],
             ],
           ),
@@ -95,7 +96,7 @@ class CharacterInfoView extends StatelessWidget {
         if (quickFields.isNotEmpty) ...[
           const SizedBox(height: 16),
           ContentSection(
-            title: '基本资料',
+            title: S.t('基本资料'),
             child: LayoutBuilder(builder: (context, constraints) {
               final columns =
                   constraints.maxWidth >= 240 && useCompactColumns ? 2 : 1;
@@ -154,7 +155,7 @@ class CharacterInfoView extends StatelessWidget {
             if (character.summary.isNotEmpty) ...[
               const SizedBox(height: 24),
               ContentSection(
-                title: '人物简介',
+                title: S.t('人物简介'),
                 child: SelectableText(character.summary,
                     style: theme.textTheme.bodyLarge?.copyWith(height: 1.65)),
               ),
@@ -162,7 +163,7 @@ class CharacterInfoView extends StatelessWidget {
             if (moreFields.isNotEmpty) ...[
               const SizedBox(height: 24),
               ContentSection.group(
-                title: '更多资料',
+                title: S.t('更多资料'),
                 children: [
                   for (final field in moreFields)
                     Padding(
@@ -175,7 +176,7 @@ class CharacterInfoView extends StatelessWidget {
             if (character.unstructuredInfo.isNotEmpty) ...[
               const SizedBox(height: 24),
               ContentSection(
-                title: '人物资料',
+                title: S.t('人物资料'),
                 child: SelectableText(character.unstructuredInfo,
                     style: theme.textTheme.bodyMedium?.copyWith(height: 1.6)),
               ),
@@ -184,10 +185,10 @@ class CharacterInfoView extends StatelessWidget {
                 character.unstructuredInfo.isEmpty &&
                 character.summary.isEmpty) ...[
               const SizedBox(height: 24),
-              const TonalCard(
+              TonalCard(
                 child: GeneralEmptyState(
                   icon: AnikumoIcons.person_outline_rounded,
-                  title: '暂无人物资料',
+                  title: S.t('暂无人物资料'),
                   compact: true,
                 ),
               ),
@@ -230,12 +231,12 @@ class _CharacterPortrait extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     if (imageUrl.isEmpty) {
-      return const TonalCard(
+      return TonalCard(
         child: SizedBox(
           height: 160,
           child: GeneralEmptyState(
             icon: AnikumoIcons.person_outline_rounded,
-            title: '暂无人物图片',
+            title: S.t('暂无人物图片'),
             compact: true,
           ),
         ),
@@ -245,7 +246,7 @@ class _CharacterPortrait extends StatelessWidget {
 
     return Semantics(
       button: true,
-      label: '查看人物原图',
+      label: S.t('查看人物原图'),
       child: Material(
         color: colors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(28),
@@ -280,7 +281,7 @@ class _CharacterPortrait extends StatelessWidget {
                           size: 20, color: colors.primary),
                       const SizedBox(width: 8),
                       Flexible(
-                        child: Text('查看原图',
+                        child: Text(S.t('查看原图'),
                             style: Theme.of(context)
                                 .textTheme
                                 .labelLarge
